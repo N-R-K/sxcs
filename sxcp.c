@@ -36,7 +36,7 @@ typedef struct {
 
 typedef struct {
 	uint oneshot           : 1;
-	uint quit_on_keypress  : 1; /* TODO: implement this */
+	uint quit_on_keypress  : 1;
 	enum output fmt;
 } Options;
 
@@ -168,6 +168,7 @@ static void
 cleanup(void)
 {
 	if (x11.dpy != NULL) {
+		XUngrabKeyboard(x11.dpy, CurrentTime); /* TODO: okay to call if i haven't grabbed the kb? */
 		XUngrabPointer(x11.dpy, CurrentTime);
 		XFreeCursor(x11.dpy, x11.cur);
 		XCloseDisplay(x11.dpy);
@@ -203,6 +204,15 @@ main(int argc, const char *argv[])
 		error(1, 0, "failed to grab cursor");
 	}
 
+	if (opt.quit_on_keypress) {
+		if (XGrabKeyboard(x11.dpy, x11.root.win, 0,
+		                  GrabModeAsync, GrabModeAsync,
+		                  CurrentTime) != GrabSuccess)
+		{
+			error(1, 0, "failed to grab keyboard");
+		}
+	}
+
 	while (1) {
 		XEvent ev;
 
@@ -213,11 +223,15 @@ main(int argc, const char *argv[])
 			if (ev.xbutton.button != Button1 || opt.oneshot)
 				exit(0);
 			break;
+		case KeyPress:
+			if (opt.quit_on_keypress)
+				exit(1);
+			break;
 		case MotionNotify: /* TODO */
 			/* error(1, 0, "recieved MotionNotify event."); */
 			break;
 		default:
-			error(1, 0, "recieved unknown event.");
+			/* error(0, 0, "recieved unknown event: `%d`", ev.type); */
 			break;
 		}
 	}
