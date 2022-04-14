@@ -12,6 +12,7 @@ error(int exit_status, int errnum, const char *fmt, ...)
 	va_list ap;
 
 	fflush(stdout);
+	fprintf(stderr, "%s: ", PROGNAME);
 	va_start(ap, fmt);
 	if (fmt)
 		vfprintf(stderr, fmt, ap);
