@@ -31,6 +31,7 @@ CPPCHECK      = $$(command -v cppcheck 2>/dev/null || printf ":")
 CPPCHECK_ARGS = --std=c89 --quiet --inline-suppr \
                 --enable=performance,portability,style \
                 --max-ctu-depth=8 -j8 \
+                --suppress=syntaxError --suppress=internalAstError \
 
 # libs
 X11_LIBS  = -lX11

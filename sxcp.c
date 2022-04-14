@@ -13,8 +13,16 @@
 enum output {
 	OUTPUT_HEX = 1 << 0,
 	OUTPUT_RGB = 1 << 1,
+	OUTPUT_HSL = 1 << 2,
 	OUTPUT_END
 };
+
+typedef struct {
+	uint h   : 9;
+	uint s   : 7;
+	uint l   : 7;
+	uint pad : 9;
+} HSL;
 
 static struct {
 	Display *dpy;
@@ -28,6 +36,41 @@ static struct {
 /*
  * function implementation
  */
+
+static HSL
+rgb_to_hsl(u32 col)
+{
+	HSL ret = {0};
+	const int r = R(col);
+	const int g = G(col);
+	const int b = B(col);
+	const int max = MAX(MAX(r, g), b);
+	const int min = MIN(MIN(r, g), b);
+	const int l = ((max + min) * 50) / 255;
+	int s = 0;
+	long h = 0; /* should work even if long == 32bits */
+
+	if (max != min) {
+		const int d = max - min;
+		s = (d * 100) / max;
+		if (max == r) {
+			h = ((g - b) * 1000) / d + (g < b ? 6000 : 0);
+		} else if (max == g) {
+			h = ((b - r) * 1000) / d + 2000;
+		} else {
+			h = ((r - g) * 1000) / d + 4000;
+		}
+		h *= 6;
+		h /= 100;
+		if (h < 0)
+			h += 360;
+	}
+
+	ret.h = h;
+	ret.l = l;
+	ret.s = s;
+	return ret;
+}
 
 static void
 print_color(uint x, uint y, enum output fmt)
@@ -47,7 +90,10 @@ print_color(uint x, uint y, enum output fmt)
 		printf("\thex: 0x%.6lX", pix);
 	if (fmt & OUTPUT_RGB)
 		printf("\trgb: %lu %lu %lu", R(pix), G(pix), B(pix));
-	/* TODO: HSL output */
+	if (fmt & OUTPUT_HSL) {
+		HSL tmp = rgb_to_hsl(pix);
+		printf("\thsl: %u %u %u", tmp.h, tmp.s, tmp.l);
+	}
 	printf("\n");
 	fflush(stdout);
 
