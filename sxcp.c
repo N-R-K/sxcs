@@ -3,6 +3,7 @@
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <X11/cursorfont.h>
 
 #include "util.h"
 
@@ -116,7 +117,7 @@ static void
 cleanup(void)
 {
 	if (x11.dpy != NULL) {
-		/* XFreeCursor(x11.dpy, x11.cur); */
+		XFreeCursor(x11.dpy, x11.cur);
 		XUngrabPointer(x11.dpy, CurrentTime);
 		XCloseDisplay(x11.dpy);
 	}
@@ -139,11 +140,13 @@ main(void)
 		x11.root.h = tmp.height;
 		x11.root.w = tmp.width;
 	}
+
+	x11.cur = XCreateFontCursor(x11.dpy, XC_tcross);
+
 	/* TODO: error check this */
 	XGrabPointer(x11.dpy, x11.root.win, 0, ButtonPressMask | PointerMotionMask,
 	             GrabModeAsync, GrabModeAsync, x11.root.win, x11.cur, CurrentTime);
 
-	/* TODO: cursor is fucked up right now */
 	while (1) {
 		XEvent ev;
 
