@@ -54,15 +54,14 @@ main(void)
 		switch (XNextEvent(x11.dpy, &ev), ev.type) {
 		case ButtonPress: /* TODO: more option on color output */
 			im = XGetImage(x11.dpy, x11.root.win,
-				       ev.xbutton.x_root, ev.xbutton.y_root, /* x, y */
-				       1, 1, /* w, h */
-				       AllPlanes, ZPixmap);
+			               ev.xbutton.x_root, ev.xbutton.y_root, /* x, y */
+			               1, 1, /* w, h */
+			               AllPlanes, ZPixmap);
 			if (im == NULL)
 				error(1, 0, "failed to get image");
 			pix = XGetPixel(im, 0, 0);
-			printf("got image. color: 0x%.6lX\n", pix);
+			printf("color: 0x%.6lX\n", pix);
 			XDestroyImage(im);
-			error(0, 0, "recieved ButtonPress event.");
 			exit(0);
 			break;
 		case MotionNotify: /* TODO */
