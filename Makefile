@@ -46,14 +46,14 @@ LDFLAGS  ?= $(CFLAGS)
 LDLIBS    = $(X11_LIBS)
 
 BIN  = sxcp
-OBJS = sxcp.o util.o
+OBJS = sxcp.o
 
 .PHONY: clean
 .SUFFIXES:
 .SUFFIXES: .c .o
 
 all: $(BIN)
-$(OBJS): Makefile util.h
+$(OBJS): Makefile
 
 $(BIN): $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LDLIBS)

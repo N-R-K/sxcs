@@ -1,16 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/cursorfont.h>
 
-#include "util.h"
-
 /*
  * macros
  */
+
+#define ARRLEN(X)        (sizeof(X) / sizeof((X)[0]))
+#define MAX(A, B)        ((A) > (B) ? (A) : (B))
+#define MIN(A, B)        ((A) < (B) ? (A) : (B))
 
 #define R(X)             (((unsigned long)(X) & 0xFF0000) >> 16)
 #define G(X)             (((unsigned long)(X) & 0x00FF00) >>  8)
@@ -19,6 +22,11 @@
 /*
  * types
  */
+
+typedef unsigned int     uint;
+typedef unsigned short   ushort;
+typedef unsigned long    ulong;
+typedef unsigned char    uchar;
 
 enum output {
 	OUTPUT_HEX = 1 << 0,
@@ -31,7 +39,7 @@ typedef struct {
 	uint h   : 9;
 	uint s   : 7;
 	uint l   : 7;
-	uint pad : 9;
+	uint pad : 9; /* cppcheck-suppress unusedStructMember */
 } HSL;
 
 typedef struct {
@@ -57,8 +65,27 @@ static struct {
  * function implementation
  */
 
+static void
+error(int exit_status, int errnum, const char *fmt, ...)
+{
+	va_list ap;
+
+	fflush(stdout);
+	fprintf(stderr, "%s: ", PROGNAME);
+	va_start(ap, fmt);
+	if (fmt)
+		vfprintf(stderr, fmt, ap);
+	va_end(ap);
+	if (errnum)
+		fprintf(stderr, "%s%s", fmt ? ": " : "", strerror(errnum));
+	fputc('\n', stderr);
+
+	if (exit_status)
+		exit(exit_status);
+}
+
 static HSL
-rgb_to_hsl(u32 col)
+rgb_to_hsl(ulong col)
 {
 	HSL ret = {0};
 	const int r = R(col);
