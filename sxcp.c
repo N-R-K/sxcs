@@ -37,7 +37,6 @@ typedef struct {
 typedef struct {
 	uint oneshot           : 1;
 	uint quit_on_keypress  : 1; /* TODO: implement this */
-	uint help              : 1; /* TODO: implement this */
 	enum output fmt;
 } Options;
 
@@ -121,6 +120,21 @@ print_color(uint x, uint y, enum output fmt)
 	XDestroyImage(im);
 }
 
+static void
+usage(void)
+{
+	fprintf(stderr,
+	        "usage: %s [options]\n"
+	        "  -h, --help:             show usage\n"
+	        "  -o, --one-shot:         quit after picking\n"
+	        "  -q, --quit-on-keypress: quit on keypress\n"
+	        "      --hex:              hex output\n"
+	        "      --rgb:              rgb output\n"
+	        "      --hsl:              hsl output\n",
+	        PROGNAME);
+	exit(1);
+}
+
 static Options
 opt_parse(int argc, const char *argv[])
 {
@@ -139,7 +153,7 @@ opt_parse(int argc, const char *argv[])
 		else if (strcmp(argv[i], "--quit-on-keypress") == 0 || strcmp(argv[i], "-q") == 0)
 			ret.quit_on_keypress = 1;
 		else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0)
-			ret.help = 1;
+			usage();
 		else
 			error(1, 0, "unknown argument `%s`.", argv[i]);
 	}

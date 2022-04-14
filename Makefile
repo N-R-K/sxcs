@@ -35,12 +35,13 @@ CPPCHECK_ARGS = --std=c89 --quiet --inline-suppr \
 
 # libs
 X11_LIBS  = -lX11
+PROGNAME  = -DPROGNAME=\"$(BIN)\"
 
 # Cool stuff
 CC       ?= gcc
 CFLAGS   ?= $(OFLAGS)
 CFLAGS   += $(WFLAGS) $(DFLAGS)
-CPPFLAGS  = $(DEBUG_CPP)
+CPPFLAGS  = $(DEBUG_CPP) $(PROGNAME)
 LDFLAGS  ?= $(CFLAGS)
 LDLIBS    = $(X11_LIBS)
 
