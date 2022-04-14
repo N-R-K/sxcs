@@ -15,6 +15,26 @@ static struct {
 	} root;
 } x11;
 
+/*
+ * function implementation
+ */
+
+static void
+print_color(uint x, uint y)
+{
+	XImage *im;
+	ulong pix;
+
+	im = XGetImage(x11.dpy, x11.root.win, x, y,
+	               1, 1, /* w, h */
+	               AllPlanes, ZPixmap);
+	if (im == NULL)
+		error(1, 0, "failed to get image");
+	pix = XGetPixel(im, 0, 0);
+	printf("color: 0x%.6lX\n", pix);
+	XDestroyImage(im);
+}
+
 static void
 cleanup(void)
 {
@@ -48,20 +68,10 @@ main(void)
 	/* TODO: cursor is fucked up right now */
 	while (1) {
 		XEvent ev;
-		XImage *im;
-		ulong pix;
 
 		switch (XNextEvent(x11.dpy, &ev), ev.type) {
 		case ButtonPress: /* TODO: more option on color output */
-			im = XGetImage(x11.dpy, x11.root.win,
-			               ev.xbutton.x_root, ev.xbutton.y_root, /* x, y */
-			               1, 1, /* w, h */
-			               AllPlanes, ZPixmap);
-			if (im == NULL)
-				error(1, 0, "failed to get image");
-			pix = XGetPixel(im, 0, 0);
-			printf("color: 0x%.6lX\n", pix);
-			XDestroyImage(im);
+			print_color(ev.xbutton.x_root, ev.xbutton.y_root);
 			exit(0);
 			break;
 		case MotionNotify: /* TODO */
