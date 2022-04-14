@@ -168,8 +168,8 @@ static void
 cleanup(void)
 {
 	if (x11.dpy != NULL) {
-		XFreeCursor(x11.dpy, x11.cur);
 		XUngrabPointer(x11.dpy, CurrentTime);
+		XFreeCursor(x11.dpy, x11.cur);
 		XCloseDisplay(x11.dpy);
 	}
 }
