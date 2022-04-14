@@ -42,11 +42,11 @@ print_color(uint x, uint y, enum output fmt)
 		error(1, 0, "failed to get image");
 	pix = XGetPixel(im, 0, 0);
 
-	printf("color:\t");
+	printf("color:");
 	if (fmt & OUTPUT_HEX)
-		printf("hex: 0x%.6lX\t", pix);
+		printf("\thex: 0x%.6lX", pix);
 	if (fmt & OUTPUT_RGB)
-		printf("rgb: %lu %lu %lu\t", R(pix), G(pix), B(pix));
+		printf("\trgb: %lu %lu %lu", R(pix), G(pix), B(pix));
 	/* TODO: HSL output */
 	printf("\n");
 	fflush(stdout);
