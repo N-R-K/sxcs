@@ -6,6 +6,16 @@
 
 #include "util.h"
 
+#define R(X)             (((unsigned long)(X) & 0xFF0000) >> 16)
+#define G(X)             (((unsigned long)(X) & 0x00FF00) >>  8)
+#define B(X)             (((unsigned long)(X) & 0x0000FF) >>  0)
+
+enum output {
+	OUTPUT_HEX = 1 << 0,
+	OUTPUT_RGB = 1 << 1,
+	OUTPUT_END
+};
+
 static struct {
 	Display *dpy;
 	Cursor cur;
@@ -20,7 +30,7 @@ static struct {
  */
 
 static void
-print_color(uint x, uint y)
+print_color(uint x, uint y, enum output fmt)
 {
 	XImage *im;
 	ulong pix;
@@ -31,7 +41,16 @@ print_color(uint x, uint y)
 	if (im == NULL)
 		error(1, 0, "failed to get image");
 	pix = XGetPixel(im, 0, 0);
-	printf("color: 0x%.6lX\n", pix);
+
+	printf("color:\t");
+	if (fmt & OUTPUT_HEX)
+		printf("hex: 0x%.6lX\t", pix);
+	if (fmt & OUTPUT_RGB)
+		printf("rgb: %lu %lu %lu\t", R(pix), G(pix), B(pix));
+	/* TODO: HSL output */
+	printf("\n");
+	fflush(stdout);
+
 	XDestroyImage(im);
 }
 
@@ -45,6 +64,7 @@ cleanup(void)
 	}
 }
 
+/* TODO: accept arguments */
 extern int
 main(void)
 {
@@ -70,8 +90,8 @@ main(void)
 		XEvent ev;
 
 		switch (XNextEvent(x11.dpy, &ev), ev.type) {
-		case ButtonPress: /* TODO: more option on color output */
-			print_color(ev.xbutton.x_root, ev.xbutton.y_root);
+		case ButtonPress:
+			print_color(ev.xbutton.x_root, ev.xbutton.y_root, ~0);
 			exit(0);
 			break;
 		case MotionNotify: /* TODO */
