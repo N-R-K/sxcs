@@ -35,7 +35,7 @@ typedef struct {
 } HSL;
 
 typedef struct {
-	uint oneshot           : 1; /* TODO: implement this */
+	uint oneshot           : 1;
 	uint quit_on_keypress  : 1; /* TODO: implement this */
 	uint help              : 1; /* TODO: implement this */
 	enum output fmt;
@@ -194,8 +194,10 @@ main(int argc, const char *argv[])
 
 		switch (XNextEvent(x11.dpy, &ev), ev.type) {
 		case ButtonPress:
-			print_color(ev.xbutton.x_root, ev.xbutton.y_root, opt.fmt);
-			exit(0);
+			if (ev.xbutton.button == Button1)
+				print_color(ev.xbutton.x_root, ev.xbutton.y_root, opt.fmt);
+			if (ev.xbutton.button != Button1 || opt.oneshot)
+				exit(0);
 			break;
 		case MotionNotify: /* TODO */
 			/* error(1, 0, "recieved MotionNotify event."); */
