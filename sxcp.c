@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -32,6 +33,13 @@ typedef struct {
 	uint l   : 7;
 	uint pad : 9;
 } HSL;
+
+typedef struct {
+	uint oneshot           : 1; /* TODO: implement this */
+	uint quit_on_keypress  : 1; /* TODO: implement this */
+	uint help              : 1; /* TODO: implement this */
+	enum output fmt;
+} Options;
 
 /*
  * static globals
@@ -113,6 +121,35 @@ print_color(uint x, uint y, enum output fmt)
 	XDestroyImage(im);
 }
 
+static Options
+opt_parse(int argc, const char *argv[])
+{
+	int i;
+	Options ret = {0};
+
+	for (i = 1; i < argc; ++i) {
+		if (strcmp(argv[i], "--rgb") == 0)
+			ret.fmt |= OUTPUT_RGB;
+		else if (strcmp(argv[i], "--hex") == 0)
+			ret.fmt |= OUTPUT_HEX;
+		else if (strcmp(argv[i], "--hsl") == 0)
+			ret.fmt |= OUTPUT_HSL;
+		else if (strcmp(argv[i], "--one-shot") == 0 || strcmp(argv[i], "-o") == 0)
+			ret.oneshot = 1;
+		else if (strcmp(argv[i], "--quit-on-keypress") == 0 || strcmp(argv[i], "-q") == 0)
+			ret.quit_on_keypress = 1;
+		else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0)
+			ret.help = 1;
+		else
+			error(1, 0, "unknown argument `%s`.", argv[i]);
+	}
+
+	if (ret.fmt == 0)
+		ret.fmt = ~0;
+
+	return ret;
+}
+
 static void
 cleanup(void)
 {
@@ -123,12 +160,14 @@ cleanup(void)
 	}
 }
 
-/* TODO: accept arguments */
 extern int
-main(void)
+main(int argc, const char *argv[])
 {
+	Options opt;
 
 	atexit(cleanup);
+
+	opt = opt_parse(argc, argv);
 
 	if ((x11.dpy = XOpenDisplay(NULL)) == NULL)
 		error(1, 0, "failed to open x11 display");
@@ -155,7 +194,7 @@ main(void)
 
 		switch (XNextEvent(x11.dpy, &ev), ev.type) {
 		case ButtonPress:
-			print_color(ev.xbutton.x_root, ev.xbutton.y_root, ~0);
+			print_color(ev.xbutton.x_root, ev.xbutton.y_root, opt.fmt);
 			exit(0);
 			break;
 		case MotionNotify: /* TODO */
