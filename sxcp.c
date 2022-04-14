@@ -143,9 +143,12 @@ main(void)
 
 	x11.cur = XCreateFontCursor(x11.dpy, XC_tcross);
 
-	/* TODO: error check this */
-	XGrabPointer(x11.dpy, x11.root.win, 0, ButtonPressMask | PointerMotionMask,
-	             GrabModeAsync, GrabModeAsync, x11.root.win, x11.cur, CurrentTime);
+	if (XGrabPointer(x11.dpy, x11.root.win, 0, ButtonPressMask | PointerMotionMask,
+	                 GrabModeAsync, GrabModeAsync, x11.root.win, x11.cur,
+	                 CurrentTime) != GrabSuccess)
+	{
+		error(1, 0, "failed to grab cursor");
+	}
 
 	while (1) {
 		XEvent ev;
