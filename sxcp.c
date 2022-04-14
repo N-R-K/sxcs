@@ -6,9 +6,17 @@
 
 #include "util.h"
 
+/*
+ * macros
+ */
+
 #define R(X)             (((unsigned long)(X) & 0xFF0000) >> 16)
 #define G(X)             (((unsigned long)(X) & 0x00FF00) >>  8)
 #define B(X)             (((unsigned long)(X) & 0x0000FF) >>  0)
+
+/*
+ * types
+ */
 
 enum output {
 	OUTPUT_HEX = 1 << 0,
@@ -23,6 +31,10 @@ typedef struct {
 	uint l   : 7;
 	uint pad : 9;
 } HSL;
+
+/*
+ * static globals
+ */
 
 static struct {
 	Display *dpy;
