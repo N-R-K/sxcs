@@ -35,7 +35,6 @@ CPPCHECK_ARGS = --std=c89 --quiet --inline-suppr \
 
 # libs
 X11_LIBS  = -lX11
-PROGNAME  = -DPROGNAME=\"$(BIN)\"
 
 # Cool stuff
 CC       ?= gcc
@@ -44,6 +43,10 @@ CFLAGS   += $(WFLAGS) $(DFLAGS)
 CPPFLAGS  = $(DEBUG_CPP) $(PROGNAME)
 LDFLAGS  ?= $(CFLAGS)
 LDLIBS    = $(X11_LIBS)
+
+PREFIX   ?= /usr/local
+PROGNAME  = -DPROGNAME=\"$(BIN)\"
+
 
 BIN  = sxcp
 OBJS = sxcp.o
@@ -67,4 +70,12 @@ debug:
 
 clean:
 	rm -f *.o $(OBJS) $(BIN) $(BIN)-debug
+
+install: $(BIN)
+	mkdir -p $(DESTDIR)$(PREFIX)/bin
+	cp $(BIN) $(DESTDIR)$(PREFIX)/bin/
+	chmod 755 $(DESTDIR)$(PREFIX)/bin/$(BIN)
+
+uninstall:
+	rm -f $(DESTDIR)$(PREFIX)/bin/$(BIN)
 
