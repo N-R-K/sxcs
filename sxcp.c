@@ -59,6 +59,11 @@ static struct {
 		Window win;
 		uint w, h;
 	} root;
+	struct {
+		uint cur         : 1;
+		uint ungrab_ptr  : 1;
+		uint ungrab_kb   : 1;
+	} valid;
 } x11;
 
 /*
@@ -194,12 +199,14 @@ opt_parse(int argc, const char *argv[])
 static void
 cleanup(void)
 {
-	if (x11.dpy != NULL) {
-		XUngrabKeyboard(x11.dpy, CurrentTime); /* TODO: okay to call if i haven't grabbed the kb? */
+	if (x11.valid.ungrab_kb)
+		XUngrabKeyboard(x11.dpy, CurrentTime);
+	if (x11.valid.ungrab_ptr)
 		XUngrabPointer(x11.dpy, CurrentTime);
+	if (x11.valid.cur)
 		XFreeCursor(x11.dpy, x11.cur);
+	if (x11.dpy != NULL)
 		XCloseDisplay(x11.dpy);
-	}
 }
 
 extern int
@@ -223,21 +230,22 @@ main(int argc, const char *argv[])
 	}
 
 	x11.cur = XCreateFontCursor(x11.dpy, XC_tcross);
+	x11.valid.cur = 1;
 
-	if (XGrabPointer(x11.dpy, x11.root.win, 0, ButtonPressMask | PointerMotionMask,
-	                 GrabModeAsync, GrabModeAsync, x11.root.win, x11.cur,
-	                 CurrentTime) != GrabSuccess)
-	{
+	x11.valid.ungrab_ptr = XGrabPointer(x11.dpy, x11.root.win, 0,
+	                                    ButtonPressMask | PointerMotionMask,
+	                                    GrabModeAsync, GrabModeAsync,
+	                                    x11.root.win, x11.cur,
+	                                    CurrentTime) == GrabSuccess;
+	if (!x11.valid.ungrab_ptr)
 		error(1, 0, "failed to grab cursor");
-	}
 
 	if (opt.quit_on_keypress) {
-		if (XGrabKeyboard(x11.dpy, x11.root.win, 0,
-		                  GrabModeAsync, GrabModeAsync,
-		                  CurrentTime) != GrabSuccess)
-		{
+		x11.valid.ungrab_kb = XGrabKeyboard(x11.dpy, x11.root.win, 0,
+		                                    GrabModeAsync, GrabModeAsync,
+		                                    CurrentTime) == GrabSuccess;
+		if (!x11.valid.ungrab_kb)
 			error(1, 0, "failed to grab keyboard");
-		}
 	}
 
 	while (1) {
