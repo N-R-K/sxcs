@@ -250,6 +250,7 @@ main(int argc, const char *argv[])
 
 	while (1) {
 		XEvent ev;
+		Bool discard = False;
 
 		switch (XNextEvent(x11.dpy, &ev), ev.type) {
 		case ButtonPress:
@@ -262,7 +263,18 @@ main(int argc, const char *argv[])
 			if (opt.quit_on_keypress)
 				exit(1);
 			break;
-		case MotionNotify: /* TODO */
+		case MotionNotify: /* TODO: zoom in */
+			do { /* don't act on stale events */
+				if (XPending(x11.dpy) > 0) {
+					XEvent next_ev, dummy;
+					XPeekEvent(x11.dpy, &next_ev);
+					discard = next_ev.type == MotionNotify;
+					if (discard)
+						XNextEvent(x11.dpy, &dummy);
+				} else {
+					break;
+				}
+			} while (discard);
 			/* error(1, 0, "recieved MotionNotify event."); */
 			break;
 		default:
