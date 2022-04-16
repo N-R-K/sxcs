@@ -266,11 +266,11 @@ main(int argc, const char *argv[])
 		case MotionNotify: /* TODO: zoom in */
 			do { /* don't act on stale events */
 				if (XPending(x11.dpy) > 0) {
-					XEvent next_ev, dummy;
+					XEvent next_ev;
 					XPeekEvent(x11.dpy, &next_ev);
 					discard = next_ev.type == MotionNotify;
 					if (discard)
-						XNextEvent(x11.dpy, &dummy);
+						XNextEvent(x11.dpy, &ev);
 				} else {
 					break;
 				}
