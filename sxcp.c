@@ -504,7 +504,7 @@ main(int argc, const char *argv[])
 			if (opt.quit_on_keypress)
 				exit(1);
 			break;
-		case MotionNotify: /* TODO: zoom in */
+		case MotionNotify:
 			do { /* don't act on stale events */
 				if (XPending(x11.dpy) > 0) {
 					XEvent next_ev;

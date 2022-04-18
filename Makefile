@@ -22,7 +22,7 @@ WGCC  += -fanalyzer
 WFLAGS = -std=c89 -Wall -Wextra -Wpedantic \
          -Wshadow -Wvla -Wpointer-arith -Wwrite-strings -Wfloat-equal \
          -Wcast-align -Wcast-qual -Wbad-function-cast \
-         -Wstrict-overflow=4 -Wunreachable-code -Wformat=2 \
+         -Wstrict-overflow=2 -Wunreachable-code -Wformat=2 \
          -Wundef -Wstrict-prototypes -Wmissing-declarations -Wmissing-prototypes \
          $(WGCC) $(WCLANG) \
 
