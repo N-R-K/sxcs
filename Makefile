@@ -48,8 +48,8 @@ PREFIX   ?= /usr/local
 PROGNAME  = -DPROGNAME=\"$(BIN)\"
 
 
-BIN  = sxcp
-OBJS = sxcp.o
+BIN  = sxcs
+OBJS = sxcs.o
 
 .PHONY: clean
 .SUFFIXES:
