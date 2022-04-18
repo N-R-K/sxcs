@@ -277,6 +277,7 @@ img_out_init(Image *img)
 {
 	img->x = img->y = 0;
 	img->w = img->h = MAGNIFY_WINDOW_SIZE;
+	/* TODO: use XInitImage instead ? */
 	img->im = XGetImage(x11.dpy, x11.root.win, img->x, img->y,
 	                    img->w, img->h, AllPlanes, ZPixmap);
 	if (img->im == NULL)
@@ -307,7 +308,10 @@ get_win_coordinates(int x, int y)
 	Window dummy, *childs = NULL;
 	int i;
 	uint nchild;
-	Atom wm_state = XInternAtom(x11.dpy, "WM_STATE", False);
+	static Atom wm_state = None;
+
+	if (wm_state == None)
+		wm_state = XInternAtom(x11.dpy, "WM_STATE", False);
 
 	ret.win = x11.root.win;
 	ret.x = x;
