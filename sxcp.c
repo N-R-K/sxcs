@@ -82,6 +82,8 @@ static struct {
 	} valid;
 } x11;
 
+static Image img_out;
+
 /*
  * function implementation
  */
@@ -212,6 +214,20 @@ opt_parse(int argc, const char *argv[])
 	return ret;
 }
 
+/* this feels like a retarded thing to do...
+ * do i really need an XImage?
+ */
+static void
+img_out_init(Image *img)
+{
+	img->x = img->y = 0;
+	img->w = img->h = MAGNIFY_WINDOW_SIZE;
+	img->im = XGetImage(x11.dpy, x11.root.win, img->x, img->y,
+	                    img->w, img->h, AllPlanes, ZPixmap);
+	if (img->im == NULL)
+		error(1, 0, "failed to get image");
+}
+
 /* FIXME: grab the image without the magnify window interfering */
 static XImage *
 img_create_from_cor(uint x, uint y, uint w, uint h)
@@ -219,8 +235,25 @@ img_create_from_cor(uint x, uint y, uint w, uint h)
 	return XGetImage(x11.dpy, x11.root.win, x, y, w, h, AllPlanes, ZPixmap);
 }
 
+/* FIXME: center properly when clipped */
+static void
+img_magnify(Image *out, const Image *in)
+{
+	uint x, y;
+
+	for (y = 0; y < out->h; ++y) {
+		for (x = 0; x < out->w; ++x) {
+			float oy = (float)y / (float)out->h;
+			float ox = (float)x / (float)out->w;
+			uint iy = oy * in->h;
+			uint ix = ox * in->w;
+			ulong tmp = XGetPixel(in->im, ix, iy);
+			XPutPixel(out->im, x, y, tmp);
+		}
+	}
+}
+
 /*
- * TODO: actually magnify the image lmao
  * TODO: follow the cursor
  * TODO: draw grid around each pixel
  * TODO: add circle output
@@ -241,14 +274,18 @@ magnify(const int x, const int y)
 	if (img.im == NULL)
 		error(1, 0, "failed to get image");
 
-	XPutImage(x11.dpy, x11.win, x11.gc, img.im,
-	          0, 0, 0, 0, img.w, img.h);
+	img_magnify(&img_out, &img);
+	XPutImage(x11.dpy, x11.win, x11.gc, img_out.im,
+	          0, 0, 0, 0, img_out.w, img_out.h);
+
 	XDestroyImage(img.im);
 }
 
 static void
 cleanup(void)
 {
+	if (img_out.im != NULL)
+		XDestroyImage(img_out.im);
 	if (x11.valid.ungrab_kb)
 		XUngrabKeyboard(x11.dpy, CurrentTime);
 	if (x11.valid.ungrab_ptr)
@@ -348,6 +385,8 @@ main(int argc, const char *argv[])
 		if (!x11.valid.ungrab_kb)
 			error(1, 0, "failed to grab keyboard");
 	}
+
+	img_out_init(&img_out);
 
 	while (1) {
 		XEvent ev;
