@@ -70,6 +70,23 @@ typedef struct {
 #define CLEANUP
 
 /*
+ * function prototype
+ */
+
+static void error(int exit_status, int errnum, const char *fmt, ...);
+static HSL rgb_to_hsl(ulong col);
+static void print_color(uint x, uint y, enum output fmt);
+static void usage(void);
+static Options opt_parse(int argc, const char *argv[]);
+static void img_out_init(Image *img);
+static Bool win_has_property(Window win, Atom atom);
+static WinCor get_win_coordinates(int x, int y);
+static XImage * img_create_from_cor(uint x, uint y, uint w, uint h);
+static void img_magnify(Image *out, const Image *in);
+static void magnify(const int x, const int y);
+CLEANUP static void cleanup(void);
+
+/*
  * static globals
  */
 
@@ -167,9 +184,7 @@ print_color(uint x, uint y, enum output fmt)
 	XImage *im;
 	ulong pix;
 
-	im = XGetImage(x11.dpy, x11.root.win, x, y,
-	               1, 1, /* w, h */
-	               AllPlanes, ZPixmap);
+	im = XGetImage(x11.dpy, x11.root.win, x, y, 1, 1, AllPlanes, ZPixmap);
 	if (im == NULL)
 		error(1, 0, "failed to get image");
 	pix = XGetPixel(im, 0, 0);
