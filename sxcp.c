@@ -176,7 +176,7 @@ print_color(uint x, uint y, enum output fmt)
 
 	printf("color:");
 	if (fmt & OUTPUT_HEX)
-		printf("\thex: 0x%.6lX", pix);
+		printf("\thex: #%.6lX", pix);
 	if (fmt & OUTPUT_RGB)
 		printf("\trgb: %lu %lu %lu", R(pix), G(pix), B(pix));
 	if (fmt & OUTPUT_HSL) {
