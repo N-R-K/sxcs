@@ -260,7 +260,8 @@ get_win_coordinates(int x, int y)
 	ret.win = x11.root.win;
 	ret.x = x;
 	ret.y = y;
-	XQueryTree(x11.dpy, x11.root.win, &dummy, &dummy, &childs, &nchild);
+	if (XQueryTree(x11.dpy, x11.root.win, &dummy, &dummy, &childs, &nchild) == 0)
+		error(1, 0, "XQueryTree failed");
 	for (i = 0; i < nchild; ++i) {
 		XWindowAttributes tmp;
 		XGetWindowAttributes(x11.dpy, childs[i], &tmp);
