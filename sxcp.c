@@ -437,7 +437,7 @@ main(int argc, const char *argv[])
 		attr_mask |= CWBackPixel;
 
 		x11.win = XCreateWindow(x11.dpy, x11.root.win,
-		                        0, 0, x11.w, x11.h, 0, x11.depth,
+		                        -1000, -1000, x11.w, x11.h, 0, x11.depth,
 		                        InputOutput, x11.vis, attr_mask, &attr);
 		x11.valid.win = 1;
 
