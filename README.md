@@ -3,6 +3,8 @@
 Color picker for X11, also has zoom feature. Outputs TAB separated `hex`,
 `rgb`, and `hsl` colors to `stdout` upon selection.
 
+![preview.gif](preview.gif)
+
 ## Usage
 
 Button1 will select and print the color, any other mouse button will quit sxcs.
