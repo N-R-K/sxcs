@@ -47,6 +47,7 @@ typedef struct {
 typedef struct {
 	uint oneshot           : 1;
 	uint quit_on_keypress  : 1;
+	uint no_mag            : 1;
 	enum output fmt;
 } Options;
 
@@ -196,6 +197,7 @@ usage(void)
 	        "  -h, --help:             show usage\n"
 	        "  -o, --one-shot:         quit after picking\n"
 	        "  -q, --quit-on-keypress: quit on keypress\n"
+	        "      --no-mag:           disable maginfier\n"
 	        "      --hex:              hex output\n"
 	        "      --rgb:              rgb output\n"
 	        "      --hsl:              hsl output\n",
@@ -220,6 +222,8 @@ opt_parse(int argc, const char *argv[])
 			ret.oneshot = 1;
 		else if (strcmp(argv[i], "--quit-on-keypress") == 0 || strcmp(argv[i], "-q") == 0)
 			ret.quit_on_keypress = 1;
+		else if (strcmp(argv[i], "--no-mag") == 0)
+			ret.no_mag = 1;
 		else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0)
 			usage();
 		else
@@ -368,6 +372,7 @@ cleanup(void)
 		XCloseDisplay(x11.dpy);
 }
 
+/* TODO: maybe make the program viable as a standalone maginfier as well */
 extern int
 main(int argc, const char *argv[])
 {
@@ -388,7 +393,7 @@ main(int argc, const char *argv[])
 		x11.root.w = tmp.width;
 	}
 
-	{
+	if (!opt.no_mag) {
 		int major, minor;
 
 		major = 0; minor = 2;
@@ -400,7 +405,7 @@ main(int argc, const char *argv[])
 			error(1, 0, "need XRender");
 	}
 
-	{
+	if (!opt.no_mag) {
 		XSetWindowAttributes attr;
 		ulong attr_mask = 0;
 
@@ -447,7 +452,7 @@ main(int argc, const char *argv[])
 		XMapRaised(x11.dpy, x11.win);
 	}
 
-	{
+	if (!opt.no_mag) {
 		x11.vfmt = XRenderFindVisualFormat(x11.dpy, x11.vis); /* TODO: free this? */
 		x11.sfmt = XRenderFindStandardFormat(x11.dpy, PictStandardARGB32); /* TODO: same as above */
 		x11.pm = XCreatePixmap(x11.dpy, x11.root.win,
@@ -458,10 +463,11 @@ main(int argc, const char *argv[])
 		if (x11.vfmt == NULL || x11.sfmt == NULL)
 			error(1, 0, "couldn't find format");
 
-		x11.pixpic = XRenderCreatePicture(x11.dpy, x11.pm, x11.sfmt, None, NULL);
+		x11.pixpic = XRenderCreatePicture(x11.dpy, x11.pm, x11.sfmt, None, NULL); /* TODO: error check? */
 		x11.valid.pixpic = 1;
 
 		XCompositeRedirectSubwindows(x11.dpy, x11.root.win, CompositeRedirectAutomatic);
+		img_out_init(&img_out);
 	}
 
 	x11.cur = XCreateFontCursor(x11.dpy, XC_tcross);
@@ -482,8 +488,6 @@ main(int argc, const char *argv[])
 		if (!x11.valid.ungrab_kb)
 			error(1, 0, "failed to grab keyboard");
 	}
-
-	img_out_init(&img_out);
 
 	while (1) {
 		XEvent ev;
@@ -512,7 +516,8 @@ main(int argc, const char *argv[])
 					break;
 				}
 			} while (discard);
-			magnify(ev.xbutton.x_root, ev.xbutton.y_root);
+			if (!opt.no_mag)
+				magnify(ev.xbutton.x_root, ev.xbutton.y_root);
 			break;
 		default:
 			/* error(0, 0, "recieved unknown event: `%d`", ev.type); */
