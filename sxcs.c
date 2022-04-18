@@ -318,9 +318,13 @@ get_win_coordinates(int x, int y)
 	ret.y = y;
 	if (XQueryTree(x11.dpy, x11.root.win, &dummy, &dummy, &childs, &nchild) == 0)
 		error(1, 0, "XQueryTree failed");
-	/* TODO: this may not be actually correct... */
+	/* FIXME: this doesn't work on kwin/kde and possibly other DEs as well... */
 	for (i = (int)nchild - 1; i >= 0; --i) {
 		XWindowAttributes tmp;
+
+		if (childs[i] == x11.win)
+			continue;
+
 		XGetWindowAttributes(x11.dpy, childs[i], &tmp);
 		if ((x > tmp.x && x < tmp.x + tmp.width) &&
 		    (y > tmp.y && y < tmp.y + tmp.height) &&
