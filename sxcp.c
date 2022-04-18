@@ -6,6 +6,8 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/cursorfont.h>
+#include <X11/extensions/Xrender.h>
+#include <X11/extensions/Xcomposite.h>
 
 /*
  * macros
@@ -53,6 +55,11 @@ typedef struct {
 	uint x, y, w, h;
 } Image;
 
+typedef struct {
+	Window win;
+	int x, y;
+} WinCor;
+
 #include "config.h"
 
 /*
@@ -75,6 +82,9 @@ static struct {
 	int screen;
 	int depth;
 	uint w, h;
+	Pixmap pm;
+	Picture pixpic;
+	XRenderPictFormat *vfmt, *sfmt;
 	struct {
 		Window win;
 		uint w, h;
@@ -82,6 +92,8 @@ static struct {
 	struct {
 		uint win         : 1;
 		uint cur         : 1;
+		uint pm          : 1;
+		uint pixpic      : 1;
 		uint gc          : 1;
 		uint ungrab_ptr  : 1;
 		uint ungrab_kb   : 1;
@@ -234,11 +246,54 @@ img_out_init(Image *img)
 		error(1, 0, "failed to get image");
 }
 
-/* FIXME: grab the image without the magnify window interfering */
+static WinCor
+get_win_coordinates(int x, int y)
+{
+	WinCor ret = {0};
+	Window dummy, *childs;
+	uint i, nchild;
+
+	ret.win = x11.root.win;
+	ret.x = x;
+	ret.y = y;
+	XQueryTree(x11.dpy, x11.root.win, &dummy, &dummy, &childs, &nchild);
+	for (i = 0; i < nchild; ++i) {
+		XWindowAttributes tmp;
+		XGetWindowAttributes(x11.dpy, childs[i], &tmp);
+		/* FIXME: make sure window is actually on top */
+		if ((x > tmp.x && x < tmp.x + tmp.width) &&
+		    (y > tmp.y && y < tmp.y + tmp.height))
+		{
+			ret.win = childs[i];
+			XTranslateCoordinates(x11.dpy, x11.root.win, ret.win,
+			                      x, y, &ret.x, &ret.y, &dummy);
+			break;
+		}
+	}
+	XFree(childs);
+
+	return ret;
+}
+
 static XImage *
 img_create_from_cor(uint x, uint y, uint w, uint h)
 {
-	return XGetImage(x11.dpy, x11.root.win, x, y, w, h, AllPlanes, ZPixmap);
+	XImage *ret = NULL;
+	XRenderPictureAttributes pattr;
+	Picture pic;
+	int alpha = x11.vfmt->type == PictTypeDirect && x11.vfmt->direct.alphaMask;
+	WinCor dst;
+
+	dst = get_win_coordinates(x, y);
+
+	pattr.subwindow_mode = IncludeInferiors;
+	pic = XRenderCreatePicture(x11.dpy, dst.win, x11.vfmt, CPSubwindowMode, &pattr);
+	XRenderComposite(x11.dpy, alpha ? PictOpOver : PictOpSrc, pic, None,
+	                 x11.pixpic, dst.x, dst.y, 0, 0, 0, 0, w, h);
+	ret = XGetImage(x11.dpy, x11.pm, 0, 0, w, h, AllPlanes, ZPixmap);
+	XRenderFreePicture(x11.dpy, pic);
+
+	return ret;
 }
 
 /* FIXME: center properly when clipped */
@@ -298,6 +353,10 @@ cleanup(void)
 		XUngrabPointer(x11.dpy, CurrentTime);
 	if (x11.valid.gc)
 		XFreeGC(x11.dpy, x11.gc);
+	if (x11.valid.pixpic)
+		XRenderFreePicture(x11.dpy, x11.pixpic);
+	if (x11.valid.pm)
+		XFreePixmap(x11.dpy, x11.pm);
 	if (x11.valid.cur)
 		XFreeCursor(x11.dpy, x11.cur);
 	if (x11.valid.win)
@@ -324,6 +383,18 @@ main(int argc, const char *argv[])
 		XGetWindowAttributes(x11.dpy, x11.root.win, &tmp);
 		x11.root.h = tmp.height;
 		x11.root.w = tmp.width;
+	}
+
+	{
+		int major, minor;
+
+		major = 0; minor = 2;
+		if (!XCompositeQueryVersion(x11.dpy, &major, &minor))
+			error(1, 0, "need XComposite 0.2 or above");
+
+		major = 0; minor = 0;
+		if (!XRenderQueryVersion(x11.dpy, &major, &minor))
+			error(1, 0, "need XRender");
 	}
 
 	{
@@ -371,6 +442,23 @@ main(int argc, const char *argv[])
 		x11.valid.gc = 1;
 
 		XMapRaised(x11.dpy, x11.win);
+	}
+
+	{
+		x11.vfmt = XRenderFindVisualFormat(x11.dpy, x11.vis); /* TODO: free this? */
+		x11.sfmt = XRenderFindStandardFormat(x11.dpy, PictStandardARGB32); /* TODO: same as above */
+		x11.pm = XCreatePixmap(x11.dpy, x11.root.win,
+		                       MAGNIFY_WINDOW_SIZE, MAGNIFY_WINDOW_SIZE,
+		                       32);
+		x11.valid.pm = 1;
+
+		if (x11.vfmt == NULL || x11.sfmt == NULL)
+			error(1, 0, "couldn't find format");
+
+		x11.pixpic = XRenderCreatePicture(x11.dpy, x11.pm, x11.sfmt, None, NULL);
+		x11.valid.pixpic = 1;
+
+		XCompositeRedirectSubwindows(x11.dpy, x11.root.win, CompositeRedirectAutomatic);
 	}
 
 	x11.cur = XCreateFontCursor(x11.dpy, XC_tcross);
