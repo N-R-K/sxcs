@@ -319,7 +319,7 @@ get_win_coordinates(int x, int y)
 	if (XQueryTree(x11.dpy, x11.root.win, &dummy, &dummy, &childs, &nchild) == 0)
 		error(1, 0, "XQueryTree failed");
 	/* TODO: this may not be actually correct... */
-	for (i = nchild - 1; i >= 0; --i) {
+	for (i = (int)nchild - 1; i >= 0; --i) {
 		XWindowAttributes tmp;
 		XGetWindowAttributes(x11.dpy, childs[i], &tmp);
 		if ((x > tmp.x && x < tmp.x + tmp.width) &&
