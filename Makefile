@@ -56,7 +56,7 @@ OBJS = sxcp.o
 .SUFFIXES: .c .o
 
 all: $(BIN)
-$(OBJS): Makefile
+$(OBJS): Makefile config.h
 
 $(BIN): $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LDLIBS)
@@ -64,6 +64,9 @@ $(BIN): $(OBJS)
 .c.o:
 	$(CPPCHECK) $(CPPCHECK_ARGS) $<
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
+config.h:
+	cp config.def.h config.h
 
 debug:
 	make BIN="$(BIN)-debug" DFLAGS="$(_DFLAGS)" DEBUG_CPP="-DDEBUG" all

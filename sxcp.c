@@ -48,19 +48,35 @@ typedef struct {
 	enum output fmt;
 } Options;
 
+typedef struct {
+	XImage *im;
+	uint x, y, w, h;
+} Image;
+
+#include "config.h"
+
 /*
  * static globals
  */
 
 static struct {
 	Display *dpy;
+	Visual *vis;
+	Window win;
 	Cursor cur;
+	GC gc;
+	Colormap cmap;
+	int screen;
+	int depth;
+	uint w, h;
 	struct {
 		Window win;
 		uint w, h;
 	} root;
 	struct {
+		uint win         : 1;
 		uint cur         : 1;
+		uint gc          : 1;
 		uint ungrab_ptr  : 1;
 		uint ungrab_kb   : 1;
 	} valid;
@@ -196,6 +212,40 @@ opt_parse(int argc, const char *argv[])
 	return ret;
 }
 
+/* FIXME: grab the image without the magnify window interfering */
+static XImage *
+img_create_from_cor(uint x, uint y, uint w, uint h)
+{
+	return XGetImage(x11.dpy, x11.root.win, x, y, w, h, AllPlanes, ZPixmap);
+}
+
+/*
+ * TODO: actually magnify the image lmao
+ * TODO: follow the cursor
+ * TODO: draw grid around each pixel
+ * TODO: add circle output
+ */
+static void
+magnify(const int x, const int y)
+{
+	const int ms = MAGNIFY_WINDOW_SIZE / ZOOM_FACTOR;
+	const int moff = ms / ZOOM_FACTOR;
+	Image img;
+
+	img.x = MAX(0, x - moff);
+	img.y = MAX(0, y - moff);
+	img.w = MIN(ms, x11.root.w - img.x);
+	img.h = MIN(ms, x11.root.h - img.y);
+
+	img.im = img_create_from_cor(img.x, img.y, img.w, img.h);
+	if (img.im == NULL)
+		error(1, 0, "failed to get image");
+
+	XPutImage(x11.dpy, x11.win, x11.gc, img.im,
+	          0, 0, 0, 0, img.w, img.h);
+	XDestroyImage(img.im);
+}
+
 static void
 cleanup(void)
 {
@@ -203,8 +253,12 @@ cleanup(void)
 		XUngrabKeyboard(x11.dpy, CurrentTime);
 	if (x11.valid.ungrab_ptr)
 		XUngrabPointer(x11.dpy, CurrentTime);
+	if (x11.valid.gc)
+		XFreeGC(x11.dpy, x11.gc);
 	if (x11.valid.cur)
 		XFreeCursor(x11.dpy, x11.cur);
+	if (x11.valid.win)
+		XDestroyWindow(x11.dpy, x11.win);
 	if (x11.dpy != NULL)
 		XCloseDisplay(x11.dpy);
 }
@@ -221,12 +275,59 @@ main(int argc, const char *argv[])
 	if ((x11.dpy = XOpenDisplay(NULL)) == NULL)
 		error(1, 0, "failed to open x11 display");
 
-	{
+	{ /* TODO: update the x11.root.{w,h} if root changes size */
 		XWindowAttributes tmp;
 		x11.root.win = DefaultRootWindow(x11.dpy);
 		XGetWindowAttributes(x11.dpy, x11.root.win, &tmp);
 		x11.root.h = tmp.height;
 		x11.root.w = tmp.width;
+	}
+
+	{
+		XSetWindowAttributes attr;
+		ulong attr_mask = 0;
+
+		x11.w = x11.h = MAGNIFY_WINDOW_SIZE;
+		x11.screen = DefaultScreen(x11.dpy);
+
+		x11.vis = DefaultVisual(x11.dpy, x11.screen);
+		x11.depth = DefaultDepth(x11.dpy, x11.screen);
+
+		{
+			XVisualInfo q = {0}, *r;
+			int d, dummy;
+
+			q.visualid = XVisualIDFromVisual(x11.vis);
+			if ((r = XGetVisualInfo(x11.dpy, VisualIDMask, &q, &dummy)) == NULL)
+				error(1, 0, "failed to obtain visual info");
+			d = r->depth; /* cppcheck-suppress nullPointerRedundantCheck */
+			XFree(r);
+			if (d < 24)
+				error(1, 0, "truecolor not supported");
+		}
+
+		x11.cmap = XCreateColormap(x11.dpy, x11.root.win, x11.vis, AllocNone);
+		attr.colormap = x11.cmap;
+		attr_mask |= CWColormap;
+
+		attr.event_mask = ExposureMask | KeyPressMask;
+		attr_mask |= CWEventMask;
+
+		attr.override_redirect = True;
+		attr_mask |= CWOverrideRedirect;
+
+		attr.background_pixel = BlackPixel(x11.dpy, x11.screen);
+		attr_mask |= CWBackPixel;
+
+		x11.win = XCreateWindow(x11.dpy, x11.root.win,
+		                        0, 0, x11.w, x11.h, 0, x11.depth,
+		                        InputOutput, x11.vis, attr_mask, &attr);
+		x11.valid.win = 1;
+
+		x11.gc = XCreateGC(x11.dpy, x11.win, 0, None);
+		x11.valid.gc = 1;
+
+		XMapRaised(x11.dpy, x11.win);
 	}
 
 	x11.cur = XCreateFontCursor(x11.dpy, XC_tcross);
@@ -275,7 +376,7 @@ main(int argc, const char *argv[])
 					break;
 				}
 			} while (discard);
-			/* error(1, 0, "recieved MotionNotify event."); */
+			magnify(ev.xbutton.x_root, ev.xbutton.y_root);
 			break;
 		default:
 			/* error(0, 0, "recieved unknown event: `%d`", ev.type); */
