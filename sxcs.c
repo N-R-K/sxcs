@@ -132,6 +132,7 @@ static struct {
 		uint gc          : 1;
 		uint ungrab_ptr  : 1;
 		uint ungrab_kb   : 1;
+		uint unredirect  : 1;
 	} valid;
 } x11;
 
@@ -408,6 +409,8 @@ cleanup(void)
 {
 	if (img_out.im != NULL)
 		XDestroyImage(img_out.im);
+	if (x11.valid.unredirect)
+		XCompositeUnredirectSubwindows(x11.dpy, x11.root.win, CompositeRedirectAutomatic);
 	if (x11.valid.ungrab_kb)
 		XUngrabKeyboard(x11.dpy, CurrentTime);
 	if (x11.valid.ungrab_ptr)
@@ -521,6 +524,7 @@ main(int argc, const char *argv[])
 		x11.valid.pixpic = 1;
 
 		XCompositeRedirectSubwindows(x11.dpy, x11.root.win, CompositeRedirectAutomatic);
+		x11.valid.unredirect = 1;
 		img_out_init(&img_out);
 	}
 
