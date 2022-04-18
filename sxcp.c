@@ -250,24 +250,45 @@ img_out_init(Image *img)
 		error(1, 0, "failed to get image");
 }
 
+static Bool
+win_has_property(Window win, Atom atom)
+{
+	Atom type_ret = None;
+	uchar *prop_ret = NULL;
+	int format_ret;
+	ulong bytes_after, num_ret;
+
+	XGetWindowProperty(x11.dpy, win, atom, 0, 0, False, AnyPropertyType,
+	                   &type_ret, &format_ret, &num_ret,
+	                   &bytes_after, &prop_ret);
+	if (prop_ret != NULL)
+		XFree(prop_ret);
+
+	return type_ret != None;
+}
+
 static WinCor
 get_win_coordinates(int x, int y)
 {
 	WinCor ret = {0};
-	Window dummy, *childs;
-	uint i, nchild;
+	Window dummy, *childs = NULL;
+	int i;
+	uint nchild;
+	Atom wm_state = XInternAtom(x11.dpy, "WM_STATE", False);
 
 	ret.win = x11.root.win;
 	ret.x = x;
 	ret.y = y;
 	if (XQueryTree(x11.dpy, x11.root.win, &dummy, &dummy, &childs, &nchild) == 0)
 		error(1, 0, "XQueryTree failed");
-	for (i = 0; i < nchild; ++i) {
+	/* TODO: this may not be actually correct... */
+	for (i = nchild - 1; i >= 0; --i) {
 		XWindowAttributes tmp;
 		XGetWindowAttributes(x11.dpy, childs[i], &tmp);
-		/* FIXME: make sure window is actually on top */
 		if ((x > tmp.x && x < tmp.x + tmp.width) &&
-		    (y > tmp.y && y < tmp.y + tmp.height))
+		    (y > tmp.y && y < tmp.y + tmp.height) &&
+		    tmp.map_state == IsViewable && tmp.class == InputOutput &&
+		    win_has_property(childs[i], wm_state))
 		{
 			ret.win = childs[i];
 			XTranslateCoordinates(x11.dpy, x11.root.win, ret.win,
