@@ -275,6 +275,7 @@ get_win_coordinates(int x, int y)
 	return ret;
 }
 
+/* FIXME: deal with overlapping windows */
 static XImage *
 img_create_from_cor(uint x, uint y, uint w, uint h)
 {
@@ -315,7 +316,6 @@ img_magnify(Image *out, const Image *in)
 }
 
 /*
- * TODO: follow the cursor
  * TODO: draw grid around each pixel
  * TODO: add circle output
  */
@@ -324,6 +324,7 @@ magnify(const int x, const int y)
 {
 	const int ms = MAGNIFY_WINDOW_SIZE / ZOOM_FACTOR;
 	const int moff = ms / ZOOM_FACTOR;
+	XWindowChanges ch = {0};
 	Image img;
 
 	img.x = MAX(0, x - moff);
@@ -334,12 +335,14 @@ magnify(const int x, const int y)
 	img.im = img_create_from_cor(img.x, img.y, img.w, img.h);
 	if (img.im == NULL)
 		error(1, 0, "failed to get image");
-
 	img_magnify(&img_out, &img);
 	XPutImage(x11.dpy, x11.win, x11.gc, img_out.im,
 	          0, 0, 0, 0, img_out.w, img_out.h);
-
 	XDestroyImage(img.im);
+
+	ch.x = x - MAGNIFY_WINDOW_SIZE / 2;
+	ch.y = y - MAGNIFY_WINDOW_SIZE / 2;
+	XConfigureWindow(x11.dpy, x11.win, CWX | CWY, &ch);
 }
 
 CLEANUP static void
