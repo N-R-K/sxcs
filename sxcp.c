@@ -56,6 +56,12 @@ typedef struct {
 #include "config.h"
 
 /*
+ * Annotation for functions called atexit()
+ * These functions are not allowed to call error(!0, ...) or exit().
+ */
+#define CLEANUP
+
+/*
  * static globals
  */
 
@@ -281,7 +287,7 @@ magnify(const int x, const int y)
 	XDestroyImage(img.im);
 }
 
-static void
+CLEANUP static void
 cleanup(void)
 {
 	if (img_out.im != NULL)
