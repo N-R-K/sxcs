@@ -54,6 +54,12 @@ enum output {
 	OUTPUT_END
 };
 
+enum mag {
+	MAG_NONE,
+	MAG_CURSOR,
+	MAG_END
+};
+
 typedef struct {
 	uint h   : 9;
 	uint s   : 7;
@@ -64,7 +70,7 @@ typedef struct {
 typedef struct {
 	uint oneshot           : 1;
 	uint quit_on_keypress  : 1;
-	uint no_mag            : 1;
+	enum mag mag;
 	enum output fmt;
 } Options;
 
@@ -230,7 +236,8 @@ usage(void)
 	        "  -h, --help:             show usage\n"
 	        "  -o, --one-shot:         quit after picking\n"
 	        "  -q, --quit-on-keypress: quit on keypress\n"
-	        "      --no-mag:           disable maginfier\n"
+	        "      --mag-cursor:       magnifier follows the cursor (default)\n"
+	        "      --mag-none:         disable magnifier\n"
 	        "      --hex:              hex output\n"
 	        "      --rgb:              rgb output\n"
 	        "      --hsl:              hsl output\n",
@@ -243,6 +250,7 @@ opt_parse(int argc, const char *argv[])
 {
 	int i;
 	Options ret = {0};
+	ret.mag = MAG_CURSOR;
 
 	for (i = 1; i < argc; ++i) {
 		if (strcmp(argv[i], "--rgb") == 0)
@@ -255,8 +263,10 @@ opt_parse(int argc, const char *argv[])
 			ret.oneshot = 1;
 		else if (strcmp(argv[i], "--quit-on-keypress") == 0 || strcmp(argv[i], "-q") == 0)
 			ret.quit_on_keypress = 1;
-		else if (strcmp(argv[i], "--no-mag") == 0)
-			ret.no_mag = 1;
+		else if (strcmp(argv[i], "--mag-cursor") == 0)
+			ret.mag = MAG_CURSOR;
+		else if (strcmp(argv[i], "--mag-none") == 0)
+			ret.mag = MAG_NONE;
 		else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0)
 			usage();
 		else
@@ -458,7 +468,7 @@ main(int argc, const char *argv[])
 		x11.root.w = tmp.width;
 	}
 
-	if (!opt.no_mag) {
+	if (opt.mag) {
 		int major, minor;
 
 		major = 0; minor = 2;
@@ -470,7 +480,7 @@ main(int argc, const char *argv[])
 			error(1, 0, "need XRender");
 	}
 
-	if (!opt.no_mag) {
+	if (opt.mag) {
 		XSetWindowAttributes attr;
 		ulong attr_mask = 0;
 
@@ -517,7 +527,7 @@ main(int argc, const char *argv[])
 		XMapRaised(x11.dpy, x11.win);
 	}
 
-	if (!opt.no_mag) {
+	if (opt.mag) {
 		x11.vfmt = XRenderFindVisualFormat(x11.dpy, x11.vis); /* TODO: free this? */
 		x11.sfmt = XRenderFindStandardFormat(x11.dpy, PictStandardARGB32); /* TODO: same as above */
 		x11.pm = XCreatePixmap(x11.dpy, x11.root.win,
@@ -582,7 +592,7 @@ main(int argc, const char *argv[])
 					break;
 				}
 			} while (discard);
-			if (!opt.no_mag)
+			if (opt.mag)
 				magnify(ev.xbutton.x_root, ev.xbutton.y_root);
 			break;
 		default:
