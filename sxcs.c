@@ -37,6 +37,8 @@
 #define G(X)             (((unsigned long)(X) & 0x00FF00) >>  8)
 #define B(X)             (((unsigned long)(X) & 0x0000FF) >>  0)
 
+#define TRANSFORM_SEQ_FROM_FUNC_ARRAY(X)  { X, ARRLEN(X) }
+
 /*
  * types
  */
@@ -84,7 +86,12 @@ typedef struct {
 	struct { uint w, h; } wanted;
 } Image;
 
-#include "config.h"
+typedef void (*TransfromFunc)(XcursorImage *out, const XcursorImage *in);
+
+typedef struct {
+	const TransfromFunc *const f;
+	uint len;
+} TransfromSequence;
 
 /*
  * Annotation for functions called atexit()
@@ -102,6 +109,8 @@ static void print_color(uint x, uint y, enum output fmt);
 static void usage(void);
 static Options opt_parse(int argc, const char *argv[]);
 CLEANUP static void cleanup(void);
+/* transformation functions */
+static void square_zoomin(XcursorImage *out, const XcursorImage *in);
 
 /*
  * static globals
@@ -126,6 +135,8 @@ static struct {
 		uint ungrab_kb   : 1;
 	} valid;
 } x11;
+
+#include "config.h"
 
 /*
  * function implementation
@@ -264,7 +275,7 @@ opt_parse(int argc, const char *argv[])
 }
 
 static void
-img_magnify(XcursorImage *out, const XcursorImage *in)
+square_zoomin(XcursorImage *out, const XcursorImage *in)
 {
 	uint x, y;
 
@@ -316,7 +327,7 @@ magnify(const int x, const int y)
 	const int ms = MAG_WINDOW_SIZE / MAG_FACTOR;
 	const int moff = ms / MAG_FACTOR;
 	Image img;
-	XcursorImage *in, *out;
+	XcursorImage *in, *out[2];
 
 	img.x = MAX(0, x - moff);
 	img.y = MAX(0, y - moff);
@@ -340,15 +351,31 @@ magnify(const int x, const int y)
 		x11.valid.cur = 0;
 	}
 
-	out = XcursorImageCreate(MAG_WINDOW_SIZE, MAG_WINDOW_SIZE);
-	if (out != NULL) {
-		out->xhot = out->yhot = MAG_WINDOW_SIZE / 2;
-		img_magnify(out, in);
-		x11.cur = XcursorImageLoadCursor(x11.dpy, out);
+	out[0] = XcursorImageCreate(MAG_WINDOW_SIZE, MAG_WINDOW_SIZE);
+	out[1] = XcursorImageCreate(MAG_WINDOW_SIZE, MAG_WINDOW_SIZE);
+	if (out[0] != NULL && out[1] != NULL) {
+		uint i;
+		void *finalout;
+
+		out[0]->xhot = out[0]->yhot = MAG_WINDOW_SIZE / 2;
+		out[1]->xhot = out[1]->yhot = MAG_WINDOW_SIZE / 2;
+
+		for (i = 0; i < transform.len; ++i) {
+			void *input  = i == 0 ? in :
+			                finalout != out[0] ? out[0] : out[1];
+			void *output = i == 0 ? out[0] :
+			                finalout != out[0] ? out[1] : out[0];
+			transform.f[i](output, input);
+			finalout = output;
+		}
+		x11.cur = XcursorImageLoadCursor(x11.dpy, finalout);
 		x11.valid.cur = 1;
 		XChangeActivePointerGrab(x11.dpy, x11.grab_mask, x11.cur, CurrentTime);
-		XcursorImageDestroy(out);
 	}
+	if (out[0] != NULL)
+		XcursorImageDestroy(out[0]);
+	if (out[1] != NULL)
+		XcursorImageDestroy(out[1]);
 	XcursorImageDestroy(in);
 }
 
