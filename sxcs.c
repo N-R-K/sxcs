@@ -82,11 +82,13 @@ typedef struct {
 typedef struct {
 	XImage *im;
 	uint x, y, w, h;
+	int cx, cy;
 } Image;
 
 typedef struct {
 	Window win;
 	int x, y;
+	int w, h;
 } WinCor;
 
 #include "config.h"
@@ -108,8 +110,8 @@ static void usage(void);
 static Options opt_parse(int argc, const char *argv[]);
 static void img_out_init(Image *img);
 static Bool win_has_property(Window win, Atom atom);
-static WinCor get_win_coordinates(int x, int y);
-static XImage * img_create_from_cor(uint x, uint y, uint w, uint h);
+static WinCor win_at_pos(int x, int y);
+static XImage * img_create_from_cor(Window win, uint x, uint y, uint w, uint h);
 static void img_magnify(Image *out, const Image *in);
 static void magnify(const int x, const int y);
 CLEANUP static void cleanup(void);
@@ -317,7 +319,7 @@ win_has_property(Window win, Atom atom)
 }
 
 static WinCor
-get_win_coordinates(int x, int y)
+win_at_pos(int x, int y)
 {
 	WinCor ret = {0};
 	Window dummy, dummy2, *childs = NULL;
@@ -331,6 +333,8 @@ get_win_coordinates(int x, int y)
 	ret.win = x11.root.win;
 	ret.x = x;
 	ret.y = y;
+	ret.w = x11.root.w;
+	ret.h = x11.root.h;
 	if (XQueryTree(x11.dpy, x11.root.win, &dummy, &dummy2, &childs, &nchild) == 0)
 		error(1, 0, "XQueryTree failed");
 	/* FIXME: this doesn't work on kwin/kde and possibly other DEs as well... */
@@ -347,8 +351,10 @@ get_win_coordinates(int x, int y)
 		    win_has_property(childs[i], wm_state))
 		{
 			ret.win = childs[i];
-			XTranslateCoordinates(x11.dpy, x11.root.win, ret.win,
-			                      x, y, &ret.x, &ret.y, &dummy);
+			ret.x = tmp.x;
+			ret.y = tmp.y;
+			ret.w = tmp.width;
+			ret.h = tmp.height;
 			break;
 		}
 	}
@@ -359,40 +365,44 @@ get_win_coordinates(int x, int y)
 
 /* FIXME: deal with overlapping windows */
 static XImage *
-img_create_from_cor(uint x, uint y, uint w, uint h)
+img_create_from_cor(Window win, uint x, uint y, uint w, uint h)
 {
 	XImage *ret = NULL;
 	XRenderPictureAttributes pattr;
 	Picture pic;
 	int alpha = x11.vfmt->type == PictTypeDirect && x11.vfmt->direct.alphaMask;
-	WinCor dst;
-
-	/* FIXME: this ends up getting the top-right window rather than the window beneath the cursor */
-	dst = get_win_coordinates(x, y);
 
 	pattr.subwindow_mode = IncludeInferiors;
-	pic = XRenderCreatePicture(x11.dpy, dst.win, x11.vfmt, CPSubwindowMode, &pattr);
+	pic = XRenderCreatePicture(x11.dpy, win, x11.vfmt, CPSubwindowMode, &pattr);
 	XRenderComposite(x11.dpy, alpha ? PictOpOver : PictOpSrc, pic, None,
-	                 x11.pixpic, dst.x, dst.y, 0, 0, 0, 0, w, h);
+	                 x11.pixpic, x, y, 0, 0, 0, 0, w, h);
 	ret = XGetImage(x11.dpy, x11.pm, 0, 0, w, h, AllPlanes, ZPixmap);
 	XRenderFreePicture(x11.dpy, pic);
 
 	return ret;
 }
 
-/* FIXME: center properly when clipped */
+/* TODO: the scaling function shouldn't need to worry about clipping */
 static void
 img_magnify(Image *out, const Image *in)
 {
 	uint x, y;
+	float ocy = (float)out->h / 2.0;
+	float ocx = ocy;
+	float icx = (MAG_WINDOW_SIZE / 2.0) / MAG_FACTOR;
+	float icy = icx;
 
 	for (y = 0; y < out->h; ++y) {
 		for (x = 0; x < out->w; ++x) {
-			float oy = (float)y / (float)out->h;
-			float ox = (float)x / (float)out->w;
-			uint iy = oy * in->h;
-			uint ix = ox * in->w;
-			ulong tmp = XGetPixel(in->im, ix, iy);
+			float oy = ((float)y - ocy) / ocy;
+			float ox = ((float)x - ocx) / ocx;
+			int iy = in->cy + (icy * oy);
+			int ix = in->cx + (icx * ox);
+			ulong tmp;
+			if ((iy < 0 || iy >= (int)in->h) || (ix < 0 || ix >= (int)in->w))
+				tmp = 0x0;
+			else
+				tmp = XGetPixel(in->im, ix, iy);
 			XPutPixel(out->im, x, y, tmp);
 		}
 	}
@@ -404,19 +414,28 @@ magnify(const int x, const int y)
 	const int ms = MAG_WINDOW_SIZE / MAG_FACTOR;
 	const int moff = ms / MAG_FACTOR;
 	XWindowChanges ch = {0};
+	WinCor win;
 	Image img;
+	Window dummy;
+	struct { int x, y; } local;
 
-	img.x = MAX(0, x - moff);
-	img.y = MAX(0, y - moff);
-	img.w = MIN(ms, x11.root.w - img.x);
-	img.h = MIN(ms, x11.root.h - img.y);
+	win = win_at_pos(x, y);
 
-	img.im = img_create_from_cor(img.x, img.y, img.w, img.h);
+	img.x = MAX(win.x, x - moff);
+	img.y = MAX(win.y, y - moff);
+	img.w = MIN(ms, (win.w + win.x) - img.x);
+	img.h = MIN(ms, (win.h + win.y) - img.y);
+	img.cx = x - MAX((int)img.x, win.x);
+	img.cy = y - MAX((int)img.y, win.y);
+
+	XTranslateCoordinates(x11.dpy, x11.root.win, win.win, img.x, img.y,
+	                      &local.x, &local.y, &dummy);
+
+	img.im = img_create_from_cor(win.win, local.x, local.y, img.w, img.h);
 	if (img.im == NULL)
 		error(1, 0, "failed to get image");
 	img_magnify(&img_out, &img);
-	XPutImage(x11.dpy, x11.win, x11.gc, img_out.im,
-	          0, 0, 0, 0, img_out.w, img_out.h);
+	XPutImage(x11.dpy, x11.win, x11.gc, img_out.im, 0, 0, 0, 0, img_out.w, img_out.h);
 	XDestroyImage(img.im);
 
 	ch.x = x - MAG_WINDOW_SIZE / 2;
