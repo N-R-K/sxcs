@@ -51,7 +51,7 @@ enum output {
 	OUTPUT_HEX = 1 << 0,
 	OUTPUT_RGB = 1 << 1,
 	OUTPUT_HSL = 1 << 2,
-	OUTPUT_END
+	OUTPUT_ALL = OUTPUT_HEX | OUTPUT_RGB | OUTPUT_HSL
 };
 
 /*
@@ -163,6 +163,7 @@ error(int exit_status, int errnum, const char *fmt, ...)
 	fflush(stdout);
 	fprintf(stderr, "%s: ", PROGNAME);
 	va_start(ap, fmt);
+
 	if (fmt)
 		vfprintf(stderr, fmt, ap);
 	va_end(ap);
@@ -203,7 +204,7 @@ rgb_to_hsl(ulong col)
 			h += 360;
 	}
 
-	ret.h = h;
+	ret.h = (uint)h;
 	ret.l = l;
 	ret.s = s;
 	return ret;
@@ -281,7 +282,7 @@ opt_parse(int argc, const char *argv[])
 	}
 
 	if (ret.fmt == 0)
-		ret.fmt = ~0;
+		ret.fmt = OUTPUT_ALL;
 
 	return ret;
 }
@@ -387,17 +388,17 @@ static void
 img_magnify(Image *out, const Image *in)
 {
 	uint x, y;
-	float ocy = (float)out->h / 2.0;
+	float ocy = (float)out->h / 2.0f;
 	float ocx = ocy;
-	float icx = (MAG_WINDOW_SIZE / 2.0) / MAG_FACTOR;
+	float icx = (MAG_WINDOW_SIZE / 2.0f) / MAG_FACTOR;
 	float icy = icx;
 
 	for (y = 0; y < out->h; ++y) {
 		for (x = 0; x < out->w; ++x) {
 			float oy = ((float)y - ocy) / ocy;
 			float ox = ((float)x - ocx) / ocx;
-			int iy = in->cy + (icy * oy);
-			int ix = in->cx + (icx * ox);
+			int iy = in->cy + (int)(icy * oy);
+			int ix = in->cx + (int)(icx * ox);
 			ulong tmp;
 			if ((iy < 0 || iy >= (int)in->h) || (ix < 0 || ix >= (int)in->w))
 				tmp = 0x0;
@@ -423,8 +424,8 @@ magnify(const int x, const int y)
 
 	img.x = MAX(win.x, x - moff);
 	img.y = MAX(win.y, y - moff);
-	img.w = MIN(ms, (win.w + win.x) - img.x);
-	img.h = MIN(ms, (win.h + win.y) - img.y);
+	img.w = MIN(ms, (win.w + win.x) - (int)img.x);
+	img.h = MIN(ms, (win.h + win.y) - (int)img.y);
 	img.cx = x - MAX((int)img.x, win.x);
 	img.cy = y - MAX((int)img.y, win.y);
 
@@ -624,5 +625,5 @@ main(int argc, const char *argv[])
 		}
 	}
 
-	return 0;
+	return 0; /* unreachable */
 }
