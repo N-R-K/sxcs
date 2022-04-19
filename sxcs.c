@@ -54,7 +54,12 @@ enum output {
 	OUTPUT_END
 };
 
-enum mag {
+/*
+ * TODO: add {top,bottom}{left,right}
+ * TODO: add grid around each pixel
+ * TODO: add circle
+ */
+enum mag_type {
 	MAG_NONE,
 	MAG_CURSOR,
 	MAG_END
@@ -70,7 +75,7 @@ typedef struct {
 typedef struct {
 	uint oneshot           : 1;
 	uint quit_on_keypress  : 1;
-	enum mag mag;
+	enum mag_type mag;
 	enum output fmt;
 } Options;
 
@@ -286,7 +291,7 @@ static void
 img_out_init(Image *img)
 {
 	img->x = img->y = 0;
-	img->w = img->h = MAGNIFY_WINDOW_SIZE;
+	img->w = img->h = MAG_WINDOW_SIZE;
 	/* TODO: use XInitImage instead ? */
 	img->im = XGetImage(x11.dpy, x11.root.win, img->x, img->y,
 	                    img->w, img->h, AllPlanes, ZPixmap);
@@ -315,7 +320,7 @@ static WinCor
 get_win_coordinates(int x, int y)
 {
 	WinCor ret = {0};
-	Window dummy, *childs = NULL;
+	Window dummy, dummy2, *childs = NULL;
 	int i;
 	uint nchild;
 	static Atom wm_state = None;
@@ -326,7 +331,7 @@ get_win_coordinates(int x, int y)
 	ret.win = x11.root.win;
 	ret.x = x;
 	ret.y = y;
-	if (XQueryTree(x11.dpy, x11.root.win, &dummy, &dummy, &childs, &nchild) == 0)
+	if (XQueryTree(x11.dpy, x11.root.win, &dummy, &dummy2, &childs, &nchild) == 0)
 		error(1, 0, "XQueryTree failed");
 	/* FIXME: this doesn't work on kwin/kde and possibly other DEs as well... */
 	for (i = (int)nchild - 1; i >= 0; --i) {
@@ -362,6 +367,7 @@ img_create_from_cor(uint x, uint y, uint w, uint h)
 	int alpha = x11.vfmt->type == PictTypeDirect && x11.vfmt->direct.alphaMask;
 	WinCor dst;
 
+	/* FIXME: this ends up getting the top-right window rather than the window beneath the cursor */
 	dst = get_win_coordinates(x, y);
 
 	pattr.subwindow_mode = IncludeInferiors;
@@ -392,15 +398,11 @@ img_magnify(Image *out, const Image *in)
 	}
 }
 
-/*
- * TODO: draw grid around each pixel
- * TODO: add circle output
- */
 static void
 magnify(const int x, const int y)
 {
-	const int ms = MAGNIFY_WINDOW_SIZE / ZOOM_FACTOR;
-	const int moff = ms / ZOOM_FACTOR;
+	const int ms = MAG_WINDOW_SIZE / MAG_FACTOR;
+	const int moff = ms / MAG_FACTOR;
 	XWindowChanges ch = {0};
 	Image img;
 
@@ -417,8 +419,8 @@ magnify(const int x, const int y)
 	          0, 0, 0, 0, img_out.w, img_out.h);
 	XDestroyImage(img.im);
 
-	ch.x = x - MAGNIFY_WINDOW_SIZE / 2;
-	ch.y = y - MAGNIFY_WINDOW_SIZE / 2;
+	ch.x = x - MAG_WINDOW_SIZE / 2;
+	ch.y = y - MAG_WINDOW_SIZE / 2;
 	XConfigureWindow(x11.dpy, x11.win, CWX | CWY, &ch);
 }
 
@@ -484,7 +486,7 @@ main(int argc, const char *argv[])
 		XSetWindowAttributes attr;
 		ulong attr_mask = 0;
 
-		x11.w = x11.h = MAGNIFY_WINDOW_SIZE;
+		x11.w = x11.h = MAG_WINDOW_SIZE;
 		x11.screen = DefaultScreen(x11.dpy);
 
 		x11.vis = DefaultVisual(x11.dpy, x11.screen);
@@ -516,6 +518,9 @@ main(int argc, const char *argv[])
 		attr.background_pixel = BlackPixel(x11.dpy, x11.screen);
 		attr_mask |= CWBackPixel;
 
+		/* TODO: what's this XCompositeGetOverlayWindow all about?
+		 * maybe i should use that instead.
+		 */
 		x11.win = XCreateWindow(x11.dpy, x11.root.win,
 		                        -1000, -1000, x11.w, x11.h, 0, x11.depth,
 		                        InputOutput, x11.vis, attr_mask, &attr);
@@ -531,8 +536,7 @@ main(int argc, const char *argv[])
 		x11.vfmt = XRenderFindVisualFormat(x11.dpy, x11.vis); /* TODO: free this? */
 		x11.sfmt = XRenderFindStandardFormat(x11.dpy, PictStandardARGB32); /* TODO: same as above */
 		x11.pm = XCreatePixmap(x11.dpy, x11.root.win,
-		                       MAGNIFY_WINDOW_SIZE, MAGNIFY_WINDOW_SIZE,
-		                       32);
+		                       MAG_WINDOW_SIZE, MAG_WINDOW_SIZE, 32);
 		x11.valid.pm = 1;
 
 		if (x11.vfmt == NULL || x11.sfmt == NULL)
