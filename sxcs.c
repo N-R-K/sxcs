@@ -32,6 +32,7 @@
 #define ARRLEN(X)        (sizeof(X) / sizeof((X)[0]))
 #define MAX(A, B)        ((A) > (B) ? (A) : (B))
 #define MIN(A, B)        ((A) < (B) ? (A) : (B))
+#define UNUSED(X)        ((void)(X))
 
 #define R(X)             (((unsigned long)(X) & 0xFF0000) >> 16)
 #define G(X)             (((unsigned long)(X) & 0x00FF00) >>  8)
@@ -111,6 +112,7 @@ static Options opt_parse(int argc, const char *argv[]);
 CLEANUP static void cleanup(void);
 /* transformation functions */
 static void square_zoomin(XcursorImage *out, const XcursorImage *in);
+static void square_border(XcursorImage *out, const XcursorImage *in);
 
 /*
  * static globals
@@ -291,6 +293,27 @@ square_zoomin(XcursorImage *out, const XcursorImage *in)
 	}
 }
 
+static void
+square_border(XcursorImage *out, const XcursorImage *in)
+{
+	uint x, y;
+	const uint b = MAG_BORDER_WIDTH;
+
+	if (MAG_BORDER_WIDTH <= 0)
+		return;
+
+	UNUSED(in);
+	for (y = 0; y < out->height; ++y) {
+		for (x = 0; x < out->width; ++x) {
+			if ((y < b || y + b >= out->height) ||
+			    (x < b || x + b >= out->width))
+			{
+				out->pixels[y * out->height + x] = 0xffff0000;
+			}
+		}
+	}
+}
+
 static XcursorImage *
 img_to_xcurimg(const Image *img)
 {
@@ -372,6 +395,7 @@ magnify(const int x, const int y)
 		x11.valid.cur = 1;
 		XChangeActivePointerGrab(x11.dpy, x11.grab_mask, x11.cur, CurrentTime);
 	}
+
 	if (out[0] != NULL)
 		XcursorImageDestroy(out[0]);
 	if (out[1] != NULL)
