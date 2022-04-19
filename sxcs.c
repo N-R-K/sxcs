@@ -23,8 +23,6 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/cursorfont.h>
-#include <X11/extensions/Xrender.h>
-#include <X11/extensions/Xcomposite.h>
 
 /*
  * macros
@@ -85,12 +83,6 @@ typedef struct {
 	int cx, cy;
 } Image;
 
-typedef struct {
-	Window win;
-	int x, y;
-	int w, h;
-} WinCor;
-
 #include "config.h"
 
 /*
@@ -108,12 +100,6 @@ static HSL rgb_to_hsl(ulong col);
 static void print_color(uint x, uint y, enum output fmt);
 static void usage(void);
 static Options opt_parse(int argc, const char *argv[]);
-static void img_out_init(Image *img);
-static Bool win_has_property(Window win, Atom atom);
-static WinCor win_at_pos(int x, int y);
-static XImage * img_create_from_cor(Window win, uint x, uint y, uint w, uint h);
-static void img_magnify(Image *out, const Image *in);
-static void magnify(const int x, const int y);
 CLEANUP static void cleanup(void);
 
 /*
@@ -123,33 +109,21 @@ CLEANUP static void cleanup(void);
 static struct {
 	Display *dpy;
 	Visual *vis;
-	Window win;
 	Cursor cur;
-	GC gc;
 	Colormap cmap;
 	int screen;
 	int depth;
 	uint w, h;
-	Pixmap pm;
-	Picture pixpic;
-	XRenderPictFormat *vfmt, *sfmt;
 	struct {
 		Window win;
 		uint w, h;
 	} root;
 	struct {
-		uint win         : 1;
 		uint cur         : 1;
-		uint pm          : 1;
-		uint pixpic      : 1;
-		uint gc          : 1;
 		uint ungrab_ptr  : 1;
 		uint ungrab_kb   : 1;
-		uint unredirect  : 1;
 	} valid;
 } x11;
-
-static Image img_out;
 
 /*
  * function implementation
@@ -287,102 +261,7 @@ opt_parse(int argc, const char *argv[])
 	return ret;
 }
 
-/* this feels like a retarded thing to do...
- * do i really need an XImage?
- */
-static void
-img_out_init(Image *img)
-{
-	img->x = img->y = 0;
-	img->w = img->h = MAG_WINDOW_SIZE;
-	/* TODO: use XInitImage instead ? */
-	img->im = XGetImage(x11.dpy, x11.root.win, img->x, img->y,
-	                    img->w, img->h, AllPlanes, ZPixmap);
-	if (img->im == NULL)
-		error(1, 0, "failed to get image");
-}
-
-static Bool
-win_has_property(Window win, Atom atom)
-{
-	Atom type_ret = None;
-	uchar *prop_ret = NULL;
-	int format_ret;
-	ulong bytes_after, num_ret;
-
-	XGetWindowProperty(x11.dpy, win, atom, 0, 0, False, AnyPropertyType,
-	                   &type_ret, &format_ret, &num_ret,
-	                   &bytes_after, &prop_ret);
-	if (prop_ret != NULL)
-		XFree(prop_ret);
-
-	return type_ret != None;
-}
-
-static WinCor
-win_at_pos(int x, int y)
-{
-	WinCor ret = {0};
-	Window dummy, dummy2, *childs = NULL;
-	int i;
-	uint nchild;
-	static Atom wm_state = None;
-
-	if (wm_state == None)
-		wm_state = XInternAtom(x11.dpy, "WM_STATE", False);
-
-	ret.win = x11.root.win;
-	ret.x = x;
-	ret.y = y;
-	ret.w = x11.root.w;
-	ret.h = x11.root.h;
-	if (XQueryTree(x11.dpy, x11.root.win, &dummy, &dummy2, &childs, &nchild) == 0)
-		error(1, 0, "XQueryTree failed");
-	/* FIXME: this doesn't work on kwin/kde and possibly other DEs as well... */
-	for (i = (int)nchild - 1; i >= 0; --i) {
-		XWindowAttributes tmp;
-
-		if (childs[i] == x11.win)
-			continue;
-
-		XGetWindowAttributes(x11.dpy, childs[i], &tmp);
-		if ((x > tmp.x && x < tmp.x + tmp.width) &&
-		    (y > tmp.y && y < tmp.y + tmp.height) &&
-		    tmp.map_state == IsViewable && tmp.class == InputOutput &&
-		    win_has_property(childs[i], wm_state))
-		{
-			ret.win = childs[i];
-			ret.x = tmp.x;
-			ret.y = tmp.y;
-			ret.w = tmp.width;
-			ret.h = tmp.height;
-			break;
-		}
-	}
-	XFree(childs);
-
-	return ret;
-}
-
-/* FIXME: deal with overlapping windows */
-static XImage *
-img_create_from_cor(Window win, uint x, uint y, uint w, uint h)
-{
-	XImage *ret = NULL;
-	XRenderPictureAttributes pattr;
-	Picture pic;
-	int alpha = x11.vfmt->type == PictTypeDirect && x11.vfmt->direct.alphaMask;
-
-	pattr.subwindow_mode = IncludeInferiors;
-	pic = XRenderCreatePicture(x11.dpy, win, x11.vfmt, CPSubwindowMode, &pattr);
-	XRenderComposite(x11.dpy, alpha ? PictOpOver : PictOpSrc, pic, None,
-	                 x11.pixpic, x, y, 0, 0, 0, 0, w, h);
-	ret = XGetImage(x11.dpy, x11.pm, 0, 0, w, h, AllPlanes, ZPixmap);
-	XRenderFreePicture(x11.dpy, pic);
-
-	return ret;
-}
-
+#if 0
 /* TODO: the scaling function shouldn't need to worry about clipping */
 static void
 img_magnify(Image *out, const Image *in)
@@ -443,28 +322,19 @@ magnify(const int x, const int y)
 	ch.y = y - MAG_WINDOW_SIZE / 2;
 	XConfigureWindow(x11.dpy, x11.win, CWX | CWY, &ch);
 }
+#else
+static void magnify(int x, int y) { (void)x; (void)y; }
+#endif
 
 CLEANUP static void
 cleanup(void)
 {
-	if (img_out.im != NULL)
-		XDestroyImage(img_out.im);
-	if (x11.valid.unredirect)
-		XCompositeUnredirectSubwindows(x11.dpy, x11.root.win, CompositeRedirectAutomatic);
 	if (x11.valid.ungrab_kb)
 		XUngrabKeyboard(x11.dpy, CurrentTime);
 	if (x11.valid.ungrab_ptr)
 		XUngrabPointer(x11.dpy, CurrentTime);
-	if (x11.valid.gc)
-		XFreeGC(x11.dpy, x11.gc);
-	if (x11.valid.pixpic)
-		XRenderFreePicture(x11.dpy, x11.pixpic);
-	if (x11.valid.pm)
-		XFreePixmap(x11.dpy, x11.pm);
 	if (x11.valid.cur)
 		XFreeCursor(x11.dpy, x11.cur);
-	if (x11.valid.win)
-		XDestroyWindow(x11.dpy, x11.win);
 	if (x11.dpy != NULL)
 		XCloseDisplay(x11.dpy);
 }
@@ -488,86 +358,22 @@ main(int argc, const char *argv[])
 		XGetWindowAttributes(x11.dpy, x11.root.win, &tmp);
 		x11.root.h = tmp.height;
 		x11.root.w = tmp.width;
-	}
-
-	if (opt.mag) {
-		int major, minor;
-
-		major = 0; minor = 2;
-		if (!XCompositeQueryVersion(x11.dpy, &major, &minor))
-			error(1, 0, "need XComposite 0.2 or above");
-
-		major = 0; minor = 0;
-		if (!XRenderQueryVersion(x11.dpy, &major, &minor))
-			error(1, 0, "need XRender");
-	}
-
-	if (opt.mag) {
-		XSetWindowAttributes attr;
-		ulong attr_mask = 0;
-
-		x11.w = x11.h = MAG_WINDOW_SIZE;
 		x11.screen = DefaultScreen(x11.dpy);
-
 		x11.vis = DefaultVisual(x11.dpy, x11.screen);
 		x11.depth = DefaultDepth(x11.dpy, x11.screen);
-
-		{
-			XVisualInfo q = {0}, *r;
-			int d, dummy;
-
-			q.visualid = XVisualIDFromVisual(x11.vis);
-			if ((r = XGetVisualInfo(x11.dpy, VisualIDMask, &q, &dummy)) == NULL)
-				error(1, 0, "failed to obtain visual info");
-			d = r->depth; /* cppcheck-suppress nullPointerRedundantCheck */
-			XFree(r);
-			if (d < 24)
-				error(1, 0, "truecolor not supported");
-		}
-
-		x11.cmap = XCreateColormap(x11.dpy, x11.root.win, x11.vis, AllocNone);
-		attr.colormap = x11.cmap;
-		attr_mask |= CWColormap;
-
-		attr.event_mask = ExposureMask | KeyPressMask;
-		attr_mask |= CWEventMask;
-
-		attr.override_redirect = True;
-		attr_mask |= CWOverrideRedirect;
-
-		attr.background_pixel = BlackPixel(x11.dpy, x11.screen);
-		attr_mask |= CWBackPixel;
-
-		/* TODO: what's this XCompositeGetOverlayWindow all about?
-		 * maybe i should use that instead.
-		 */
-		x11.win = XCreateWindow(x11.dpy, x11.root.win,
-		                        -1000, -1000, x11.w, x11.h, 0, x11.depth,
-		                        InputOutput, x11.vis, attr_mask, &attr);
-		x11.valid.win = 1;
-
-		x11.gc = XCreateGC(x11.dpy, x11.win, 0, None);
-		x11.valid.gc = 1;
-
-		XMapRaised(x11.dpy, x11.win);
 	}
 
-	if (opt.mag) {
-		x11.vfmt = XRenderFindVisualFormat(x11.dpy, x11.vis); /* TODO: free this? */
-		x11.sfmt = XRenderFindStandardFormat(x11.dpy, PictStandardARGB32); /* TODO: same as above */
-		x11.pm = XCreatePixmap(x11.dpy, x11.root.win,
-		                       MAG_WINDOW_SIZE, MAG_WINDOW_SIZE, 32);
-		x11.valid.pm = 1;
+	{
+		XVisualInfo q = {0}, *r;
+		int d, dummy;
 
-		if (x11.vfmt == NULL || x11.sfmt == NULL)
-			error(1, 0, "couldn't find format");
-
-		x11.pixpic = XRenderCreatePicture(x11.dpy, x11.pm, x11.sfmt, None, NULL); /* TODO: error check? */
-		x11.valid.pixpic = 1;
-
-		XCompositeRedirectSubwindows(x11.dpy, x11.root.win, CompositeRedirectAutomatic);
-		x11.valid.unredirect = 1;
-		img_out_init(&img_out);
+		q.visualid = XVisualIDFromVisual(x11.vis);
+		if ((r = XGetVisualInfo(x11.dpy, VisualIDMask, &q, &dummy)) == NULL)
+			error(1, 0, "failed to obtain visual info");
+		d = r->depth; /* cppcheck-suppress nullPointerRedundantCheck */
+		XFree(r);
+		if (d < 24)
+			error(1, 0, "truecolor not supported");
 	}
 
 	x11.cur = XCreateFontCursor(x11.dpy, XC_tcross);
