@@ -1,7 +1,6 @@
 # debug
 _DFLAGS      ?= -g -fsanitize=address,undefined,leak
 # optimizations
-# TODO: make this "portable." currently, lot of the flags are gcc specific
 O_BASIC       = -pipe -march=native -Ofast
 O_LTO         = -flto=auto -fuse-linker-plugin
 O_GRAPHITE    = -fgraphite-identity -floop-nest-optimize
@@ -18,13 +17,14 @@ OFLAGS = $(O_BASIC) $(O_LTO) $(O_GRAPHITE) $(O_IPAPTA) \
 # warnings
 WGCC   = -Wlogical-op
 WGCC  += -fanalyzer
-# WCLANG = -Weverything
+WCLANG = -Weverything
 WFLAGS = -std=c89 -Wall -Wextra -Wpedantic \
          -Wshadow -Wvla -Wpointer-arith -Wwrite-strings -Wfloat-equal \
          -Wcast-align -Wcast-qual -Wbad-function-cast \
          -Wstrict-overflow=2 -Wunreachable-code -Wformat=2 \
          -Wundef -Wstrict-prototypes -Wmissing-declarations -Wmissing-prototypes \
-         $(WGCC) $(WCLANG) \
+         $$(test "$(CC)" = "gcc" && printf "%s " $(WGCC)) \
+         $$(test "$(CC)" = "clang" && printf "%s " $(WCLANG)) \
 
 # CPPCHECK
 CPPCHECK      = $$(command -v cppcheck 2>/dev/null || printf ":")
@@ -37,8 +37,8 @@ CPPCHECK_ARGS = --std=c89 --quiet --inline-suppr \
 X11_LIBS  = -lX11 -lXrender -lXcomposite
 
 # Cool stuff
-CC       ?= gcc
-CFLAGS   ?= $(OFLAGS)
+CC       ?= cc
+CFLAGS   ?= $$(test "$(CC)" = "gcc" && printf "%s " $(OFLAGS))
 CFLAGS   += $(WFLAGS) $(DFLAGS)
 CPPFLAGS  = $(DEBUG_CPP) $(PROGNAME)
 LDFLAGS  ?= $(CFLAGS)

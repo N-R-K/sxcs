@@ -7,7 +7,8 @@ Color picker for X11, also has zoom feature. Outputs TAB separated `hex`,
 
 ## Usage
 
-Button1 will select and print the color, any other mouse button will quit sxcs.
+<kbd>Button1</kbd> will select and print the color,
+any other mouse button will quit sxcs.
 
 Output format can be chosen via cli argument.
 Zoom/magnification can be disabled via `--mag-none`.
@@ -36,13 +37,9 @@ $ sxcs --help
   * Xrender
   * XComposite
 
-***NOTE***: Makefile has some GCC specific optimization flags. Remove them from
-`OFLAGS` if you're planning to use some other compiler.
-
 ```console
 $ make
-# or to override OFLAGS...
-$ make CC=cc OFLAGS="-march=native -O2"
+# sudo make install
 ```
 
 ## TODOs
