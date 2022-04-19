@@ -23,6 +23,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/cursorfont.h>
+#include <X11/Xcursor/Xcursor.h>
 
 /*
  * macros
@@ -53,7 +54,6 @@ enum output {
 };
 
 /*
- * TODO: add {top,bottom}{left,right}
  * TODO: add grid around each pixel
  * TODO: add circle
  */
@@ -81,6 +81,7 @@ typedef struct {
 	XImage *im;
 	uint x, y, w, h;
 	int cx, cy;
+	struct { uint w, h; } wanted;
 } Image;
 
 #include "config.h"
@@ -114,6 +115,7 @@ static struct {
 	int screen;
 	int depth;
 	uint w, h;
+	uint grab_mask;
 	struct {
 		Window win;
 		uint w, h;
@@ -261,31 +263,51 @@ opt_parse(int argc, const char *argv[])
 	return ret;
 }
 
-#if 0
-/* TODO: the scaling function shouldn't need to worry about clipping */
 static void
-img_magnify(Image *out, const Image *in)
+img_magnify(XcursorImage *out, const XcursorImage *in)
 {
 	uint x, y;
-	float ocy = (float)out->h / 2.0f;
-	float ocx = ocy;
-	float icx = (MAG_WINDOW_SIZE / 2.0f) / MAG_FACTOR;
-	float icy = icx;
 
-	for (y = 0; y < out->h; ++y) {
-		for (x = 0; x < out->w; ++x) {
-			float oy = ((float)y - ocy) / ocy;
-			float ox = ((float)x - ocx) / ocx;
-			int iy = in->cy + (int)(icy * oy);
-			int ix = in->cx + (int)(icx * ox);
-			ulong tmp;
-			if ((iy < 0 || iy >= (int)in->h) || (ix < 0 || ix >= (int)in->w))
-				tmp = 0x0;
-			else
-				tmp = XGetPixel(in->im, ix, iy);
-			XPutPixel(out->im, x, y, tmp);
+	for (y = 0; y < out->height; ++y) {
+		for (x = 0; x < out->width; ++x) {
+			float ox = (float)x / (float)out->width;
+			float oy = (float)y / (float)out->height;
+			uint ix = (float)in->width  * ox;
+			uint iy = (float)in->height * oy;
+			ulong tmp = in->pixels[iy * in->height + ix];
+			out->pixels[y * out->height + x] = tmp | 0xff000000;
 		}
 	}
+}
+
+static XcursorImage *
+img_to_xcurimg(const Image *img)
+{
+	uint x, y;
+	XcursorImage *ret;
+	float cy = (float)img->wanted.h / 2.0f;
+	float cx = cy;
+
+	ret = XcursorImageCreate(img->wanted.w, img->wanted.h);
+	if (ret == NULL)
+		return ret;
+
+	for (y = 0; y < img->wanted.h; ++y) {
+		for (x = 0; x < img->wanted.w; ++x) {
+			float oy = ((float)y - cy) / cy;
+			float ox = ((float)x - cx) / cx;
+			int iy = img->cy + (int)(cy * oy);
+			int ix = img->cx + (int)(cx * ox);
+			ulong tmp;
+			if ((iy < 0 || iy >= (int)img->h) || (ix < 0 || ix >= (int)img->w))
+				tmp = 0xffffffff;
+			else
+				tmp = XGetPixel(img->im, ix, iy) | 0xff000000;
+			ret->pixels[y * ret->width + x] = tmp;
+		}
+	}
+
+	return ret;
 }
 
 static void
@@ -293,38 +315,42 @@ magnify(const int x, const int y)
 {
 	const int ms = MAG_WINDOW_SIZE / MAG_FACTOR;
 	const int moff = ms / MAG_FACTOR;
-	XWindowChanges ch = {0};
-	WinCor win;
 	Image img;
-	Window dummy;
-	struct { int x, y; } local;
+	XcursorImage *in, *out;
 
-	win = win_at_pos(x, y);
-
-	img.x = MAX(win.x, x - moff);
-	img.y = MAX(win.y, y - moff);
-	img.w = MIN(ms, (win.w + win.x) - (int)img.x);
-	img.h = MIN(ms, (win.h + win.y) - (int)img.y);
-	img.cx = x - MAX((int)img.x, win.x);
-	img.cy = y - MAX((int)img.y, win.y);
-
-	XTranslateCoordinates(x11.dpy, x11.root.win, win.win, img.x, img.y,
-	                      &local.x, &local.y, &dummy);
-
-	img.im = img_create_from_cor(win.win, local.x, local.y, img.w, img.h);
+	img.x = MAX(0, x - moff);
+	img.y = MAX(0, y - moff);
+	img.w = MIN(ms, x11.root.w - img.x);
+	img.h = MIN(ms, x11.root.h - img.y);
+	img.cx = x - img.x;
+	img.cy = y - img.y;
+	img.wanted.w = img.wanted.h = ms;
+	img.im = XGetImage(x11.dpy, x11.root.win, img.x, img.y,
+	                   img.w, img.h, AllPlanes, ZPixmap);
 	if (img.im == NULL)
 		error(1, 0, "failed to get image");
-	img_magnify(&img_out, &img);
-	XPutImage(x11.dpy, x11.win, x11.gc, img_out.im, 0, 0, 0, 0, img_out.w, img_out.h);
+	in = img_to_xcurimg(&img);
 	XDestroyImage(img.im);
 
-	ch.x = x - MAG_WINDOW_SIZE / 2;
-	ch.y = y - MAG_WINDOW_SIZE / 2;
-	XConfigureWindow(x11.dpy, x11.win, CWX | CWY, &ch);
+	if (in == NULL)
+		error(1, 0, "failed to create image");
+
+	if (x11.valid.cur) {
+		XFreeCursor(x11.dpy, x11.cur);
+		x11.valid.cur = 0;
+	}
+
+	out = XcursorImageCreate(MAG_WINDOW_SIZE, MAG_WINDOW_SIZE);
+	if (out != NULL) {
+		out->xhot = out->yhot = MAG_WINDOW_SIZE / 2;
+		img_magnify(out, in);
+		x11.cur = XcursorImageLoadCursor(x11.dpy, out);
+		x11.valid.cur = 1;
+		XChangeActivePointerGrab(x11.dpy, x11.grab_mask, x11.cur, CurrentTime);
+		XcursorImageDestroy(out);
+	}
+	XcursorImageDestroy(in);
 }
-#else
-static void magnify(int x, int y) { (void)x; (void)y; }
-#endif
 
 CLEANUP static void
 cleanup(void)
@@ -361,6 +387,7 @@ main(int argc, const char *argv[])
 		x11.screen = DefaultScreen(x11.dpy);
 		x11.vis = DefaultVisual(x11.dpy, x11.screen);
 		x11.depth = DefaultDepth(x11.dpy, x11.screen);
+		x11.cmap = DefaultColormap(x11.dpy, x11.screen);
 	}
 
 	{
@@ -376,12 +403,14 @@ main(int argc, const char *argv[])
 			error(1, 0, "truecolor not supported");
 	}
 
-	x11.cur = XCreateFontCursor(x11.dpy, XC_tcross);
-	x11.valid.cur = 1;
+	if (!opt.mag) {
+		x11.cur = XCreateFontCursor(x11.dpy, XC_tcross);
+		x11.valid.cur = 1;
+	}
 
+	x11.grab_mask = ButtonPressMask | PointerMotionMask;
 	x11.valid.ungrab_ptr = XGrabPointer(x11.dpy, x11.root.win, 0,
-	                                    ButtonPressMask | PointerMotionMask,
-	                                    GrabModeAsync, GrabModeAsync,
+	                                    x11.grab_mask, GrabModeAsync, GrabModeAsync,
 	                                    x11.root.win, x11.cur,
 	                                    CurrentTime) == GrabSuccess;
 	if (!x11.valid.ungrab_ptr)

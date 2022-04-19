@@ -35,7 +35,7 @@ CPPCHECK_ARGS = --std=c89 --quiet --inline-suppr \
                 --suppress=syntaxError --suppress=internalAstError \
 
 # libs
-X11_LIBS  = -lX11
+X11_LIBS  = -lX11 -lXcursor
 
 # Cool stuff
 CC       ?= cc

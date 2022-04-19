@@ -34,8 +34,7 @@ $ sxcs --help
 - Runtime Dependencies:
   * C standard library
   * Xlib
-  * Xrender
-  * XComposite
+  * Xcursor
 
 ```console
 $ make
