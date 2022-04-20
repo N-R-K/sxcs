@@ -366,8 +366,8 @@ static void
 circle(XcursorImage *img)
 {
 	int x, y;
-	int r = CIRCLE_RADIUS;
-	int br = r - CIRCLE_WIDTH;
+	int r = (int)CIRCLE_RADIUS;
+	int br = r - (int)CIRCLE_WIDTH;
 	int c = img->height / 2;
 
 	for (y = 0; y < (int)img->height; ++y) {
@@ -378,11 +378,11 @@ circle(XcursorImage *img)
 			if ((tx * tx) + (ty * ty) <= (r * r) &&
 			    (tx * tx) + (ty * ty) > (br * br))
 			{
-				img->pixels[y * img->height + x] = CIRCLE_COLOR;
+				img->pixels[y * (int)img->height + x] = CIRCLE_COLOR;
 			} else if (CIRCLE_TRANSPARENT_OUTSIDE &&
 			           (tx * tx) + (ty * ty) > (r * r))
 			{
-				img->pixels[y * img->height + x] = 0x0;
+				img->pixels[y * (int)img->height + x] = 0x0;
 			}
 		}
 	}
