@@ -147,6 +147,7 @@ static XcursorImage *cursor_img;
 
 static volatile sig_atomic_t sig_recieved;
 
+/* TODO: comment config.h more thoroughly */
 #include "config.h"
 
 /*
@@ -326,17 +327,17 @@ square_border(XcursorImage *img)
 	}
 }
 
-/* TODO: make width configureable */
 static void
 crosshair_square(XcursorImage *img)
 {
 	uint x, y;
 	const uint c = (img->height / 2);
 	const uint b = CROSSHAIR_SQUARE_SIZE;
+	const uint bw = CROSSHAIR_SQUARE_BORDER_WIDTH;
 
 	for (y = c - b; y <= c + b; ++y) {
 		for (x = c - b; x <= c + b; ++x) {
-			if (DIFF(x, c) > b / 2 || DIFF(y, c) > b / 2)
+			if (DIFF(x, c) > b - bw || DIFF(y, c) > b - bw)
 				img->pixels[y * img->height + x] = CROSSHAIR_SQUARE_COLOR;
 		}
 	}
