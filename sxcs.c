@@ -215,6 +215,7 @@ print_color(uint x, uint y, enum output fmt)
 	XImage *im;
 	ulong pix;
 
+	/* TODO: maybe just get the pixel from cursor_img if maginfier is on? */
 	im = XGetImage(x11.dpy, x11.root.win, x, y, 1, 1, AllPlanes, ZPixmap);
 	if (im == NULL)
 		error(1, 0, "failed to get image");
@@ -312,7 +313,6 @@ nearest_neighbour(XcursorImage *out, const Image *in)
 	}
 }
 
-/* TODO: allow configuring color */
 static void
 square_border(XcursorImage *img)
 {
@@ -324,7 +324,7 @@ square_border(XcursorImage *img)
 			if ((y < b || y + b >= img->height) ||
 			    (x < b || x + b >= img->width))
 			{
-				img->pixels[y * img->height + x] = 0xffff0000;
+				img->pixels[y * img->height + x] = SQUARE_BORDER_COLOR;
 			}
 		}
 	}
@@ -341,7 +341,7 @@ crosshair_square(XcursorImage *img)
 	for (y = c - b + 1; y < c + b; ++y) {
 		for (x = c - b + 1; x < c + b; ++x) {
 			if (DIFF(x, c) > b / 2 || DIFF(y, c) > b / 2)
-				img->pixels[y * img->height + x] = 0xffff0000;
+				img->pixels[y * img->height + x] = CROSSHAIR_SQUARE_COLOR;
 		}
 	}
 }
