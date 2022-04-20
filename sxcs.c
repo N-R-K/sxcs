@@ -108,6 +108,7 @@ static void magnify(const int x, const int y);
 static void sighandler(int sig);
 CLEANUP static void cleanup(void);
 /* TODO: document this shit */
+/* TODO: add bicubic scaling */
 /* zoom functions */
 static void nearest_neighbour(XcursorImage *out, const Image *in);
 /* TODO: allow picking sequences via cli arguments */
