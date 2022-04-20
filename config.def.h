@@ -5,8 +5,10 @@ enum {
 	MAG_END_END
 };
 
-static const TransfromFunc sq_zoom[] = {
-	square_zoomin, square_border, crosshair
+static ZoomFunc zoom_func = nearest_neighbour;
+
+static const FilterFunc sq_zoom[] = {
+	square_border, crosshair
 };
 
-static TransfromSequence transform = TRANSFORM_SEQ_FROM_FUNC_ARRAY(sq_zoom);
+static FilterSeq filter = FILTER_SEQ_FROM_ARRAY(sq_zoom);

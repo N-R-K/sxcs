@@ -39,7 +39,7 @@
 #define G(X)             (((unsigned long)(X) & 0x00FF00) >>  8)
 #define B(X)             (((unsigned long)(X) & 0x0000FF) >>  0)
 
-#define TRANSFORM_SEQ_FROM_FUNC_ARRAY(X)  { X, ARRLEN(X) }
+#define FILTER_SEQ_FROM_ARRAY(X)  { X, ARRLEN(X) }
 
 /*
  * types
@@ -90,12 +90,13 @@ typedef struct {
 	struct { uint w, h; } wanted;
 } Image;
 
-typedef void (*TransfromFunc)(XcursorImage *out, const XcursorImage *in);
+typedef void (*FilterFunc)(XcursorImage *img);
+typedef void (*ZoomFunc)(XcursorImage *out, const Image *in);
 
 typedef struct {
-	const TransfromFunc *const f;
+	const FilterFunc *const f;
 	uint len;
-} TransfromSequence;
+} FilterSeq;
 
 /*
  * Annotation for functions called atexit()
@@ -113,10 +114,11 @@ static void print_color(uint x, uint y, enum output fmt);
 static void usage(void);
 static Options opt_parse(int argc, const char *argv[]);
 CLEANUP static void cleanup(void);
-/* transformation functions */
-static void square_zoomin(XcursorImage *out, const XcursorImage *in);
-static void square_border(XcursorImage *out, const XcursorImage *in);
-static void crosshair(XcursorImage *out, const XcursorImage *in);
+/* zoom functions */
+static void nearest_neighbour(XcursorImage *out, const Image *in);
+/* filter functions */
+static void square_border(XcursorImage *img);
+static void crosshair(XcursorImage *img);
 
 /*
  * static globals
@@ -281,51 +283,58 @@ opt_parse(int argc, const char *argv[])
 }
 
 static void
-square_zoomin(XcursorImage *out, const XcursorImage *in)
+nearest_neighbour(XcursorImage *out, const Image *in)
 {
 	uint x, y;
+	float ocy = (float)out->height / 2.0f;
+	float ocx = (float)out->width / 2.0f;
+	float icy = (float)in->wanted.h / 2.0f;
+	float icx = (float)in->wanted.w / 2.0f;
 
 	for (y = 0; y < out->height; ++y) {
 		for (x = 0; x < out->width; ++x) {
-			float ox = (float)x / (float)out->width;
-			float oy = (float)y / (float)out->height;
-			uint ix = (float)in->width  * ox;
-			uint iy = (float)in->height * oy;
-			ulong tmp = in->pixels[iy * in->height + ix];
-			out->pixels[y * out->height + x] = tmp | 0xff000000;
+			float oy = ((float)y - ocy) / ocy;
+			float ox = ((float)x - ocx) / ocx;
+			int iy = in->cy + (int)(icy * oy);
+			int ix = in->cx + (int)(icx * ox);
+			ulong tmp;
+
+			if ((iy < 0 || iy >= (int)in->h) || (ix < 0 || ix >= (int)in->w))
+				tmp = 0xff000000;
+			else
+				tmp = XGetPixel(in->im, ix, iy) | 0xff000000;
+			out->pixels[y * out->height + x] = tmp;
 		}
 	}
 }
 
 /* TODO: allow configuring color */
 static void
-square_border(XcursorImage *out, const XcursorImage *in)
+square_border(XcursorImage *img)
 {
 	uint x, y;
 	const uint b = MAG_BORDER_WIDTH;
-	UNUSED(in);
 
 	if (MAG_BORDER_WIDTH <= 0)
 		return;
 
-	for (y = 0; y < out->height; ++y) {
-		for (x = 0; x < out->width; ++x) {
-			if ((y < b || y + b >= out->height) ||
-			    (x < b || x + b >= out->width))
+	for (y = 0; y < img->height; ++y) {
+		for (x = 0; x < img->width; ++x) {
+			if ((y < b || y + b >= img->height) ||
+			    (x < b || x + b >= img->width))
 			{
-				out->pixels[y * out->height + x] = 0xffff0000;
+				img->pixels[y * img->height + x] = 0xffff0000;
 			}
 		}
 	}
 }
 
 static void
-crosshair(XcursorImage *out, const XcursorImage *in)
+crosshair(XcursorImage *img)
 {
 	uint x, y;
-	const uint c = (out->height / 2) + (out->height & 1);
+	const uint c = (img->height / 2) + (img->height & 1);
 	const uint b = MAG_BORDER_WIDTH * 2;
-	UNUSED(in);
 
 	if (MAG_BORDER_WIDTH <= 0)
 		return;
@@ -333,39 +342,9 @@ crosshair(XcursorImage *out, const XcursorImage *in)
 	for (y = c - b + 1; y < c + b; ++y) {
 		for (x = c - b + 1; x < c + b; ++x) {
 			if (DIFF(x, c) > b / 2 || DIFF(y, c) > b / 2)
-				out->pixels[y * out->height + x] = 0xffff0000;
+				img->pixels[y * img->height + x] = 0xffff0000;
 		}
 	}
-}
-
-static XcursorImage *
-img_to_xcurimg(const Image *img)
-{
-	uint x, y;
-	XcursorImage *ret;
-	float cy = (float)img->wanted.h / 2.0f;
-	float cx = cy;
-
-	ret = XcursorImageCreate(img->wanted.w, img->wanted.h);
-	if (ret == NULL)
-		return ret;
-
-	for (y = 0; y < img->wanted.h; ++y) {
-		for (x = 0; x < img->wanted.w; ++x) {
-			float oy = ((float)y - cy) / cy;
-			float ox = ((float)x - cx) / cx;
-			int iy = img->cy + (int)(cy * oy);
-			int ix = img->cx + (int)(cx * ox);
-			ulong tmp;
-			if ((iy < 0 || iy >= (int)img->h) || (ix < 0 || ix >= (int)img->w))
-				tmp = 0xffffffff;
-			else
-				tmp = XGetPixel(img->im, ix, iy) | 0xff000000;
-			ret->pixels[y * ret->width + x] = tmp;
-		}
-	}
-
-	return ret;
 }
 
 static void
@@ -374,7 +353,7 @@ magnify(const int x, const int y)
 	const int ms = MAG_WINDOW_SIZE / MAG_FACTOR;
 	const int moff = ms / MAG_FACTOR;
 	Image img;
-	XcursorImage *in, *out[2];
+	XcursorImage *cimg;
 
 	img.x = MAX(0, x - moff);
 	img.y = MAX(0, y - moff);
@@ -387,44 +366,30 @@ magnify(const int x, const int y)
 	                   img.w, img.h, AllPlanes, ZPixmap);
 	if (img.im == NULL)
 		error(1, 0, "failed to get image");
-	in = img_to_xcurimg(&img);
-	XDestroyImage(img.im);
-
-	if (in == NULL)
+	/* TODO: fix allocation */
+	cimg = XcursorImageCreate(MAG_WINDOW_SIZE, MAG_WINDOW_SIZE);
+	if (cimg == NULL)
 		error(1, 0, "failed to create image");
+	cimg->xhot = cimg->yhot = MAG_WINDOW_SIZE / 2;
+	zoom_func(cimg, &img);
+	XDestroyImage(img.im);
 
 	if (x11.valid.cur) {
 		XFreeCursor(x11.dpy, x11.cur);
 		x11.valid.cur = 0;
 	}
 
-	out[0] = XcursorImageCreate(MAG_WINDOW_SIZE, MAG_WINDOW_SIZE);
-	out[1] = XcursorImageCreate(MAG_WINDOW_SIZE, MAG_WINDOW_SIZE);
-	if (out[0] != NULL && out[1] != NULL) {
+	{
 		uint i;
-		void *finalout;
-
-		out[0]->xhot = out[0]->yhot = MAG_WINDOW_SIZE / 2;
-		out[1]->xhot = out[1]->yhot = MAG_WINDOW_SIZE / 2;
-
-		for (i = 0; i < transform.len; ++i) {
-			void *input  = i == 0 ? in :
-			                finalout != out[0] ? out[0] : out[1];
-			void *output = i == 0 ? out[0] :
-			                finalout != out[0] ? out[1] : out[0];
-			transform.f[i](output, input);
-			finalout = output;
+		for (i = 0; i < filter.len; ++i) {
+			filter.f[i](cimg);
 		}
-		x11.cur = XcursorImageLoadCursor(x11.dpy, finalout);
+		x11.cur = XcursorImageLoadCursor(x11.dpy, cimg);
 		x11.valid.cur = 1;
 		XChangeActivePointerGrab(x11.dpy, x11.grab_mask, x11.cur, CurrentTime);
 	}
 
-	if (out[0] != NULL)
-		XcursorImageDestroy(out[0]);
-	if (out[1] != NULL)
-		XcursorImageDestroy(out[1]);
-	XcursorImageDestroy(in);
+	XcursorImageDestroy(cimg);
 }
 
 CLEANUP static void
