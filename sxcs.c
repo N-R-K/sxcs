@@ -114,6 +114,7 @@ static void print_color(uint x, uint y, enum output fmt);
 static void usage(void);
 static Options opt_parse(int argc, const char *argv[]);
 CLEANUP static void cleanup(void);
+/* TODO: document this shit */
 /* zoom functions */
 static void nearest_neighbour(XcursorImage *out, const Image *in);
 /* filter functions */
@@ -355,6 +356,8 @@ magnify(const int x, const int y)
 	const int ms = MAG_WINDOW_SIZE / MAG_FACTOR;
 	const int moff = ms / MAG_FACTOR;
 	Image img;
+	uint i;
+	Cursor new_cur;
 
 	img.x = MAX(0, x - moff);
 	img.y = MAX(0, y - moff);
@@ -370,20 +373,14 @@ magnify(const int x, const int y)
 	zoom_func(cursor_img, &img);
 	XDestroyImage(img.im);
 
-	if (x11.valid.cur) {
+	for (i = 0; i < filter.len; ++i)
+		filter.f[i](cursor_img);
+	new_cur = XcursorImageLoadCursor(x11.dpy, cursor_img);
+	if (x11.valid.cur)
 		XFreeCursor(x11.dpy, x11.cur);
-		x11.valid.cur = 0;
-	}
-
-	{
-		uint i;
-		for (i = 0; i < filter.len; ++i) {
-			filter.f[i](cursor_img);
-		}
-		x11.cur = XcursorImageLoadCursor(x11.dpy, cursor_img);
-		x11.valid.cur = 1;
-		XChangeActivePointerGrab(x11.dpy, x11.grab_mask, x11.cur, CurrentTime);
-	}
+	x11.cur = new_cur;
+	x11.valid.cur = 1;
+	XChangeActivePointerGrab(x11.dpy, x11.grab_mask, x11.cur, CurrentTime);
 }
 
 CLEANUP static void
