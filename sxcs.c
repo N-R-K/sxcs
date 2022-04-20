@@ -20,6 +20,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <poll.h>
+#include <signal.h>
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -104,6 +105,7 @@ static void print_color(int x, int y, enum output fmt);
 static void usage(void);
 static Options opt_parse(int argc, const char *argv[]);
 static void magnify(const int x, const int y);
+static void sighandler(int sig);
 CLEANUP static void cleanup(void);
 /* TODO: document this shit */
 /* zoom functions */
@@ -142,6 +144,8 @@ static struct {
 } x11;
 
 static XcursorImage *cursor_img;
+
+static volatile sig_atomic_t sig_recieved;
 
 #include "config.h"
 
@@ -371,6 +375,12 @@ magnify(const int x, const int y)
 	XChangeActivePointerGrab(x11.dpy, x11.grab_mask, x11.cur, CurrentTime);
 }
 
+static void
+sighandler(int sig)
+{
+	sig_recieved = sig_recieved ? sig_recieved : sig;
+}
+
 CLEANUP static void
 cleanup(void)
 {
@@ -453,10 +463,20 @@ main(int argc, const char *argv[])
 
 	pfd.fd = ConnectionNumber(x11.dpy);
 	pfd.events = POLLIN;
+
+	{
+		int i, sigs[] = { SIGINT, SIGTERM, SIGABRT, SIGKILL /* one can try */ };
+		for (i = 0; i < (int)ARRLEN(sigs); ++i)
+			signal(sigs[i], sighandler);
+	}
+
 	while (1) {
 		XEvent ev;
 		Bool discard = False;
 		Bool pending = XPending(x11.dpy) > 0 || poll(&pfd, 1, FRAMETIME) > 0;
+
+		if (sig_recieved)
+			exit(sig_recieved);
 
 		/* TODO: rather than updating at certain interval,
 		 * try to check if the window below changed or not
