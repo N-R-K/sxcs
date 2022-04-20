@@ -110,14 +110,12 @@ CLEANUP static void cleanup(void);
 /* TODO: document this shit */
 /* zoom functions */
 static void nearest_neighbour(XcursorImage *out, const Image *in);
-/*
- * TODO: allow picking sequences via cli arguments
- * TODO: add circle
- */
+/* TODO: allow picking sequences via cli arguments */
 /* filter functions */
 static void square_border(XcursorImage *img);
 static void crosshair_square(XcursorImage *img);
 static void grid(XcursorImage *img);
+static void circle(XcursorImage *img);
 
 /*
  * static globals
@@ -354,6 +352,32 @@ grid(XcursorImage *img)
 		for (x = 0; x < img->width; ++x) {
 			if (DIFF(c, x) % z == 0 || DIFF(c, y) % z == 0) {
 				img->pixels[y * img->height + x] = GRID_COLOR;
+			}
+		}
+	}
+}
+
+static void
+circle(XcursorImage *img)
+{
+	int x, y;
+	int r = CIRCLE_RADIUS;
+	int br = r - CIRCLE_WIDTH;
+	int c = img->height / 2;
+
+	for (y = 0; y < (int)img->height; ++y) {
+		for (x = 0; x < (int)img->width; ++x) {
+			int tx = x - c;
+			int ty = y - c;
+
+			if ((tx * tx) + (ty * ty) <= (r * r) &&
+			    (tx * tx) + (ty * ty) > (br * br))
+			{
+				img->pixels[y * img->height + x] = CIRCLE_COLOR;
+			} else if (CIRCLE_TRANSPARENT_OUTSIDE &&
+			           (tx * tx) + (ty * ty) > (r * r))
+			{
+				img->pixels[y * img->height + x] = 0x0;
 			}
 		}
 	}
