@@ -349,8 +349,8 @@ crosshair_square(XcursorImage *img)
 static void
 magnify(const int x, const int y)
 {
-	const int ms = MAG_WINDOW_SIZE / MAG_FACTOR;
-	const int moff = ms / MAG_FACTOR;
+	const int ms = (int)((float)MAG_WINDOW_SIZE / MAG_FACTOR);
+	const int moff = (int)((float)ms / MAG_FACTOR);
 	Image img;
 	uint i;
 	Cursor new_cur;

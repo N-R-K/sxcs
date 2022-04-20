@@ -1,4 +1,4 @@
-static const uint MAG_FACTOR = 2; /* TODO: make this a float */
+static const float MAG_FACTOR = 2.0f;
 static const uint MAG_WINDOW_SIZE = 128;
 
 static const MagFunc mag_func = nearest_neighbour;
