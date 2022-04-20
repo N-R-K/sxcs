@@ -32,6 +32,7 @@
 #define ARRLEN(X)        (sizeof(X) / sizeof((X)[0]))
 #define MAX(A, B)        ((A) > (B) ? (A) : (B))
 #define MIN(A, B)        ((A) < (B) ? (A) : (B))
+#define DIFF(A, B)       ((A) > (B) ? (A) - (B) : (B) - (A))
 #define UNUSED(X)        ((void)(X))
 
 #define R(X)             (((unsigned long)(X) & 0xFF0000) >> 16)
@@ -113,6 +114,7 @@ CLEANUP static void cleanup(void);
 /* transformation functions */
 static void square_zoomin(XcursorImage *out, const XcursorImage *in);
 static void square_border(XcursorImage *out, const XcursorImage *in);
+static void crosshair(XcursorImage *out, const XcursorImage *in);
 
 /*
  * static globals
@@ -298,11 +300,11 @@ square_border(XcursorImage *out, const XcursorImage *in)
 {
 	uint x, y;
 	const uint b = MAG_BORDER_WIDTH;
+	UNUSED(in);
 
 	if (MAG_BORDER_WIDTH <= 0)
 		return;
 
-	UNUSED(in);
 	for (y = 0; y < out->height; ++y) {
 		for (x = 0; x < out->width; ++x) {
 			if ((y < b || y + b >= out->height) ||
@@ -310,6 +312,25 @@ square_border(XcursorImage *out, const XcursorImage *in)
 			{
 				out->pixels[y * out->height + x] = 0xffff0000;
 			}
+		}
+	}
+}
+
+static void
+crosshair(XcursorImage *out, const XcursorImage *in)
+{
+	uint x, y;
+	const uint c = (out->height / 2) + (out->height & 1);
+	uint b = MAG_BORDER_WIDTH * 2;
+	UNUSED(in);
+
+	if (MAG_BORDER_WIDTH <= 0)
+		return;
+
+	for (y = c - b; y < c + b; ++y) {
+		for (x = c - b; x < c + b; ++x) {
+			if (DIFF(x, c) > b / 2 || DIFF(y, c) > b / 2)
+				out->pixels[y * out->height + x] = 0xffff0000;
 		}
 	}
 }

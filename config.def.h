@@ -6,7 +6,7 @@ enum {
 };
 
 static const TransfromFunc sq_zoom[] = {
-	square_zoomin, square_border
+	square_zoomin, square_border, crosshair
 };
 
 static TransfromSequence transform = TRANSFORM_SEQ_FROM_FUNC_ARRAY(sq_zoom);
