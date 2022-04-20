@@ -113,6 +113,7 @@ static HSL rgb_to_hsl(ulong col);
 static void print_color(uint x, uint y, enum output fmt);
 static void usage(void);
 static Options opt_parse(int argc, const char *argv[]);
+static void magnify(const int x, const int y);
 CLEANUP static void cleanup(void);
 /* TODO: document this shit */
 /* zoom functions */
