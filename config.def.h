@@ -11,10 +11,18 @@ static const XcursorPixel SQUARE_BORDER_COLOR = 0xffff3838;
 static const uint CROSSHAIR_SQUARE_SIZE = 4;
 static const XcursorPixel CROSSHAIR_SQUARE_COLOR = 0xffff3838;
 
-static const FilterFunc sq_zoom[] = {
+/* grid() options */
+static const uint GRID_SIZE = 8; /* best kept 2x CROSSHAIR_SQUARE_SIZE */
+static const XcursorPixel GRID_COLOR = 0xff3C3836;
+
+static const FilterFunc sq_cross[] = {
 	square_border, crosshair_square
 };
 
-static const FilterSeq filter = FILTER_SEQ_FROM_ARRAY(sq_zoom);
+static const FilterFunc sq_grid_cross[] = {
+	grid, square_border, crosshair_square
+};
+
+static const FilterSeq filter = FILTER_SEQ_FROM_ARRAY(sq_grid_cross);
 
 static const int FRAMETIME = 16; /* ms before forced redraw */

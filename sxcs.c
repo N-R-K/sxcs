@@ -112,12 +112,12 @@ CLEANUP static void cleanup(void);
 static void nearest_neighbour(XcursorImage *out, const Image *in);
 /*
  * TODO: allow picking sequences via cli arguments
- * TODO: add grid around each pixel
  * TODO: add circle
  */
 /* filter functions */
 static void square_border(XcursorImage *img);
 static void crosshair_square(XcursorImage *img);
+static void grid(XcursorImage *img);
 
 /*
  * static globals
@@ -338,6 +338,22 @@ crosshair_square(XcursorImage *img)
 		for (x = c - b; x <= c + b; ++x) {
 			if (DIFF(x, c) > b / 2 || DIFF(y, c) > b / 2)
 				img->pixels[y * img->height + x] = CROSSHAIR_SQUARE_COLOR;
+		}
+	}
+}
+
+static void
+grid(XcursorImage *img)
+{
+	uint x, y;
+	const uint z = GRID_SIZE;
+	const uint c = (img->height / 2) + (z / 2);
+
+	for (y = 0; y < img->height; ++y) {
+		for (x = 0; x < img->width; ++x) {
+			if (DIFF(c, x) % z == 0 || DIFF(c, y) % z == 0) {
+				img->pixels[y * img->height + x] = GRID_COLOR;
+			}
 		}
 	}
 }
