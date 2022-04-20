@@ -1,15 +1,12 @@
-enum {
-	MAG_FACTOR = 2,
-	MAG_WINDOW_SIZE = 128,
-	MAG_END_END
-};
+static const uint MAG_FACTOR = 2; /* TODO: make this a float */
+static const uint MAG_WINDOW_SIZE = 128;
 
-static ZoomFunc zoom_func = nearest_neighbour;
+static const MagFunc mag_func = nearest_neighbour;
 
-enum { SQUARE_BORDER_WIDTH = 2 };
+static const uint SQUARE_BORDER_WIDTH = 2;
 
 static const FilterFunc sq_zoom[] = {
 	square_border, crosshair_square
 };
 
-static FilterSeq filter = FILTER_SEQ_FROM_ARRAY(sq_zoom);
+static const FilterSeq filter = FILTER_SEQ_FROM_ARRAY(sq_zoom);

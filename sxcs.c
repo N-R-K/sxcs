@@ -91,7 +91,7 @@ typedef struct {
 } Image;
 
 typedef void (*FilterFunc)(XcursorImage *img);
-typedef void (*ZoomFunc)(XcursorImage *out, const Image *in);
+typedef void (*MagFunc)(XcursorImage *out, const Image *in);
 
 typedef struct {
 	const FilterFunc *const f;
@@ -366,7 +366,7 @@ magnify(const int x, const int y)
 	                   img.w, img.h, AllPlanes, ZPixmap);
 	if (img.im == NULL)
 		error(1, 0, "failed to get image");
-	zoom_func(cursor_img, &img);
+	mag_func(cursor_img, &img);
 	XDestroyImage(img.im);
 
 	for (i = 0; i < filter.len; ++i)
