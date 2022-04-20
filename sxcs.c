@@ -144,6 +144,8 @@ static struct {
 	} valid;
 } x11;
 
+static XcursorImage *cursor_img;
+
 #include "config.h"
 
 /*
@@ -353,7 +355,6 @@ magnify(const int x, const int y)
 	const int ms = MAG_WINDOW_SIZE / MAG_FACTOR;
 	const int moff = ms / MAG_FACTOR;
 	Image img;
-	XcursorImage *cimg;
 
 	img.x = MAX(0, x - moff);
 	img.y = MAX(0, y - moff);
@@ -366,12 +367,7 @@ magnify(const int x, const int y)
 	                   img.w, img.h, AllPlanes, ZPixmap);
 	if (img.im == NULL)
 		error(1, 0, "failed to get image");
-	/* TODO: fix allocation */
-	cimg = XcursorImageCreate(MAG_WINDOW_SIZE, MAG_WINDOW_SIZE);
-	if (cimg == NULL)
-		error(1, 0, "failed to create image");
-	cimg->xhot = cimg->yhot = MAG_WINDOW_SIZE / 2;
-	zoom_func(cimg, &img);
+	zoom_func(cursor_img, &img);
 	XDestroyImage(img.im);
 
 	if (x11.valid.cur) {
@@ -382,14 +378,12 @@ magnify(const int x, const int y)
 	{
 		uint i;
 		for (i = 0; i < filter.len; ++i) {
-			filter.f[i](cimg);
+			filter.f[i](cursor_img);
 		}
-		x11.cur = XcursorImageLoadCursor(x11.dpy, cimg);
+		x11.cur = XcursorImageLoadCursor(x11.dpy, cursor_img);
 		x11.valid.cur = 1;
 		XChangeActivePointerGrab(x11.dpy, x11.grab_mask, x11.cur, CurrentTime);
 	}
-
-	XcursorImageDestroy(cimg);
 }
 
 CLEANUP static void
@@ -399,6 +393,8 @@ cleanup(void)
 		XUngrabKeyboard(x11.dpy, CurrentTime);
 	if (x11.valid.ungrab_ptr)
 		XUngrabPointer(x11.dpy, CurrentTime);
+	if (cursor_img != NULL)
+		XcursorImageDestroy(cursor_img);
 	if (x11.valid.cur)
 		XFreeCursor(x11.dpy, x11.cur);
 	if (x11.dpy != NULL)
@@ -446,6 +442,11 @@ main(int argc, const char *argv[])
 	if (!opt.mag) {
 		x11.cur = XCreateFontCursor(x11.dpy, XC_tcross);
 		x11.valid.cur = 1;
+	} else {
+		cursor_img = XcursorImageCreate(MAG_WINDOW_SIZE, MAG_WINDOW_SIZE);
+		if (cursor_img == NULL)
+			error(1, 0, "failed to create image");
+		cursor_img->xhot = cursor_img->yhot = MAG_WINDOW_SIZE / 2;
 	}
 
 	x11.grab_mask = ButtonPressMask | PointerMotionMask;
