@@ -99,7 +99,7 @@ typedef struct {
 
 static void error(int exit_status, int errnum, const char *fmt, ...);
 static HSL rgb_to_hsl(ulong col);
-static void print_color(uint x, uint y, enum output fmt);
+static void print_color(int x, int y, enum output fmt);
 static void usage(void);
 static Options opt_parse(int argc, const char *argv[]);
 static void magnify(const int x, const int y);
@@ -198,13 +198,13 @@ rgb_to_hsl(ulong col)
 	}
 
 	ret.h = (uint)h;
-	ret.l = l;
-	ret.s = s;
+	ret.l = (uint)l;
+	ret.s = (uint)s;
 	return ret;
 }
 
 static void
-print_color(uint x, uint y, enum output fmt)
+print_color(int x, int y, enum output fmt)
 {
 	XImage *im;
 	ulong pix;
@@ -346,14 +346,14 @@ magnify(const int x, const int y)
 	uint i;
 	Cursor new_cur;
 
-	img.x = MAX(0, x - moff);
-	img.y = MAX(0, y - moff);
+	img.x = (uint)MAX(0, x - moff);
+	img.y = (uint)MAX(0, y - moff);
 	img.w = MIN(ms, x11.root.w - img.x);
 	img.h = MIN(ms, x11.root.h - img.y);
-	img.cx = x - img.x;
-	img.cy = y - img.y;
+	img.cx = x - (int)img.x;
+	img.cy = y - (int)img.y;
 	img.wanted.w = img.wanted.h = ms;
-	img.im = XGetImage(x11.dpy, x11.root.win, img.x, img.y,
+	img.im = XGetImage(x11.dpy, x11.root.win, (int)img.x, (int)img.y,
 	                   img.w, img.h, AllPlanes, ZPixmap);
 	if (img.im == NULL)
 		error(1, 0, "failed to get image");
@@ -402,8 +402,8 @@ main(int argc, const char *argv[])
 		XWindowAttributes tmp;
 		x11.root.win = DefaultRootWindow(x11.dpy);
 		XGetWindowAttributes(x11.dpy, x11.root.win, &tmp);
-		x11.root.h = tmp.height;
-		x11.root.w = tmp.width;
+		x11.root.h = (uint)tmp.height;
+		x11.root.w = (uint)tmp.width;
 		x11.screen = DefaultScreen(x11.dpy);
 		x11.vis = DefaultVisual(x11.dpy, x11.screen);
 		x11.depth = DefaultDepth(x11.dpy, x11.screen);

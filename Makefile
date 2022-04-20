@@ -18,7 +18,7 @@ OFLAGS = $(O_BASIC) $(O_LTO) $(O_GRAPHITE) $(O_IPAPTA) \
 WGCC   = -Wlogical-op
 WGCC  += -fanalyzer
 WCLANG = -Weverything
-WCLANG += -Wno-sign-conversion -Wno-padded -Wno-comma -Wno-missing-noreturn -Wno-unused-macros
+WCLANG += -Wno-padded -Wno-comma -Wno-missing-noreturn -Wno-unused-macros
 WFLAGS = -std=c89 -Wall -Wextra -Wpedantic \
          -Wshadow -Wvla -Wpointer-arith -Wwrite-strings -Wfloat-equal \
          -Wcast-align -Wcast-qual -Wbad-function-cast \
