@@ -326,16 +326,16 @@ square_border(XcursorImage *img)
 	}
 }
 
+/* TODO: make width configureable */
 static void
 crosshair_square(XcursorImage *img)
 {
 	uint x, y;
-	const uint c = (img->height / 2) + (img->height & 1);
-	/* TODO: make this configureable */
-	const uint b = 4;
+	const uint c = (img->height / 2);
+	const uint b = CROSSHAIR_SQUARE_SIZE;
 
-	for (y = c - b + 1; y < c + b; ++y) {
-		for (x = c - b + 1; x < c + b; ++x) {
+	for (y = c - b; y <= c + b; ++y) {
+		for (x = c - b; x <= c + b; ++x) {
 			if (DIFF(x, c) > b / 2 || DIFF(y, c) > b / 2)
 				img->pixels[y * img->height + x] = CROSSHAIR_SQUARE_COLOR;
 		}

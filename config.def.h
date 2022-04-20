@@ -8,6 +8,7 @@ static const uint SQUARE_BORDER_WIDTH = 2;
 static const XcursorPixel SQUARE_BORDER_COLOR = 0xffff3838;
 
 /* crosshair_square() options */
+static const uint CROSSHAIR_SQUARE_SIZE = 4;
 static const XcursorPixel CROSSHAIR_SQUARE_COLOR = 0xffff3838;
 
 static const FilterFunc sq_zoom[] = {
