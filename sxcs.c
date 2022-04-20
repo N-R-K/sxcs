@@ -292,8 +292,8 @@ nearest_neighbour(XcursorImage *out, const Image *in)
 	uint x, y;
 	float ocy = (float)out->height / 2.0f;
 	float ocx = (float)out->width / 2.0f;
-	float icy = (float)in->wanted.h / 2.0f;
-	float icx = (float)in->wanted.w / 2.0f;
+	float icy = (float)in->wanted.h / MAG_FACTOR;
+	float icx = (float)in->wanted.w / MAG_FACTOR;
 
 	for (y = 0; y < out->height; ++y) {
 		for (x = 0; x < out->width; ++x) {
