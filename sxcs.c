@@ -36,6 +36,8 @@
 #define MIN(A, B)        ((A) < (B) ? (A) : (B))
 #define DIFF(A, B)       ((A) > (B) ? (A) - (B) : (B) - (A))
 #define UNUSED(X)        ((void)(X))
+/* not correct. but works fine for our usecase in this program */
+#define ROUNDF(X)        ((int)((X) + 0.50f))
 
 #define R(X)             (((unsigned long)(X) & 0xFF0000) >> 16)
 #define G(X)             (((unsigned long)(X) & 0x00FF00) >>  8)
@@ -296,8 +298,10 @@ nearest_neighbour(XcursorImage *out, const Image *in)
 		for (x = 0; x < out->width; ++x) {
 			float oy = ((float)y - ocy) / ocy;
 			float ox = ((float)x - ocx) / ocx;
-			int iy = in->cy + (int)(icy * oy);
-			int ix = in->cx + (int)(icx * ox);
+			float iyf = (float)in->cy + (icy * oy);
+			float ixf = (float)in->cx + (icx * ox);
+			int iy = ROUNDF(iyf);
+			int ix = ROUNDF(ixf);
 			ulong tmp;
 
 			if ((iy < 0 || iy >= (int)in->h) || (ix < 0 || ix >= (int)in->w))
