@@ -8,7 +8,7 @@ enum {
 static ZoomFunc zoom_func = nearest_neighbour;
 
 static const FilterFunc sq_zoom[] = {
-	square_border, crosshair
+	square_border, crosshair_square
 };
 
 static FilterSeq filter = FILTER_SEQ_FROM_ARRAY(sq_zoom);

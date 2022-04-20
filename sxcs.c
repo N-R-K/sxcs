@@ -119,7 +119,7 @@ CLEANUP static void cleanup(void);
 static void nearest_neighbour(XcursorImage *out, const Image *in);
 /* filter functions */
 static void square_border(XcursorImage *img);
-static void crosshair(XcursorImage *img);
+static void crosshair_square(XcursorImage *img);
 
 /*
  * static globals
@@ -333,7 +333,7 @@ square_border(XcursorImage *img)
 }
 
 static void
-crosshair(XcursorImage *img)
+crosshair_square(XcursorImage *img)
 {
 	uint x, y;
 	const uint c = (img->height / 2) + (img->height & 1);
