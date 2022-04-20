@@ -58,17 +58,6 @@ enum output {
 	OUTPUT_ALL = OUTPUT_HEX | OUTPUT_RGB | OUTPUT_HSL
 };
 
-/*
- * TODO: allow picking sequences via cli arguments
- * TODO: add grid around each pixel
- * TODO: add circle
- */
-enum mag_type {
-	MAG_NONE,
-	MAG_CURSOR,
-	MAG_END
-};
-
 typedef struct {
 	uint h   : 9;
 	uint s   : 7;
@@ -79,7 +68,7 @@ typedef struct {
 typedef struct {
 	uint oneshot           : 1;
 	uint quit_on_keypress  : 1;
-	enum mag_type mag;
+	uint no_mag            : 1;
 	enum output fmt;
 } Options;
 
@@ -87,7 +76,7 @@ typedef struct {
 	XImage *im;
 	uint x, y, w, h;
 	int cx, cy;
-	struct { uint w, h; } wanted;
+	struct { uint w, h; } wanted; /* w, h if no clipping occurred */
 } Image;
 
 typedef void (*FilterFunc)(XcursorImage *img);
@@ -118,6 +107,11 @@ CLEANUP static void cleanup(void);
 /* TODO: document this shit */
 /* zoom functions */
 static void nearest_neighbour(XcursorImage *out, const Image *in);
+/*
+ * TODO: allow picking sequences via cli arguments
+ * TODO: add grid around each pixel
+ * TODO: add circle
+ */
 /* filter functions */
 static void square_border(XcursorImage *img);
 static void crosshair_square(XcursorImage *img);
@@ -244,7 +238,6 @@ usage(void)
 	        "  -h, --help:             show usage\n"
 	        "  -o, --one-shot:         quit after picking\n"
 	        "  -q, --quit-on-keypress: quit on keypress\n"
-	        "      --mag-cursor:       magnifier follows the cursor (default)\n"
 	        "      --mag-none:         disable magnifier\n"
 	        "      --hex:              hex output\n"
 	        "      --rgb:              rgb output\n"
@@ -258,7 +251,6 @@ opt_parse(int argc, const char *argv[])
 {
 	int i;
 	Options ret = {0};
-	ret.mag = MAG_CURSOR;
 
 	for (i = 1; i < argc; ++i) {
 		if (strcmp(argv[i], "--rgb") == 0)
@@ -271,10 +263,8 @@ opt_parse(int argc, const char *argv[])
 			ret.oneshot = 1;
 		else if (strcmp(argv[i], "--quit-on-keypress") == 0 || strcmp(argv[i], "-q") == 0)
 			ret.quit_on_keypress = 1;
-		else if (strcmp(argv[i], "--mag-cursor") == 0)
-			ret.mag = MAG_CURSOR;
 		else if (strcmp(argv[i], "--mag-none") == 0)
-			ret.mag = MAG_NONE;
+			ret.no_mag = 1;
 		else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0)
 			usage();
 		else
@@ -287,6 +277,7 @@ opt_parse(int argc, const char *argv[])
 	return ret;
 }
 
+/* FIXME: this is kinda fucked if MAG_FACTOR < 2.0 */
 static void
 nearest_neighbour(XcursorImage *out, const Image *in)
 {
@@ -432,7 +423,7 @@ main(int argc, const char *argv[])
 			error(1, 0, "truecolor not supported");
 	}
 
-	if (!opt.mag) {
+	if (opt.no_mag) {
 		x11.cur = XCreateFontCursor(x11.dpy, XC_tcross);
 		x11.valid.cur = 1;
 	} else {
@@ -485,7 +476,7 @@ main(int argc, const char *argv[])
 					break;
 				}
 			} while (discard);
-			if (opt.mag)
+			if (!opt.no_mag)
 				magnify(ev.xbutton.x_root, ev.xbutton.y_root);
 			break;
 		default:
