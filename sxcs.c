@@ -50,6 +50,7 @@ typedef unsigned short   ushort;
 typedef unsigned long    ulong;
 typedef unsigned char    uchar;
 
+/* TODO: allow disabling color output */
 enum output {
 	OUTPUT_HEX = 1 << 0,
 	OUTPUT_RGB = 1 << 1,
@@ -58,6 +59,7 @@ enum output {
 };
 
 /*
+ * TODO: allow picking sequences via cli arguments
  * TODO: add grid around each pixel
  * TODO: add circle
  */
@@ -295,6 +297,7 @@ square_zoomin(XcursorImage *out, const XcursorImage *in)
 	}
 }
 
+/* TODO: allow configuring color */
 static void
 square_border(XcursorImage *out, const XcursorImage *in)
 {
@@ -316,6 +319,7 @@ square_border(XcursorImage *out, const XcursorImage *in)
 	}
 }
 
+/* TODO: top and left side appears more bold */
 static void
 crosshair(XcursorImage *out, const XcursorImage *in)
 {
