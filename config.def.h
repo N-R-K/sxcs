@@ -26,4 +26,5 @@ static const FilterFunc sq_grid_cross[] = {
 
 static const FilterSeq filter = FILTER_SEQ_FROM_ARRAY(sq_grid_cross);
 
-static const int FRAMETIME = 16; /* ms before forced redraw */
+/* max time (in ms) allowed to go on without a redraw */
+static const int MAX_FRAME_TIME = 16;

@@ -490,7 +490,7 @@ main(int argc, const char *argv[])
 	while (1) {
 		XEvent ev;
 		Bool discard = False;
-		Bool pending = XPending(x11.dpy) > 0 || poll(&pfd, 1, FRAMETIME) > 0;
+		Bool pending = XPending(x11.dpy) > 0 || poll(&pfd, 1, MAX_FRAME_TIME) > 0;
 
 		if (sig_recieved)
 			exit(sig_recieved);
