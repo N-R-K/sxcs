@@ -15,3 +15,5 @@ static const FilterFunc sq_zoom[] = {
 };
 
 static const FilterSeq filter = FILTER_SEQ_FROM_ARRAY(sq_zoom);
+
+static const int FRAMETIME = 16; /* ms before forced redraw */

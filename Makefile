@@ -36,6 +36,7 @@ CPPCHECK_ARGS = --std=c89 --quiet --inline-suppr \
 
 # libs
 X11_LIBS  = -lX11 -lXcursor
+FEAT_CPP  = -D_POSIX_C_SOURCE=200809L
 
 # Cool stuff
 CC       ?= cc

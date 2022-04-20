@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <poll.h>
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -390,6 +391,7 @@ extern int
 main(int argc, const char *argv[])
 {
 	Options opt;
+	struct pollfd pfd;
 
 	atexit(cleanup);
 
@@ -449,9 +451,21 @@ main(int argc, const char *argv[])
 			error(1, 0, "failed to grab keyboard");
 	}
 
+	pfd.fd = ConnectionNumber(x11.dpy);
+	pfd.events = POLLIN;
 	while (1) {
 		XEvent ev;
 		Bool discard = False;
+		Bool pending = XPending(x11.dpy) > 0 || poll(&pfd, 1, FRAMETIME) > 0;
+
+		/* TODO: rather than updating at certain interval,
+		 * try to check if the window below changed or not
+		 */
+		if (!pending) {
+			if (!opt.no_mag)
+				magnify(ev.xbutton.x_root, ev.xbutton.y_root);
+			continue;
+		}
 
 		switch (XNextEvent(x11.dpy, &ev), ev.type) {
 		case ButtonPress:
