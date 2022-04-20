@@ -307,7 +307,7 @@ nearest_neighbour(XcursorImage *out, const Image *in)
 				tmp = 0xff000000;
 			else
 				tmp = XGetPixel(in->im, ix, iy) | 0xff000000;
-			out->pixels[y * out->height + x] = tmp;
+			out->pixels[y * out->height + x] = (XcursorPixel)tmp;
 		}
 	}
 }
@@ -317,10 +317,7 @@ static void
 square_border(XcursorImage *img)
 {
 	uint x, y;
-	const uint b = MAG_BORDER_WIDTH;
-
-	if (MAG_BORDER_WIDTH <= 0)
-		return;
+	const uint b = SQUARE_BORDER_WIDTH;
 
 	for (y = 0; y < img->height; ++y) {
 		for (x = 0; x < img->width; ++x) {
@@ -338,10 +335,8 @@ crosshair_square(XcursorImage *img)
 {
 	uint x, y;
 	const uint c = (img->height / 2) + (img->height & 1);
-	const uint b = MAG_BORDER_WIDTH * 2;
-
-	if (MAG_BORDER_WIDTH <= 0)
-		return;
+	/* TODO: make this configureable */
+	const uint b = 4;
 
 	for (y = c - b + 1; y < c + b; ++y) {
 		for (x = c - b + 1; x < c + b; ++x) {
