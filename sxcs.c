@@ -319,20 +319,19 @@ square_border(XcursorImage *out, const XcursorImage *in)
 	}
 }
 
-/* TODO: top and left side appears more bold */
 static void
 crosshair(XcursorImage *out, const XcursorImage *in)
 {
 	uint x, y;
 	const uint c = (out->height / 2) + (out->height & 1);
-	uint b = MAG_BORDER_WIDTH * 2;
+	const uint b = MAG_BORDER_WIDTH * 2;
 	UNUSED(in);
 
 	if (MAG_BORDER_WIDTH <= 0)
 		return;
 
-	for (y = c - b; y < c + b; ++y) {
-		for (x = c - b; x < c + b; ++x) {
+	for (y = c - b + 1; y < c + b; ++y) {
+		for (x = c - b + 1; x < c + b; ++x) {
 			if (DIFF(x, c) > b / 2 || DIFF(y, c) > b / 2)
 				out->pixels[y * out->height + x] = 0xffff0000;
 		}
