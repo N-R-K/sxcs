@@ -73,7 +73,7 @@ config.h:
 debug:
 	make BIN="$(BIN)-debug" DFLAGS="$(_DFLAGS)" DEBUG_CPP="-DDEBUG" all
 
-clang:
+clang-weverything:
 	make clean
 	make -f Makefile CC="clang" OFLAGS="-march=native -Ofast -flto"
 
