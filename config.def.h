@@ -8,12 +8,12 @@ static const uint SQUARE_BORDER_WIDTH = 2;
 static const XcursorPixel SQUARE_BORDER_COLOR = 0xffff3838;
 
 /* crosshair_square() options */
-static const uint CROSSHAIR_SQUARE_SIZE = 6;
+static const uint CROSSHAIR_SQUARE_SIZE = 5;
 static const uint CROSSHAIR_SQUARE_BORDER_WIDTH = 2;
 static const XcursorPixel CROSSHAIR_SQUARE_COLOR = 0xffff3838;
 
 /* grid() options */
-static const uint GRID_SIZE = 6 * 2; /* best kept 2x CROSSHAIR_SQUARE_SIZE */
+static const uint GRID_SIZE = 5 * 2; /* best kept 2x CROSSHAIR_SQUARE_SIZE */
 static const XcursorPixel GRID_COLOR = 0xff3C3836;
 
 /* circle_border() options */
