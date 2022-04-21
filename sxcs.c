@@ -240,16 +240,19 @@ print_color(int x, int y, enum output fmt)
 static void
 usage(void)
 {
-	fprintf(stderr,
-	        "usage: %s [options]\n"
-	        "  -h, --help:             show usage\n"
-	        "  -o, --one-shot:         quit after picking\n"
-	        "  -q, --quit-on-keypress: quit on keypress\n"
-	        "      --mag-none:         disable magnifier\n"
-	        "      --hex:              hex output\n"
-	        "      --rgb:              rgb output\n"
-	        "      --hsl:              hsl output\n",
-	        PROGNAME);
+	uint i;
+	const char *const s[] = {
+		"usage: "PROGNAME" [options]",
+		"  -h, --help:             show usage",
+		"  -o, --one-shot:         quit after picking",
+		"  -q, --quit-on-keypress: quit on keypress",
+		"      --mag-none:         disable magnifier",
+		"      --hex:              hex output",
+		"      --rgb:              rgb output",
+		"      --hsl:              hsl output",
+	};
+	for (i = 0; i < ARRLEN(s); ++i)
+		fprintf(stderr, "%s\n", s[i]);
 	exit(1);
 }
 
