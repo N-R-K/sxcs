@@ -42,7 +42,7 @@ FEAT_CPP  = -D_POSIX_C_SOURCE=200809L
 CC       ?= cc
 CFLAGS   ?= $$(test "$(CC)" = "gcc" && printf "%s " $(OFLAGS))
 CFLAGS   += $(WFLAGS) $(DFLAGS)
-CPPFLAGS  = $(DEBUG_CPP) $(PROGNAME)
+CPPFLAGS  = $(DEBUG_CPP) $(PROGNAME) $(FEAT_CPP)
 LDFLAGS  ?= $(CFLAGS)
 LDLIBS    = $(X11_LIBS)
 
