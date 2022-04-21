@@ -103,6 +103,7 @@ typedef struct {
 
 static void error(int exit_status, int errnum, const char *fmt, ...);
 static HSL rgb_to_hsl(ulong col);
+static ulong get_pixel(int x, int y);
 static void print_color(int x, int y, enum output fmt);
 static void usage(void);
 static Options opt_parse(int argc, const char *argv[]);
@@ -210,18 +211,33 @@ rgb_to_hsl(ulong col)
 	return ret;
 }
 
+static ulong
+get_pixel(int x, int y)
+{
+	ulong ret;
+
+	if (cursor_img != NULL) {
+		uint m = cursor_img->height / 2;
+		ret = cursor_img->pixels[m * cursor_img->height + m];
+		ret &= 0x00ffffff; /* cut off the alpha */
+	} else {
+		XImage *im;
+		im = XGetImage(x11.dpy, x11.root.win, x, y, 1, 1, AllPlanes, ZPixmap);
+		if (im == NULL)
+			error(1, 0, "failed to get image");
+		ret = XGetPixel(im, 0, 0);
+		XDestroyImage(im);
+	}
+
+	return ret;
+}
+
 static void
 print_color(int x, int y, enum output fmt)
 {
-	XImage *im;
 	ulong pix;
 
-	/* TODO: maybe just get the pixel from cursor_img if maginfier is on? */
-	im = XGetImage(x11.dpy, x11.root.win, x, y, 1, 1, AllPlanes, ZPixmap);
-	if (im == NULL)
-		error(1, 0, "failed to get image");
-	pix = XGetPixel(im, 0, 0);
-
+	pix = get_pixel(x, y);
 	printf("color:");
 	if (fmt & OUTPUT_HEX)
 		printf("\thex: #%.6lX", pix);
@@ -233,8 +249,6 @@ print_color(int x, int y, enum output fmt)
 	}
 	printf("\n");
 	fflush(stdout);
-
-	XDestroyImage(im);
 }
 
 static void
