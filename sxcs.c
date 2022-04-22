@@ -110,7 +110,6 @@ static Options opt_parse(int argc, const char *argv[]);
 static void magnify(const int x, const int y);
 static void sighandler(int sig);
 CLEANUP static void cleanup(void);
-/* TODO: document this shit */
 /* TODO: add bicubic scaling */
 /* zoom functions */
 static void nearest_neighbour(XcursorImage *out, const Image *in);
@@ -149,7 +148,7 @@ static XcursorImage *cursor_img;
 
 static volatile sig_atomic_t sig_recieved;
 
-/* TODO: comment config.h more thoroughly */
+/* TODO: comment config.h more thoroughly and document the filter/zoom func */
 #include "config.h"
 
 /*
@@ -163,11 +162,12 @@ error(int exit_status, int errnum, const char *fmt, ...)
 
 	fflush(stdout);
 	fprintf(stderr, "%s: ", PROGNAME);
-	va_start(ap, fmt);
 
+	va_start(ap, fmt);
 	if (fmt)
 		vfprintf(stderr, fmt, ap);
 	va_end(ap);
+
 	if (errnum)
 		fprintf(stderr, "%s%s", fmt ? ": " : "", strerror(errnum));
 	fputc('\n', stderr);
@@ -279,7 +279,7 @@ opt_parse(int argc, const char *argv[])
 {
 	int i;
 	Options ret = {0};
-	Bool no_color = 0;
+	int no_color = 0;
 
 	for (i = 1; i < argc; ++i) {
 		if (strcmp(argv[i], "--rgb") == 0)
