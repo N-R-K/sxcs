@@ -126,11 +126,7 @@ static void circle(XcursorImage *img);
 
 static struct {
 	Display *dpy;
-	Visual *vis;
 	Cursor cur;
-	Colormap cmap;
-	int screen;
-	int depth;
 	uint w, h;
 	uint grab_mask;
 	struct {
@@ -485,17 +481,16 @@ main(int argc, const char *argv[])
 		XGetWindowAttributes(x11.dpy, x11.root.win, &tmp);
 		x11.root.h = (uint)tmp.height;
 		x11.root.w = (uint)tmp.width;
-		x11.screen = DefaultScreen(x11.dpy);
-		x11.vis = DefaultVisual(x11.dpy, x11.screen);
-		x11.depth = DefaultDepth(x11.dpy, x11.screen);
-		x11.cmap = DefaultColormap(x11.dpy, x11.screen);
 	}
 
 	{
 		XVisualInfo q = {0}, *r;
-		int d, dummy;
+		int d, dummy, screen;
+		Visual *vis;
 
-		q.visualid = XVisualIDFromVisual(x11.vis);
+		screen = DefaultScreen(x11.dpy);
+		vis = DefaultVisual(x11.dpy, screen);
+		q.visualid = XVisualIDFromVisual(vis);
 		if ((r = XGetVisualInfo(x11.dpy, VisualIDMask, &q, &dummy)) == NULL)
 			error(1, 0, "failed to obtain visual info");
 		d = r->depth; /* cppcheck-suppress nullPointerRedundantCheck */
