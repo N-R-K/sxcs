@@ -34,7 +34,7 @@ static const FilterFunc circle_grid_cross[] = {
 	grid, circle, crosshair_square
 };
 
-static const FilterSeq filter = FILTER_SEQ_FROM_ARRAY(circle_grid_cross);
+static const FilterSeq filter_default = FILTER_SEQ_FROM_ARRAY(circle_grid_cross);
 
 /* max time (in ms) allowed to go on without a redraw */
 static const int MAX_FRAME_TIME = 16;

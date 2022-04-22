@@ -5,6 +5,7 @@ Color picker for X11, also has zoom feature. Outputs TAB separated `hex`,
 
 ![preview.gif](preview.gif)
 
+<!-- TODO: document custom filters -->
 ## Usage
 
 <kbd>Button1</kbd> will select and print the color,

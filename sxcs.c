@@ -87,7 +87,7 @@ typedef void (*FilterFunc)(XcursorImage *img);
 typedef void (*MagFunc)(XcursorImage *out, const Image *in);
 
 typedef struct {
-	const FilterFunc *const f;
+	const FilterFunc *f;
 	uint len;
 } FilterSeq;
 
@@ -106,6 +106,7 @@ static HSL rgb_to_hsl(ulong col);
 static ulong get_pixel(int x, int y);
 static void print_color(int x, int y, enum output fmt);
 static void usage(void);
+static void filter_parse(const char *s);
 static Options opt_parse(int argc, const char *argv[]);
 static void magnify(const int x, const int y);
 static void sighandler(int sig);
@@ -146,6 +147,8 @@ static volatile sig_atomic_t sig_recieved;
 
 /* TODO: comment config.h more thoroughly and document the filter/zoom func */
 #include "config.h"
+
+static const FilterSeq *filter = &filter_default;
 
 /*
  * function implementation
@@ -254,12 +257,14 @@ static void
 usage(void)
 {
 	uint i;
+	/* TODO: list available filters */
 	const char *const s[] = {
 		"usage: "PROGNAME" [options]",
 		"  -h, --help:             show usage",
 		"  -o, --one-shot:         quit after picking",
 		"  -q, --quit-on-keypress: quit on keypress",
 		"      --mag-none:         disable magnifier",
+		"      --mag-filters:      comma separated filter list",
 		"      --color-none:       disable color output",
 		"      --hex:              hex output",
 		"      --rgb:              rgb output",
@@ -268,6 +273,52 @@ usage(void)
 	for (i = 0; i < ARRLEN(s); ++i)
 		fprintf(stderr, "%s\n", s[i]);
 	exit(1);
+}
+
+static void
+filter_parse(const char *s)
+{
+	static FilterFunc f_buf[16];
+	static FilterSeq fs_buf = FILTER_SEQ_FROM_ARRAY(f_buf);
+	uint f_len = 0;
+
+	struct { const char *str; FilterFunc f; } table[] = {
+		{ "square_border", square_border },
+		{ "crosshair_square", crosshair_square },
+		{ "grid", grid },
+		{ "circle", circle }
+	};
+	char tok_buf[256], *tok = NULL;
+
+	if (s == NULL)
+		error(1, 0, "invalid filter (null)");
+
+	strncpy(tok_buf, s, sizeof(tok_buf)); /* cppcheck-suppress nullPointerRedundantCheck */
+	tok_buf[sizeof(tok_buf) - 1] = '\0';
+
+	tok = strtok(tok_buf, ",");
+	while (tok != NULL) {
+		uint i, found_match = 0;
+
+		for (i = 0; i < ARRLEN(table); ++i) {
+			if (strcmp(tok, table[i].str) == 0) {
+				if (f_len >= ARRLEN(f_buf)) {
+					error(1, 0, "too many filters."
+					      "max aloud: %zu", ARRLEN(f_buf));
+				}
+				f_buf[f_len++] = table[i].f;
+				found_match = 1;
+				break;
+			}
+		}
+
+		if (!found_match)
+			error(1, 0, "invalid filter %s", tok);
+		tok = strtok(NULL, ",");
+	}
+
+	fs_buf.len = f_len;
+	filter = &fs_buf;
 }
 
 static Options
@@ -292,6 +343,8 @@ opt_parse(int argc, const char *argv[])
 			ret.quit_on_keypress = 1;
 		else if (strcmp(argv[i], "--mag-none") == 0)
 			ret.no_mag = 1;
+		else if (strcmp(argv[i], "--mag-filters") == 0)
+			filter_parse(argv[++i]);
 		else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0)
 			usage();
 		else
@@ -431,8 +484,8 @@ magnify(const int x, const int y)
 	mag_func(cursor_img, &img);
 	XDestroyImage(img.im);
 
-	for (i = 0; i < filter.len; ++i)
-		filter.f[i](cursor_img);
+	for (i = 0; i < filter->len; ++i)
+		filter->f[i](cursor_img);
 	new_cur = XcursorImageLoadCursor(x11.dpy, cursor_img);
 	if (x11.valid.cur)
 		XFreeCursor(x11.dpy, x11.cur);
