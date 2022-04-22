@@ -32,7 +32,7 @@ $ sxcs --help
   * necessary headers
 
 - Runtime Dependencies:
-  * POSIX 2008 C standard library
+  * POSIX 2001 C standard library
   * Xlib
   * Xcursor
 
