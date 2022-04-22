@@ -464,7 +464,6 @@ extern int
 main(int argc, const char *argv[])
 {
 	Options opt;
-	struct pollfd pfd;
 
 	atexit(cleanup);
 
@@ -524,9 +523,6 @@ main(int argc, const char *argv[])
 			error(1, 0, "failed to grab keyboard");
 	}
 
-	pfd.fd = ConnectionNumber(x11.dpy);
-	pfd.events = POLLIN;
-
 	{
 		int i, sigs[] = { SIGINT, SIGTERM, SIGABRT, SIGKILL /* one can try */ };
 		for (i = 0; i < (int)ARRLEN(sigs); ++i)
@@ -535,8 +531,12 @@ main(int argc, const char *argv[])
 
 	while (1) {
 		XEvent ev;
-		Bool discard = False;
-		Bool pending = XPending(x11.dpy) > 0 || poll(&pfd, 1, MAX_FRAME_TIME) > 0;
+		Bool discard = False, pending;
+		struct pollfd pfd;
+
+		pfd.fd = ConnectionNumber(x11.dpy);
+		pfd.events = POLLIN;
+		pending = XPending(x11.dpy) > 0 || poll(&pfd, 1, MAX_FRAME_TIME) > 0;
 
 		if (sig_recieved)
 			exit(sig_recieved);
