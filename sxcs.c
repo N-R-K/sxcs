@@ -54,8 +54,8 @@ typedef unsigned short   ushort;
 typedef unsigned long    ulong;
 typedef unsigned char    uchar;
 
-/* TODO: allow disabling color output */
 enum output {
+	OUTPUT_NONE = 0,
 	OUTPUT_HEX = 1 << 0,
 	OUTPUT_RGB = 1 << 1,
 	OUTPUT_HSL = 1 << 2,
@@ -237,6 +237,9 @@ print_color(int x, int y, enum output fmt)
 {
 	ulong pix;
 
+	if (fmt == OUTPUT_NONE)
+		return;
+
 	pix = get_pixel(x, y);
 	printf("color:");
 	if (fmt & OUTPUT_HEX)
@@ -261,6 +264,7 @@ usage(void)
 		"  -o, --one-shot:         quit after picking",
 		"  -q, --quit-on-keypress: quit on keypress",
 		"      --mag-none:         disable magnifier",
+		"      --color-none:       disable color output",
 		"      --hex:              hex output",
 		"      --rgb:              rgb output",
 		"      --hsl:              hsl output",
@@ -275,6 +279,7 @@ opt_parse(int argc, const char *argv[])
 {
 	int i;
 	Options ret = {0};
+	Bool no_color = 0;
 
 	for (i = 1; i < argc; ++i) {
 		if (strcmp(argv[i], "--rgb") == 0)
@@ -283,6 +288,8 @@ opt_parse(int argc, const char *argv[])
 			ret.fmt |= OUTPUT_HEX;
 		else if (strcmp(argv[i], "--hsl") == 0)
 			ret.fmt |= OUTPUT_HSL;
+		else if (strcmp(argv[i], "--color-none") == 0)
+			no_color = 1;
 		else if (strcmp(argv[i], "--one-shot") == 0 || strcmp(argv[i], "-o") == 0)
 			ret.oneshot = 1;
 		else if (strcmp(argv[i], "--quit-on-keypress") == 0 || strcmp(argv[i], "-q") == 0)
@@ -295,7 +302,7 @@ opt_parse(int argc, const char *argv[])
 			error(1, 0, "unknown argument `%s`.", argv[i]);
 	}
 
-	if (ret.fmt == 0)
+	if (ret.fmt == OUTPUT_NONE && !no_color)
 		ret.fmt = OUTPUT_ALL;
 
 	return ret;
