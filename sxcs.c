@@ -240,14 +240,13 @@ print_color(int x, int y, enum output fmt)
 		return;
 
 	pix = get_pixel(x, y);
-	printf("color:");
 	if (fmt & OUTPUT_HEX)
-		printf("\thex: #%.6lX", pix);
+		printf("hex:\t#%.6lX\t", pix);
 	if (fmt & OUTPUT_RGB)
-		printf("\trgb: %lu %lu %lu", R(pix), G(pix), B(pix));
+		printf("rgb:\t%lu %lu %lu\t", R(pix), G(pix), B(pix));
 	if (fmt & OUTPUT_HSL) {
 		HSL tmp = rgb_to_hsl(pix);
-		printf("\thsl: %u %u %u", tmp.h, tmp.s, tmp.l);
+		printf("hsl:\t%u %u %u\t", tmp.h, tmp.s, tmp.l);
 	}
 	printf("\n");
 	fflush(stdout);

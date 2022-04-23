@@ -16,7 +16,13 @@ Zoom/magnification can be disabled via `--mag-none`.
 
 ```console
 $ sxcs --rgb --mag-none
-color:  rgb: 22 158 111
+rgb:	22 158 111
+```
+
+Copying the hex output to clipboard (using `xclip`):
+
+```console
+$ sxcs -o --hex | cut -f 2 | xclip -in -selection clipboard
 ```
 
 To see a list of all available cli arguments:
