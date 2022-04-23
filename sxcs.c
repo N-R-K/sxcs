@@ -519,6 +519,7 @@ extern int
 main(int argc, const char *argv[])
 {
 	Options opt;
+	uint started = 0;
 
 	atexit(cleanup);
 
@@ -599,7 +600,7 @@ main(int argc, const char *argv[])
 		 * try to check if the window below changed or not
 		 */
 		if (!pending) {
-			if (!opt.no_mag)
+			if (!opt.no_mag && started) /* TODO: figure out the random crashes */
 				magnify(ev.xbutton.x_root, ev.xbutton.y_root);
 			continue;
 		}
@@ -629,6 +630,7 @@ main(int argc, const char *argv[])
 			} while (discard);
 			if (!opt.no_mag)
 				magnify(ev.xbutton.x_root, ev.xbutton.y_root);
+			started = 1;
 			break;
 		default:
 			/* error(0, 0, "recieved unknown event: `%d`", ev.type); */
