@@ -59,7 +59,6 @@ enum output {
 	OUTPUT_HEX = 1 << 0,
 	OUTPUT_RGB = 1 << 1,
 	OUTPUT_HSL = 1 << 2,
-	OUTPUT_ALL = OUTPUT_HEX | OUTPUT_RGB | OUTPUT_HSL
 };
 
 typedef struct {
@@ -354,7 +353,7 @@ opt_parse(int argc, const char *argv[])
 	}
 
 	if (ret.fmt == OUTPUT_NONE && !no_color)
-		ret.fmt = OUTPUT_ALL;
+		ret.fmt = OUTPUT_DFL;
 
 	return ret;
 }
