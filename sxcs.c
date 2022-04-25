@@ -114,7 +114,6 @@ CLEANUP static void cleanup(void);
 /* TODO: add bicubic scaling */
 /* zoom functions */
 static void nearest_neighbour(XcursorImage *out, const Image *in);
-/* TODO: allow picking sequences via cli arguments */
 /* filter functions */
 static void square_border(XcursorImage *img);
 static void crosshair_square(XcursorImage *img);
@@ -518,7 +517,6 @@ cleanup(void)
 		XCloseDisplay(x11.dpy);
 }
 
-/* TODO: maybe make the program viable as a standalone maginfier as well */
 extern int
 main(int argc, const char *argv[])
 {
@@ -609,6 +607,7 @@ main(int argc, const char *argv[])
 			continue;
 		}
 
+		/* TODO: allow changing MAG_FACTOR via scroll */
 		switch (XNextEvent(x11.dpy, &ev), ev.type) {
 		case ButtonPress:
 			if (ev.xbutton.button == Button1)

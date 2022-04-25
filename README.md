@@ -1,14 +1,14 @@
 # sxcs - Simple X Color Sniper
 
-Color picker for X11, also has zoom feature. Outputs TAB separated `hex`,
-`rgb`, and `hsl` colors to `stdout` upon selection.
+Color picker and magnifier for X11.
 
 ![preview/preview.gif](preview/preview.gif)
 
 ## Usage
 
-<kbd>Button1</kbd> will select and print the color,
-any other mouse button will quit sxcs.
+<kbd>Button1</kbd> will select and print the color to `stdout`, the output is
+TAB separated `hex`, `rgb`, and `hsl`.
+Any other mouse button will quit sxcs.
 
 Output format can be chosen via cli argument.
 Zoom/magnification can be disabled via `--mag-none`.
@@ -24,9 +24,11 @@ Copying the hex output to clipboard (using `xclip`):
 $ sxcs -o --hex | cut -f 2 | xclip -in -selection clipboard
 ```
 
-The magnifying window can be customized via using `--mag-filters
-<filter-list>`, where `filter-list` is a comma separated list of filters to
-apply in order.
+Color output can be disabled via `--color-none`, which more or less turns
+`sxcs` into a magnifier.
+
+The magnifying window can be customized via using `--mag-filters <filter-list>`,
+where `filter-list` is a comma separated list of filters to apply in order.
 
 The default filter list is the following:
 
@@ -71,11 +73,20 @@ $ make
 # sudo make install
 ```
 
+## Limitation
+
+Cursor size bigger than 255x255 causes visual glitches, it seems to be a
+X11/Xcursor limitation.
+
+One alternative would be using XComposite and using an `override_redirect`
+window. Which is what was being done (incorrectly) before commit
+[33490dd](https://codeberg.org/NRK/sxcs/commit/33490ddf9164655bf6decafa6f85082e413fa333).
+I suspect doing this correctly would require way too much code, probably above
+my self imposed limit of ~800 SLoC for this project.
+
 ## TODOs
 
-* Make it viable as a standalone magnifying application as well.
-
-grep the source to find more TODOs:
+grep the source to find TODOs:
 
 ```console
 $ grep -Hn -E 'TODO|FIXME' sxcs.c
