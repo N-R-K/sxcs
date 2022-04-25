@@ -40,4 +40,4 @@ static const FilterSeq filter_default = FILTER_SEQ_FROM_ARRAY(circle_grid_cross)
 static const int MAX_FRAME_TIME = 16;
 
 /* default output format */
-static const enum output OUTPUT_DFL = OUTPUT_HEX | OUTPUT_RGB | OUTPUT_HSL;
+static const enum output OUTPUT_DEFAULT = OUTPUT_ALL;

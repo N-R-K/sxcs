@@ -59,6 +59,7 @@ enum output {
 	OUTPUT_HEX = 1 << 0,
 	OUTPUT_RGB = 1 << 1,
 	OUTPUT_HSL = 1 << 2,
+	OUTPUT_ALL = OUTPUT_HEX | OUTPUT_RGB | OUTPUT_HSL
 };
 
 typedef struct {
@@ -353,7 +354,7 @@ opt_parse(int argc, const char *argv[])
 	}
 
 	if (ret.fmt == OUTPUT_NONE && !no_color)
-		ret.fmt = OUTPUT_DFL;
+		ret.fmt = OUTPUT_DEFAULT;
 
 	return ret;
 }
@@ -465,7 +466,7 @@ circle(XcursorImage *img)
 static void
 magnify(const int x, const int y)
 {
-	const int ms = (int)((float)MAG_WINDOW_SIZE / MAG_FACTOR);
+	const uint ms = (uint)((float)MAG_WINDOW_SIZE / MAG_FACTOR);
 	const int moff = (int)((float)ms / MAG_FACTOR);
 	Image img;
 	uint i;
@@ -610,10 +611,10 @@ main(int argc, const char *argv[])
 		case ButtonPress:
 			switch (ev.xbutton.button) {
 			case Button4:
-				MAG_FACTOR *= 1.025;
+				MAG_FACTOR *= 1.025f;
 				break;
 			case Button5:
-				MAG_FACTOR = MAG_FACTOR / 1.025 < 2.0 ? MAG_FACTOR : MAG_FACTOR / 1.025;
+				MAG_FACTOR = MAX(2.0f, MAG_FACTOR / 1.025f);
 				break;
 			case Button1:
 				print_color(ev.xbutton.x_root, ev.xbutton.y_root, opt.fmt);
