@@ -466,7 +466,7 @@ circle(XcursorImage *img)
 static void
 magnify(const int x, const int y)
 {
-	const uint ms = (uint)((float)MAG_WINDOW_SIZE / MAG_FACTOR);
+	const int ms = (int)((float)MAG_WINDOW_SIZE / MAG_FACTOR);
 	const int moff = (int)((float)ms / MAG_FACTOR);
 	Image img;
 	uint i;
