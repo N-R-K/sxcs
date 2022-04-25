@@ -14,6 +14,9 @@ OFLAGS = $(O_BASIC) $(O_LTO) $(O_GRAPHITE) $(O_IPAPTA) \
          $(O_SEMINTERPOS) $(O_NOCOMMON) $(O_NOPLT) \
          $(O_NOPIE) $(O_NOSSP) \
 
+# fallback if $(CC) != "gcc"
+O_FALLBACK    = -O3
+
 # warnings
 WGCC   = -Wlogical-op
 WGCC  += -fanalyzer
@@ -41,7 +44,7 @@ FEAT_CPP  = -D_POSIX_C_SOURCE=200112L
 
 # Cool stuff
 CC       ?= cc
-CFLAGS   ?= $$(test "$(CC)" = "gcc" && printf "%s " $(OFLAGS))
+CFLAGS   ?= $$(test "$(CC)" = "gcc" && printf "%s " $(OFLAGS) || printf "%s " $(O_FALLBACK))
 CFLAGS   += $(WFLAGS) $(DFLAGS)
 CPPFLAGS  = $(DEBUG_CPP) $(PROGNAME) $(FEAT_CPP)
 LDFLAGS  ?= $(CFLAGS)
