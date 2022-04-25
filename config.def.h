@@ -1,4 +1,5 @@
 static float MAG_FACTOR = 3.0f;
+static const float MAG_STEP = 1.025f;
 static const uint MAG_WINDOW_SIZE = 192;
 
 static const MagFunc mag_func = nearest_neighbour;
