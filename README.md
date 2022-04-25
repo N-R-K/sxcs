@@ -3,7 +3,7 @@
 Color picker for X11, also has zoom feature. Outputs TAB separated `hex`,
 `rgb`, and `hsl` colors to `stdout` upon selection.
 
-![preview.gif](preview.gif)
+![preview/preview.gif](preview/preview.gif)
 
 ## Usage
 
@@ -40,9 +40,13 @@ Following are a couple more examples:
 $ sxcs --mag-filters "square_border,crosshair_square"
 ```
 
+<img width="256" height="256" src="preview/square_x.png"/>
+
 ```console
 $ sxcs --mag-filters "grid,crosshair_square"
 ```
+
+<img width="256" height="256" src="preview/grid_x.png"/>
 
 To see a list of all available cli arguments and filters:
 
