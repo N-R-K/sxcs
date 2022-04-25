@@ -28,7 +28,8 @@ Color output can be disabled via `--color-none`, which more or less turns
 `sxcs` into a magnifier.
 
 The magnifying window can be customized via using `--mag-filters <filter-list>`,
-where `filter-list` is a comma separated list of filters to apply in order.
+where `filter-list` is a comma separated list of filters to apply. The
+filter-list will be applied in order, as given by the user.
 
 The default filter list is the following:
 
