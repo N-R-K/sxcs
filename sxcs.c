@@ -354,7 +354,7 @@ opt_parse(int argc, const char *argv[])
 	}
 
 	if (ret.fmt == OUTPUT_NONE && !no_color)
-		ret.fmt = OUTPUT_ALL;
+		ret.fmt = OUTPUT_DEFAULT;
 
 	return ret;
 }
@@ -466,7 +466,7 @@ circle(XcursorImage *img)
 static void
 magnify(const int x, const int y)
 {
-	const int ms = (int)((float)MAG_WINDOW_SIZE / MAG_FACTOR);
+	const uint ms = (uint)((float)MAG_WINDOW_SIZE / MAG_FACTOR);
 	const int moff = (int)((float)ms / MAG_FACTOR);
 	Image img;
 	uint i;
@@ -610,11 +610,11 @@ main(int argc, const char *argv[])
 		switch (XNextEvent(x11.dpy, &ev), ev.type) {
 		case ButtonPress:
 			switch (ev.xbutton.button) {
-			case Button4:
+        case Button4:
 				MAG_FACTOR += 0.25;
 				break;
 			case Button5:
-				MAG_FACTOR = MAG_FACTOR - 0.25 < 2.0 ? MAG_FACTOR : MAG_FACTOR - 0.25;
+				MAG_FACTOR = MAX(2.0f, MAG_FACTOR - 0.25f);
 				break;
 			case Button1:
 				print_color(ev.xbutton.x_root, ev.xbutton.y_root, opt.fmt);

@@ -19,6 +19,7 @@ WGCC   = -Wlogical-op
 WGCC  += -fanalyzer
 WCLANG = -Weverything
 WCLANG += -Wno-padded -Wno-comma -Wno-missing-noreturn -Wno-unused-macros
+WCLANG += -Wno-implicit-fallthrough
 WFLAGS = -std=c89 -Wall -Wextra -Wpedantic \
          -Wshadow -Wvla -Wpointer-arith -Wwrite-strings -Wfloat-equal \
          -Wcast-align -Wcast-qual -Wbad-function-cast \
