@@ -43,8 +43,6 @@
 #define G(X)             (((unsigned long)(X) & 0x00FF00) >>  8)
 #define B(X)             (((unsigned long)(X) & 0x0000FF) >>  0)
 
-#define FILTER_SEQ_FROM_ARRAY(X)  { X, ARRLEN(X) }
-
 /*
  * types
  */
@@ -87,8 +85,9 @@ typedef void (*FilterFunc)(XcursorImage *img);
 typedef void (*MagFunc)(XcursorImage *out, const Image *in);
 
 typedef struct {
-	const FilterFunc *f;
-	uint len;
+	FilterFunc grid;
+	FilterFunc border;
+	FilterFunc crosshair;
 } FilterSeq;
 
 /*
@@ -106,7 +105,6 @@ static HSL rgb_to_hsl(ulong col);
 static ulong get_pixel(int x, int y);
 static void print_color(int x, int y, enum output fmt);
 static void usage(void);
-static void filter_parse(const char *s);
 static Options opt_parse(int argc, const char *argv[]);
 static void magnify(const int x, const int y);
 static void sighandler(int sig);
@@ -147,7 +145,7 @@ static volatile sig_atomic_t sig_recieved;
 /* TODO: comment config.h more thoroughly and document the filter/zoom func */
 #include "config.h"
 
-static const FilterSeq *filter = &filter_default;
+static FilterSeq filter = filter_default;
 
 /*
  * function implementation
@@ -261,66 +259,17 @@ usage(void)
 		"  -o, --one-shot:         quit after picking",
 		"  -q, --quit-on-keypress: quit on keypress",
 		"      --mag-none:         disable magnifier",
-		"      --mag-filters:      comma separated filter list",
 		"      --color-none:       disable color output",
 		"      --hex:              hex output",
 		"      --rgb:              rgb output",
 		"      --hsl:              hsl output",
-		"available filters:",
-		"    square_border:     draws a square border",
-		"    crosshair_square:  draws a square crosshair",
-		"    grid:              draws grid",
-		"    circle:            draws a circle",
+		"      --grid:             [yes/no] set grid",
+		"      --border:            [square/circle/no] set border",
+		"      --crosshair:        [yes/no] set crosshair",
 	};
 	for (i = 0; i < ARRLEN(s); ++i)
 		fprintf(stderr, "%s\n", s[i]);
 	exit(1);
-}
-
-static void
-filter_parse(const char *s)
-{
-	static FilterFunc f_buf[16];
-	static FilterSeq fs_buf = FILTER_SEQ_FROM_ARRAY(f_buf);
-	uint f_len = 0;
-
-	struct { const char *str; FilterFunc f; } table[] = {
-		{ "square_border", square_border },
-		{ "crosshair_square", crosshair_square },
-		{ "grid", grid },
-		{ "circle", circle }
-	};
-	char tok_buf[256], *tok = NULL;
-
-	if (s == NULL)
-		error(1, 0, "invalid filter (null)");
-
-	strncpy(tok_buf, s, sizeof(tok_buf)); /* cppcheck-suppress nullPointerRedundantCheck */
-	tok_buf[sizeof(tok_buf) - 1] = '\0';
-
-	tok = strtok(tok_buf, ",");
-	while (tok != NULL) {
-		uint i, found_match = 0;
-
-		for (i = 0; i < ARRLEN(table); ++i) {
-			if (strcmp(tok, table[i].str) == 0) {
-				if (f_len >= ARRLEN(f_buf)) {
-					error(1, 0, "too many filters."
-					      "max aloud: %zu", ARRLEN(f_buf));
-				}
-				f_buf[f_len++] = table[i].f;
-				found_match = 1;
-				break;
-			}
-		}
-
-		if (!found_match)
-			error(1, 0, "invalid filter %s", tok);
-		tok = strtok(NULL, ",");
-	}
-
-	fs_buf.len = f_len;
-	filter = &fs_buf;
 }
 
 static Options
@@ -345,8 +294,22 @@ opt_parse(int argc, const char *argv[])
 			ret.quit_on_keypress = 1;
 		else if (strcmp(argv[i], "--mag-none") == 0)
 			ret.no_mag = 1;
-		else if (strcmp(argv[i], "--mag-filters") == 0)
-			filter_parse(argv[++i]);
+		else if (strcmp(argv[i], "--grid") == 0)
+			if (++i == argc)
+				error(1, 0, "missing argument for `%s`.", argv[--i]);
+			else
+				filter.grid = strcmp(argv[i], "no") == 0 ? NULL : grid;
+		else if (strcmp(argv[i], "--border") == 0)
+			if (++i == argc)
+				error(1, 0, "missing argument for `%s`.", argv[--i]);
+			else
+				filter.border = strcmp(argv[i], "square") == 0 ? square_border :
+						strcmp(argv[i], "circle") == 0 ? circle : NULL;
+		else if (strcmp(argv[i], "--crosshair") == 0)
+			if (++i == argc)
+				error(1, 0, "missing argument for `%s`.", argv[--i]);
+			else
+				filter.crosshair = strcmp(argv[i], "no") == 0 ? NULL : crosshair_square;
 		else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0)
 			usage();
 		else
@@ -469,7 +432,6 @@ magnify(const int x, const int y)
 	const uint ms = (uint)((float)MAG_WINDOW_SIZE / MAG_FACTOR);
 	const int moff = (int)((float)ms / MAG_FACTOR);
 	Image img;
-	uint i;
 	Cursor new_cur;
 
 	img.x = (uint)MAX(0, x - moff);
@@ -486,8 +448,12 @@ magnify(const int x, const int y)
 	mag_func(cursor_img, &img);
 	XDestroyImage(img.im);
 
-	for (i = 0; i < filter->len; ++i)
-		filter->f[i](cursor_img);
+	if (filter.grid)
+		filter.grid(cursor_img);
+	if (filter.crosshair)
+		filter.crosshair(cursor_img);
+	if (filter.border)
+		filter.border(cursor_img);
 	new_cur = XcursorImageLoadCursor(x11.dpy, cursor_img);
 	if (x11.valid.cur)
 		XFreeCursor(x11.dpy, x11.cur);

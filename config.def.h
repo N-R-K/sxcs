@@ -22,19 +22,25 @@ static const uint CIRCLE_WIDTH = 2;
 static const XcursorPixel CIRCLE_COLOR = 0xffff3838;
 static const Bool CIRCLE_TRANSPARENT_OUTSIDE = True;
 
-static const FilterFunc sq_cross[] = {
-	square_border, crosshair_square
+static const FilterSeq sq_cross[] = {
+	NULL,
+	square_border,
+	crosshair_square
 };
 
 static const FilterFunc sq_grid_cross[] = {
-	grid, square_border, crosshair_square
+	grid,
+	square_border,
+	crosshair_square
 };
 
 static const FilterFunc circle_grid_cross[] = {
-	grid, circle, crosshair_square
+	grid,
+	circle,
+	crosshair_square
 };
 
-static const FilterSeq filter_default = FILTER_SEQ_FROM_ARRAY(circle_grid_cross);
+static const FilterSeq filter_default = circle_grid_cross;
 
 /* max time (in ms) allowed to go on without a redraw */
 static const int MAX_FRAME_TIME = 16;

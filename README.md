@@ -27,25 +27,26 @@ $ sxcs -o --hex | cut -f 2 | xclip -in -selection clipboard
 Color output can be disabled via `--color-none`, which more or less turns
 `sxcs` into a magnifier.
 
-The magnifying window can be customized via using `--mag-filters <filter-list>`,
-where `filter-list` is a comma separated list of filters to apply in order.
+The magnifying window can be customized to have circular border with
+`--broder circle`, or a square border with `--border square`. The grid and
+crosshair can be disabled via `--grid no` and `--crosshair no` respectively.
 
-The default filter list is the following:
+The default filter set in config.h is equivalent to the following:
 
 ```console
-$ sxcs --mag-filters "grid,circle,crosshair_square"
+$ sxcs --grid yes --crosshair yes --border circle
 ```
 
 Following are a couple more examples:
 
 ```console
-$ sxcs --mag-filters "square_border,crosshair_square"
+$ sxcs --grid no --crosshair yes --border square
 ```
 
 <img width="256" height="256" src="preview/square_x.png"/>
 
 ```console
-$ sxcs --mag-filters "grid,crosshair_square"
+$ sxcs --grid yes --crosshair yes --border no
 ```
 
 <img width="256" height="256" src="preview/grid_x.png"/>
