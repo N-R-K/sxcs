@@ -607,13 +607,23 @@ main(int argc, const char *argv[])
 			continue;
 		}
 
-		/* TODO: allow changing MAG_FACTOR via scroll */
 		switch (XNextEvent(x11.dpy, &ev), ev.type) {
 		case ButtonPress:
-			if (ev.xbutton.button == Button1)
+			switch (ev.xbutton.button) {
+			case Button4:
+				MAG_FACTOR *= 1.025;
+				break;
+			case Button5:
+				MAG_FACTOR = MAG_FACTOR / 1.025 < 2.0 ? MAG_FACTOR : MAG_FACTOR / 1.025;
+				break;
+			case Button1:
 				print_color(ev.xbutton.x_root, ev.xbutton.y_root, opt.fmt);
-			if (ev.xbutton.button != Button1 || opt.oneshot)
+				if (!opt.oneshot)
+					break;
+				/* fallthrough */
+			default:
 				exit(0);
+			}
 			break;
 		case KeyPress:
 			if (opt.quit_on_keypress)
