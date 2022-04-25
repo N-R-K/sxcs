@@ -611,10 +611,10 @@ main(int argc, const char *argv[])
 		case ButtonPress:
 			switch (ev.xbutton.button) {
 			case Button4:
-				MAG_FACTOR *= 1.025;
+				MAG_FACTOR += 0.25;
 				break;
 			case Button5:
-				MAG_FACTOR = MAG_FACTOR / 1.025 < 2.0 ? MAG_FACTOR : MAG_FACTOR / 1.025;
+				MAG_FACTOR = MAG_FACTOR - 0.25 < 2.0 ? MAG_FACTOR : MAG_FACTOR - 0.25;
 				break;
 			case Button1:
 				print_color(ev.xbutton.x_root, ev.xbutton.y_root, opt.fmt);
