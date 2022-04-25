@@ -46,6 +46,7 @@ CFLAGS   += $(WFLAGS) $(DFLAGS)
 CPPFLAGS  = $(DEBUG_CPP) $(PROGNAME) $(FEAT_CPP)
 LDFLAGS  ?= $(CFLAGS)
 LDLIBS    = $(X11_LIBS)
+STRIP    ?= strip
 
 PREFIX   ?= /usr/local
 PROGNAME  = -DPROGNAME=\"$(BIN)\"
@@ -63,6 +64,7 @@ $(OBJS): Makefile config.h
 
 $(BIN): $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LDLIBS)
+	$(STRIP) $@
 
 .c.o:
 	$(CPPCHECK) $(CPPCHECK_ARGS) $<
@@ -72,7 +74,7 @@ config.h:
 	cp config.def.h config.h
 
 debug:
-	make BIN="$(BIN)-debug" DFLAGS="$(_DFLAGS)" DEBUG_CPP="-DDEBUG" all
+	make BIN="$(BIN)-debug" DFLAGS="$(_DFLAGS)" DEBUG_CPP="-DDEBUG" STRIP=":" all
 
 clang-weverything:
 	make clean
