@@ -5,7 +5,6 @@ Color picker for X11, also has zoom feature. Outputs TAB separated `hex`,
 
 ![preview.gif](preview.gif)
 
-<!-- TODO: document custom filters -->
 ## Usage
 
 <kbd>Button1</kbd> will select and print the color,
@@ -25,7 +24,27 @@ Copying the hex output to clipboard (using `xclip`):
 $ sxcs -o --hex | cut -f 2 | xclip -in -selection clipboard
 ```
 
-To see a list of all available cli arguments:
+The magnifying window can be customized via using `--mag-filters
+<filter-list>`, where `filter-list` is a comma separated list of filters to
+apply in order.
+
+The default filter list is the following:
+
+```console
+$ sxcs --mag-filters "grid,circle,crosshair_square"
+```
+
+Following are a couple more examples:
+
+```console
+$ sxcs --mag-filters "square_border,crosshair_square"
+```
+
+```console
+$ sxcs --mag-filters "grid,crosshair_square"
+```
+
+To see a list of all available cli arguments and filters:
 
 ```console
 $ sxcs --help

@@ -256,7 +256,6 @@ static void
 usage(void)
 {
 	uint i;
-	/* TODO: list available filters */
 	const char *const s[] = {
 		"usage: "PROGNAME" [options]",
 		"  -h, --help:             show usage",
@@ -268,6 +267,11 @@ usage(void)
 		"      --hex:              hex output",
 		"      --rgb:              rgb output",
 		"      --hsl:              hsl output",
+		"available filters:",
+		"    square_border:     draws a square border",
+		"    crosshair_square:  draws a square crosshair",
+		"    grid:              draws grid",
+		"    circle:            draws a circle",
 	};
 	for (i = 0; i < ARRLEN(s); ++i)
 		fprintf(stderr, "%s\n", s[i]);
