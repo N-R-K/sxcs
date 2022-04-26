@@ -82,6 +82,9 @@ debug:
 analyze:
 	make clean; make CC="clang" OFLAGS="-march=native -Ofast -flto"
 
+run:
+	tcc $(CPPFLAGS) -DDFLAGS="$(_DFLAGS)" -DDEBUG $(LDLIBS) -b -run $(BIN).c
+
 clean:
 	rm -f *.o $(OBJS) $(BIN) $(BIN)-debug
 
