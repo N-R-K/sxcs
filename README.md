@@ -8,6 +8,7 @@ Color picker and magnifier for X11.
 
 <kbd>Button1</kbd> will select and print the color to `stdout`, the output is
 TAB separated `hex`, `rgb`, and `hsl`.
+<kbd>Scroll Up/Down</kbd> will zoom in and out.
 Any other mouse button will quit sxcs.
 
 Output format can be chosen via cli argument.
