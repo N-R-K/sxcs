@@ -5,6 +5,7 @@ O_BASIC       = -pipe -march=native -Ofast
 O_LTO         = -flto=auto -fuse-linker-plugin
 O_GRAPHITE    = -fgraphite-identity -floop-nest-optimize
 O_IPAPTA      = -fipa-pta
+O_BUILTIN     = -fbuiltin
 O_SEMINTERPOS = -fno-semantic-interposition
 O_NOCOMMON    = -fno-common
 O_NOPLT       = -fno-plt
@@ -12,7 +13,7 @@ O_NOPIE       = -no-pie
 O_NOSSP       = -fno-stack-protector
 OFLAGS = $(O_BASIC) $(O_LTO) $(O_GRAPHITE) $(O_IPAPTA) \
          $(O_SEMINTERPOS) $(O_NOCOMMON) $(O_NOPLT) \
-         $(O_NOPIE) $(O_NOSSP) \
+         $(O_NOPIE) $(O_NOSSP) $(O_BUILTIN) \
 
 # fallback if $(CC) != "gcc"
 O_FALLBACK    = -O3
