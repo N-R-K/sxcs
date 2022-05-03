@@ -581,7 +581,7 @@ main(int argc, const char *argv[])
 	}
 
 	{
-		int i, sigs[] = { SIGINT, SIGTERM, SIGABRT, SIGKILL /* one can try */ };
+		int i, sigs[] = { SIGINT, SIGTERM, SIGKILL /* one can try */ };
 		for (i = 0; i < (int)ARRLEN(sigs); ++i)
 			signal(sigs[i], sighandler);
 	}
