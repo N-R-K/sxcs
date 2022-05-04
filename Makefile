@@ -54,6 +54,7 @@ STRIP    ?= strip
 
 PREFIX   ?= /usr/local
 PROGNAME  = -DPROGNAME=\"$(BIN)\"
+VERSION   = Beta
 
 
 BIN  = sxcs
@@ -64,7 +65,7 @@ OBJS = sxcs.o
 .SUFFIXES: .c .o
 
 all: $(BIN)
-$(OBJS): Makefile config.h
+$(OBJS): Makefile config.h version.h
 
 $(BIN): $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LDLIBS)
@@ -77,6 +78,12 @@ $(BIN): $(OBJS)
 config.h:
 	cp config.def.h config.h
 
+version.h: Makefile .git/index
+	v="$$(git describe --tags --dirty 2>/dev/null || true)"; \
+	echo "#define VERSION \"$${v:-$(VERSION)}\"" >$@
+
+.git/index:
+
 debug:
 	make BIN="$(BIN)-debug" DFLAGS="$(_DFLAGS)" DEBUG_CPP="-DDEBUG" STRIP=":" all
 
@@ -87,7 +94,7 @@ run:
 	tcc $(CPPFLAGS) -DDFLAGS="$(_DFLAGS)" -DDEBUG $(LDLIBS) -b -run $(BIN).c
 
 clean:
-	rm -f *.o $(OBJS) $(BIN) $(BIN)-debug
+	rm -f *.o $(OBJS) $(BIN) $(BIN)-debug version.h
 
 install: $(BIN)
 	mkdir -p $(DESTDIR)$(PREFIX)/bin

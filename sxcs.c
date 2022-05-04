@@ -1,4 +1,6 @@
 /*
+ * Copyright (C) 2022 NRK and contributors.
+ *
  * This file is part of sxcs.
  *
  * sxcs is free software: you can redistribute it and/or modify it under the
@@ -26,6 +28,8 @@
 #include <X11/Xutil.h>
 #include <X11/cursorfont.h>
 #include <X11/Xcursor/Xcursor.h>
+
+#include "version.h"
 
 /*
  * macros
@@ -106,6 +110,7 @@ static HSL rgb_to_hsl(ulong col);
 static ulong get_pixel(int x, int y);
 static void print_color(int x, int y, enum output fmt);
 static void usage(void);
+static void version(void);
 static void filter_parse(const char *s);
 static Options opt_parse(int argc, const char *argv[]);
 static void magnify(const int x, const int y);
@@ -278,6 +283,18 @@ usage(void)
 }
 
 static void
+version(void)
+{
+	fprintf(stderr, "%s\n%s\n%s\n%s\n",
+	        PROGNAME" "VERSION,
+	        "Copyright (C) 2022 NRK and contributors.",
+	        "GPLv3 license.",
+	        "https://codeberg.org/NRK/sxcs"
+	       );
+	exit(1);
+}
+
+static void
 filter_parse(const char *s)
 {
 	static FilterFunc f_buf[16];
@@ -349,6 +366,8 @@ opt_parse(int argc, const char *argv[])
 			filter_parse(argv[++i]);
 		else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0)
 			usage();
+		else if (strcmp(argv[i], "--version") == 0)
+			version();
 		else
 			error(1, 0, "unknown argument `%s`.", argv[i]);
 	}
