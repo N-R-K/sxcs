@@ -22,7 +22,7 @@ O_FALLBACK    = -O3
 WGCC   = -Wlogical-op -Wcast-align=strict
 WGCC  += -fanalyzer
 WCLANG = -Weverything
-WCLANG += -Wno-padded -Wno-comma -Wno-missing-noreturn -Wno-unused-macros -Wno-format-nonliteral
+WCLANG += -Wno-padded -Wno-comma -Wno-unused-macros
 WCLANG += -Wno-implicit-fallthrough -Wno-unreachable-code-break -Wno-unreachable-code-return
 WFLAGS = -std=c89 -Wall -Wextra -Wpedantic \
          -Wshadow -Wvla -Wpointer-arith -Wwrite-strings -Wfloat-equal \

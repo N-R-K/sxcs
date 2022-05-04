@@ -49,6 +49,21 @@
 
 #define FILTER_SEQ_FROM_ARRAY(X)  { X, ARRLEN(X) }
 
+/* portable compiler attributes */
+#ifndef __has_attribute
+	#define __has_attribute(X) (0)
+#endif
+#if __has_attribute(format)
+	#define ATTR_FMT(A, S, ARG) __attribute__ ((format (A, S, ARG)))
+#else
+	#define ATTR_FMT(A, S, ARG)
+#endif
+#if __has_attribute(noreturn)
+	#define ATTR_NORETURN __attribute__ ((noreturn))
+#else
+	#define ATTR_NORETURN
+#endif
+
 /*
  * types
  */
@@ -70,7 +85,6 @@ typedef struct {
 	uint h   : 9;
 	uint s   : 7;
 	uint l   : 7;
-	uint pad : 9; /* cppcheck-suppress unusedStructMember */
 } HSL;
 
 typedef struct {
@@ -105,12 +119,12 @@ typedef struct {
  * function prototype
  */
 
-static void error(int exit_status, int errnum, const char *fmt, ...);
+static void error(int exit_status, int errnum, const char *fmt, ...) ATTR_FMT(printf, 3, 4);
 static HSL rgb_to_hsl(ulong col);
 static ulong get_pixel(int x, int y);
 static void print_color(int x, int y, enum output fmt);
-static void usage(void);
-static void version(void);
+static void usage(void) ATTR_NORETURN;
+static void version(void) ATTR_NORETURN;
 static void filter_parse(const char *s);
 static Options opt_parse(int argc, const char *argv[]);
 static void magnify(const int x, const int y);
@@ -323,7 +337,7 @@ filter_parse(const char *s)
 			if (strcmp(tok, table[i].str) == 0) {
 				if (f_len >= ARRLEN(f_buf)) {
 					error(1, 0, "too many filters."
-					      "max aloud: %zu", ARRLEN(f_buf));
+					      "max aloud: %u", (uint)ARRLEN(f_buf));
 				}
 				f_buf[f_len++] = table[i].f;
 				found_match = 1;
