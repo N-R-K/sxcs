@@ -111,7 +111,7 @@ typedef struct {
 
 /*
  * Annotation for functions called atexit()
- * These functions are not allowed to call error(!0, ...) or exit().
+ * These functions are not allowed to call die() or exit().
  */
 #define CLEANUP
 
@@ -119,7 +119,7 @@ typedef struct {
  * function prototype
  */
 
-static void error(int exit_status, int errnum, const char *fmt, ...) ATTR_FMT(printf, 3, 4);
+static void die(int exit_status, int errnum, const char *fmt, ...) ATTR_NORETURN ATTR_FMT(printf, 3, 4);
 static HSL rgb_to_hsl(ulong col);
 static ulong get_pixel(int x, int y);
 static void print_color(int x, int y, enum output fmt);
@@ -173,7 +173,7 @@ static const FilterSeq *filter = &filter_default;
  */
 
 static void
-error(int exit_status, int errnum, const char *fmt, ...)
+die(int exit_status, int errnum, const char *fmt, ...)
 {
 	va_list ap;
 
@@ -189,8 +189,7 @@ error(int exit_status, int errnum, const char *fmt, ...)
 		fprintf(stderr, "%s%s", fmt ? ": " : "", strerror(errnum));
 	fputc('\n', stderr);
 
-	if (exit_status)
-		exit(exit_status);
+	exit(exit_status);
 }
 
 static HSL
@@ -241,7 +240,7 @@ get_pixel(int x, int y)
 		XImage *im;
 		im = XGetImage(x11.dpy, x11.root.win, x, y, 1, 1, AllPlanes, ZPixmap);
 		if (im == NULL)
-			error(1, 0, "failed to get image");
+			die(1, 0, "failed to get image");
 		ret = XGetPixel(im, 0, 0);
 		XDestroyImage(im);
 	}
@@ -324,9 +323,9 @@ filter_parse(const char *s)
 	char tok_buf[256], *tok = NULL;
 
 	if (s == NULL)
-		error(1, 0, "invalid filter (null)");
+		die(1, 0, "invalid filter (null)");
 
-	strncpy(tok_buf, s, sizeof(tok_buf)); /* cppcheck-suppress nullPointerRedundantCheck */
+	strncpy(tok_buf, s, sizeof(tok_buf));
 	tok_buf[sizeof(tok_buf) - 1] = '\0';
 
 	tok = strtok(tok_buf, ",");
@@ -336,8 +335,8 @@ filter_parse(const char *s)
 		for (i = 0; i < ARRLEN(table); ++i) {
 			if (strcmp(tok, table[i].str) == 0) {
 				if (f_len >= ARRLEN(f_buf)) {
-					error(1, 0, "too many filters."
-					      "max aloud: %u", (uint)ARRLEN(f_buf));
+					die(1, 0, "too many filters."
+					          "max aloud: %u", (uint)ARRLEN(f_buf));
 				}
 				f_buf[f_len++] = table[i].f;
 				found_match = 1;
@@ -346,7 +345,7 @@ filter_parse(const char *s)
 		}
 
 		if (!found_match)
-			error(1, 0, "invalid filter %s", tok);
+			die(1, 0, "invalid filter %s", tok);
 		tok = strtok(NULL, ",");
 	}
 
@@ -383,7 +382,7 @@ opt_parse(int argc, const char *argv[])
 		else if (strcmp(argv[i], "--version") == 0)
 			version();
 		else
-			error(1, 0, "unknown argument `%s`.", argv[i]);
+			die(1, 0, "unknown argument `%s`.", argv[i]);
 	}
 
 	if (ret.fmt == OUTPUT_NONE && !no_color)
@@ -515,7 +514,7 @@ magnify(const int x, const int y)
 	img.im = XGetImage(x11.dpy, x11.root.win, (int)img.x, (int)img.y,
 	                   img.w, img.h, AllPlanes, ZPixmap);
 	if (img.im == NULL)
-		error(1, 0, "failed to get image");
+		die(1, 0, "failed to get image");
 	mag_func(cursor_img, &img);
 	XDestroyImage(img.im);
 
@@ -561,7 +560,7 @@ main(int argc, const char *argv[])
 	opt = opt_parse(argc, argv);
 
 	if ((x11.dpy = XOpenDisplay(NULL)) == NULL)
-		error(1, 0, "failed to open x11 display");
+		die(1, 0, "failed to open x11 display");
 
 	{ /* TODO: update the x11.root.{w,h} if root changes size */
 		XWindowAttributes tmp;
@@ -580,11 +579,11 @@ main(int argc, const char *argv[])
 		vis = DefaultVisual(x11.dpy, screen);
 		q.visualid = XVisualIDFromVisual(vis);
 		if ((r = XGetVisualInfo(x11.dpy, VisualIDMask, &q, &dummy)) == NULL)
-			error(1, 0, "failed to obtain visual info");
-		d = r->depth; /* cppcheck-suppress nullPointerRedundantCheck */
+			die(1, 0, "failed to obtain visual info");
+		d = r->depth;
 		XFree(r);
 		if (d < 24)
-			error(1, 0, "truecolor not supported");
+			die(1, 0, "truecolor not supported");
 	}
 
 	if (opt.no_mag) {
@@ -593,7 +592,7 @@ main(int argc, const char *argv[])
 	} else {
 		cursor_img = XcursorImageCreate(MAG_WINDOW_SIZE, MAG_WINDOW_SIZE);
 		if (cursor_img == NULL)
-			error(1, 0, "failed to create image");
+			die(1, 0, "failed to create image");
 		cursor_img->xhot = cursor_img->yhot = MAG_WINDOW_SIZE / 2;
 	}
 
@@ -603,14 +602,14 @@ main(int argc, const char *argv[])
 	                                    x11.root.win, x11.cur,
 	                                    CurrentTime) == GrabSuccess;
 	if (!x11.valid.ungrab_ptr)
-		error(1, 0, "failed to grab cursor");
+		die(1, 0, "failed to grab cursor");
 
 	if (opt.quit_on_keypress) {
 		x11.valid.ungrab_kb = XGrabKeyboard(x11.dpy, x11.root.win, 0,
 		                                    GrabModeAsync, GrabModeAsync,
 		                                    CurrentTime) == GrabSuccess;
 		if (!x11.valid.ungrab_kb)
-			error(1, 0, "failed to grab keyboard");
+			die(1, 0, "failed to grab keyboard");
 	}
 
 	{
@@ -679,7 +678,7 @@ main(int argc, const char *argv[])
 			started = 1;
 			break;
 		default:
-			/* error(0, 0, "recieved unknown event: `%d`", ev.type); */
+			/* die(0, 0, "recieved unknown event: `%d`", ev.type); */
 			break;
 		}
 	}
