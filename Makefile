@@ -34,7 +34,7 @@ WFLAGS = -std=c89 -Wall -Wextra -Wpedantic \
 
 # CPPCHECK
 CPPCHECK      = $$(command -v cppcheck 2>/dev/null || printf ":")
-CPPCHECK_ARGS = --std=c89 --quiet --inline-suppr \
+CPPCHECK_ARGS = --std=c89 --quiet --inline-suppr --force \
                 --enable=performance,portability,style \
                 --max-ctu-depth=8 -j8 \
                 --suppress=syntaxError --suppress=internalAstError \
