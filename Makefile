@@ -28,7 +28,8 @@ WFLAGS = -std=c89 -Wall -Wextra -Wpedantic \
          -Wshadow -Wvla -Wpointer-arith -Wwrite-strings -Wfloat-equal \
          -Wcast-align -Wcast-qual -Wbad-function-cast \
          -Wstrict-overflow=2 -Wunreachable-code -Wformat=2 \
-         -Wundef -Wstrict-prototypes -Wmissing-declarations -Wmissing-prototypes \
+         -Wundef -Wstrict-prototypes -Wmissing-declarations \
+         -Wmissing-prototypes -Wold-style-definition  \
          $$(test "$(CC)" = "gcc" && printf "%s " $(WGCC)) \
          $$(test "$(CC)" = "clang" && printf "%s " $(WCLANG)) \
 
