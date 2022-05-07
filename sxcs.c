@@ -272,26 +272,10 @@ print_color(int x, int y, enum output fmt)
 static void
 usage(void)
 {
-	uint i;
-	const char *const s[] = {
-		"usage: "PROGNAME" [options]",
-		"  -h, --help:             show usage",
-		"  -o, --one-shot:         quit after picking",
-		"  -q, --quit-on-keypress: quit on keypress",
-		"      --mag-none:         disable magnifier",
-		"      --mag-filters:      comma separated filter list",
-		"      --color-none:       disable color output",
-		"      --hex:              hex output",
-		"      --rgb:              rgb output",
-		"      --hsl:              hsl output",
-		"available filters:",
-		"    square_border:     draws a square border",
-		"    crosshair_square:  draws a square crosshair",
-		"    grid:              draws grid",
-		"    circle:            draws a circle",
-	};
-	for (i = 0; i < ARRLEN(s); ++i)
-		fprintf(stderr, "%s\n", s[i]);
+	fprintf(stderr, "%s\n%s\n",
+	        "usage: "PROGNAME" [options]",
+	        "See the manpage for more details."
+	       );
 	exit(1);
 }
 

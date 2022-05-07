@@ -1,0 +1,61 @@
+.TH SXCS 1 "May 2022"
+.SH NAME
+sxcs - Minimal X11 color picker and magnifier
+.SH SYNOPSIS
+sxcs [\fBoptions\fR]
+.SH DESCRIPTION
+.B sxcs
+is a minimal X11 color picker and magnifier.
+\fIButton1\fR will select and print the color to stdout, the output is TAB
+separated hex, rgb, and hsl. \fIScroll Up/Down\fR will zoom in and out. Any
+other mouse button will quit sxcs.
+.SH OPTIONS
+.TP
+.BR "--color-none"
+disable color output.
+.TP
+.BR "--hex"
+output hex colors.
+.TP
+.BR "--rgb"
+output rgb colors.
+.TP
+.BR "--hsl"
+output hsl colors.
+.TP
+.BR "--mag-none"
+disable magnifier.
+.TP
+.BI "--mag-filters " "filters"
+comma separated list of filter to apply in order.
+See section FILTERS for more information.
+.TP
+.BR "-o, --one-shot"
+quit after a single selection.
+.TP
+.BR "-q, --quit-on-keypress"
+quit on keypress.
+.TP
+.BR "-h, --help"
+Show usage and exit.
+.TP
+.BR "--version"
+Show version and exit.
+.SH FILTERS
+List of available filters:
+.TP
+.B "square_border"
+draws a square border.
+.TP
+.B "crosshair_square"
+draws a square crosshair.
+.TP
+.B "grid"
+draws grid.
+.TP
+.B "circle"
+draws a circle.
+.SH AUTHORS
+NRK <nrk@disroot.org>
+.SH "REPORTING BUGS"
+https://codeberg.org/NRK/sxcs

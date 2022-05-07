@@ -52,10 +52,10 @@ $ sxcs --mag-filters "grid,crosshair_square"
 
 <img width="256" height="256" src="preview/grid_x.png"/>
 
-To see a list of all available cli arguments and filters:
+Consult the manpage to see a list of all available cli arguments and filters:
 
 ```console
-$ sxcs --help
+$ man sxcs
 ```
 
 ## Building

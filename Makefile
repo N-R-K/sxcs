@@ -54,6 +54,7 @@ LDLIBS    = $(X11_LIBS)
 STRIP    ?= strip
 
 PREFIX   ?= /usr/local
+MANPREFIX ?= $(PREFIX)/share/man
 PROGNAME  = -DPROGNAME=\"$(BIN)\"
 VERSION   = Beta
 
@@ -101,7 +102,11 @@ install: $(BIN)
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
 	cp $(BIN) $(DESTDIR)$(PREFIX)/bin/
 	chmod 755 $(DESTDIR)$(PREFIX)/bin/$(BIN)
+	mkdir -p $(DESTDIR)$(MANPREFIX)/man1
+	cp $(BIN).1 $(DESTDIR)$(MANPREFIX)/man1/$(BIN).1
+	chmod 644 $(DESTDIR)$(MANPREFIX)/man1/$(BIN).1
 
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/$(BIN)
+	rm -f $(DESTDIR)$(MANPREFIX)/man1/$(BIN).1
 
