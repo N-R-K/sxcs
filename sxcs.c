@@ -399,7 +399,7 @@ nearest_neighbour(XcursorImage *out, const Image *in)
 				tmp = 0xff000000;
 			else
 				tmp = XGetPixel(in->im, ix, iy) | 0xff000000;
-			out->pixels[y * out->height + x] = (XcursorPixel)tmp;
+			out->pixels[y * out->width + x] = (XcursorPixel)tmp;
 		}
 	}
 }
