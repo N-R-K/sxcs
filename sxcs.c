@@ -234,7 +234,7 @@ get_pixel(int x, int y)
 
 	if (cursor_img != NULL) {
 		uint m = cursor_img->height / 2;
-		ret = cursor_img->pixels[m * cursor_img->height + m];
+		ret = cursor_img->pixels[m * cursor_img->width + m];
 		ret &= 0x00ffffff; /* cut off the alpha */
 	} else {
 		XImage *im;
@@ -415,7 +415,7 @@ square_border(XcursorImage *img)
 			if ((y < b || y + b >= img->height) ||
 			    (x < b || x + b >= img->width))
 			{
-				img->pixels[y * img->height + x] = SQUARE_BORDER_COLOR;
+				img->pixels[y * img->width + x] = SQUARE_BORDER_COLOR;
 			}
 		}
 	}
@@ -432,7 +432,7 @@ crosshair_square(XcursorImage *img)
 	for (y = c - b; y <= c + b; ++y) {
 		for (x = c - b; x <= c + b; ++x) {
 			if (DIFF(x, c) > b - bw || DIFF(y, c) > b - bw)
-				img->pixels[y * img->height + x] = CROSSHAIR_SQUARE_COLOR;
+				img->pixels[y * img->width + x] = CROSSHAIR_SQUARE_COLOR;
 		}
 	}
 }
@@ -447,7 +447,7 @@ grid(XcursorImage *img)
 	for (y = 0; y < img->height; ++y) {
 		for (x = 0; x < img->width; ++x) {
 			if (DIFF(c, x) % z == 0 || DIFF(c, y) % z == 0) {
-				img->pixels[y * img->height + x] = GRID_COLOR;
+				img->pixels[y * img->width + x] = GRID_COLOR;
 			}
 		}
 	}
@@ -469,11 +469,11 @@ circle(XcursorImage *img)
 			if ((tx * tx) + (ty * ty) <= (r * r) &&
 			    (tx * tx) + (ty * ty) > (br * br))
 			{
-				img->pixels[y * (int)img->height + x] = CIRCLE_COLOR;
+				img->pixels[y * (int)img->width + x] = CIRCLE_COLOR;
 			} else if (CIRCLE_TRANSPARENT_OUTSIDE &&
 			           (tx * tx) + (ty * ty) > (r * r))
 			{
-				img->pixels[y * (int)img->height + x] = 0x0;
+				img->pixels[y * (int)img->width + x] = 0x0;
 			}
 		}
 	}
