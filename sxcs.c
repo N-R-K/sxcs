@@ -483,7 +483,7 @@ static void
 magnify(const int x, const int y)
 {
 	const uint ms = (uint)((float)MAG_WINDOW_SIZE / MAG_FACTOR);
-	const int moff = (int)((float)ms / MAG_FACTOR);
+	const int moff = ms / 2;
 	Image img;
 	uint i;
 	Cursor new_cur;
