@@ -375,15 +375,14 @@ opt_parse(int argc, const char *argv[])
 	return ret;
 }
 
-/* FIXME: this is kinda fucked if MAG_FACTOR < 2.0 */
 static void
 nearest_neighbour(XcursorImage *out, const Image *in)
 {
 	uint x, y;
 	float ocy = (float)out->height / 2.0f;
 	float ocx = (float)out->width / 2.0f;
-	float icy = (float)in->wanted.h / MAG_FACTOR;
-	float icx = (float)in->wanted.w / MAG_FACTOR;
+	float icy = (float)in->wanted.h / 2.0f;
+	float icx = (float)in->wanted.w / 2.0f;
 
 	for (y = 0; y < out->height; ++y) {
 		for (x = 0; x < out->width; ++x) {
@@ -630,7 +629,7 @@ main(int argc, const char *argv[])
 				MAG_FACTOR *= MAG_STEP;
 				break;
 			case Button5:
-				MAG_FACTOR = MAX(2.0f, MAG_FACTOR / MAG_STEP);
+				MAG_FACTOR = MAX(1.0f, MAG_FACTOR / MAG_STEP);
 				break;
 			case Button1:
 				print_color(ev.xbutton.x_root, ev.xbutton.y_root, opt.fmt);
