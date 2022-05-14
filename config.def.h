@@ -3,7 +3,7 @@ static float MAG_FACTOR = 3.0f;
 /* zoom in/out factor */
 static const float MAG_STEP = 1.025f;
 /* size of the mangifier */
-static const uint MAG_WINDOW_SIZE = 192;
+static const uint MAG_SIZE = 192;
 
 /* default scaling function */
 static const MagFunc mag_func = nearest_neighbour;

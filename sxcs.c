@@ -481,7 +481,7 @@ circle(XcursorImage *img)
 static void
 magnify(const int x, const int y)
 {
-	const uint ms = (uint)((float)MAG_WINDOW_SIZE / MAG_FACTOR);
+	const uint ms = (uint)((float)MAG_SIZE / MAG_FACTOR);
 	const int moff = ms / 2;
 	Image img;
 	uint i;
@@ -573,10 +573,10 @@ main(int argc, const char *argv[])
 		x11.cur = XCreateFontCursor(x11.dpy, XC_tcross);
 		x11.valid.cur = 1;
 	} else {
-		cursor_img = XcursorImageCreate(MAG_WINDOW_SIZE, MAG_WINDOW_SIZE);
+		cursor_img = XcursorImageCreate(MAG_SIZE, MAG_SIZE);
 		if (cursor_img == NULL)
 			die(1, 0, "failed to create image");
-		cursor_img->xhot = cursor_img->yhot = MAG_WINDOW_SIZE / 2;
+		cursor_img->xhot = cursor_img->yhot = MAG_SIZE / 2;
 	}
 
 	x11.grab_mask = ButtonPressMask | PointerMotionMask;
