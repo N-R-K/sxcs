@@ -406,18 +406,19 @@ nearest_neighbour(XcursorImage *out, const Image *in)
 static void
 square_border(XcursorImage *img)
 {
-	uint x, y;
+	size_t i, k;
 	const uint b = SQUARE_BORDER_WIDTH;
 
-	for (y = 0; y < img->height; ++y) {
-		for (x = 0; x < img->width; ++x) {
-			if ((y < b || y + b >= img->height) ||
-			    (x < b || x + b >= img->width))
-			{
-				img->pixels[y * img->width + x] = SQUARE_BORDER_COLOR;
-			}
-		}
-	}
+	i = 0;
+	while (i < img->width * b + b) /* draw the top border + 1 left side */
+		img->pixels[i++] = SQUARE_BORDER_COLOR;
+	do {
+		i += img->width - b * 2; /* skip the mid */
+		for (k = 0; k < b*2; ++k)
+			img->pixels[i++] = SQUARE_BORDER_COLOR;
+	} while (i < (img->height - b) * img->width);
+	while (i < img->width * img->height) /* draw the rest */
+		img->pixels[i++] = SQUARE_BORDER_COLOR;
 }
 
 static void
