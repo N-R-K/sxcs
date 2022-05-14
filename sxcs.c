@@ -130,6 +130,7 @@ static Options opt_parse(int argc, const char *argv[]);
 static void magnify(const int x, const int y);
 static void sighandler(int sig);
 CLEANUP static void cleanup(void);
+/* TODO: document (and stabilize) the filter/zoom function API */
 /* TODO: add bicubic scaling */
 /* zoom functions */
 static void nearest_neighbour(XcursorImage *out, const Image *in);
@@ -163,7 +164,6 @@ static XcursorImage *cursor_img;
 
 static volatile sig_atomic_t sig_recieved;
 
-/* TODO: comment config.h more thoroughly and document the filter/zoom func */
 #include "config.h"
 
 static const FilterSeq *filter = &filter_default;
