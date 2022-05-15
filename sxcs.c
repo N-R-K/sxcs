@@ -132,11 +132,17 @@ static void sighandler(int sig);
 CLEANUP static void cleanup(void);
 /* helpers */
 static void four_point_draw(XcursorImage *img, int x, int y, XcursorPixel col);
+/* TODO: trying to grab the pixel from XImage via XGetPixel seems pretty expensive.
+ * Maybe using XImage isn't the best idea, try to find if there's a way to grab
+ * the ARGB pixmap directly.
+ */
+/* TODO: look into Shm extension to reduce allocation overhead. */
 /* TODO: document (and stabilize) the filter/zoom function API */
 /* TODO: add bicubic scaling */
 /* zoom functions */
 static void nearest_neighbour(XcursorImage *out, const Image *in);
 /* filter functions */
+/* TODO: add pixels_grid */
 static void square_border(XcursorImage *img);
 static void crosshair_square(XcursorImage *img);
 static void grid(XcursorImage *img);
@@ -498,8 +504,8 @@ magnify(const int x, const int y)
 {
 	const uint ms = (uint)((float)MAG_SIZE / MAG_FACTOR);
 	const int moff = ms / 2;
-	Image img;
 	uint i;
+	Image img;
 	Cursor new_cur;
 
 	img.x = (uint)MAX(0, x - moff);
@@ -676,7 +682,6 @@ main(int argc, const char *argv[])
 			started = 1;
 			break;
 		default:
-			/* die(0, 0, "recieved unknown event: `%d`", ev.type); */
 			break;
 		}
 	}
