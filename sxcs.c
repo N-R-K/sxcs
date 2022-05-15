@@ -130,6 +130,8 @@ static Options opt_parse(int argc, const char *argv[]);
 static void magnify(const int x, const int y);
 static void sighandler(int sig);
 CLEANUP static void cleanup(void);
+/* helpers */
+static void four_point_draw(XcursorImage *img, int x, int y, XcursorPixel col);
 /* TODO: document (and stabilize) the filter/zoom function API */
 /* TODO: add bicubic scaling */
 /* zoom functions */
@@ -454,26 +456,39 @@ grid(XcursorImage *img)
 }
 
 static void
+four_point_draw(XcursorImage *img, int x, int y, XcursorPixel col) /* naming is hard */
+{
+	int w = (int)img->width, h = (int)img->height;
+	img->pixels[y * w + x] = col;
+	img->pixels[y * w + (w - x - 1)] = col;
+	img->pixels[(h - y - 1) * w + x] = col;
+	img->pixels[(h - y - 1) * w + (w - x - 1)] = col;
+}
+
+/* TODO: reduce jaggedness */
+static void
 circle(XcursorImage *img)
 {
-	int x, y;
+	int x, y, h = (int)img->height, w = (int)img->width;
 	int r = (int)CIRCLE_RADIUS;
 	int br = r - (int)CIRCLE_WIDTH;
-	int c = img->height / 2;
+	int c = h / 2;
 
-	for (y = 0; y < (int)img->height; ++y) {
-		for (x = 0; x < (int)img->width; ++x) {
+	for (y = 0; y < h / 2 + (h & 1); ++y) {
+		for (x = 0; x < w / 2 + (w & 1); ++x) {
 			int tx = x - c;
 			int ty = y - c;
 
 			if ((tx * tx) + (ty * ty) <= (r * r) &&
 			    (tx * tx) + (ty * ty) > (br * br))
 			{
-				img->pixels[y * (int)img->width + x] = CIRCLE_COLOR;
+				four_point_draw(img, x, y, CIRCLE_COLOR);
 			} else if (CIRCLE_TRANSPARENT_OUTSIDE &&
 			           (tx * tx) + (ty * ty) > (r * r))
 			{
-				img->pixels[y * (int)img->width + x] = 0x0;
+				four_point_draw(img, x, y, 0x0);
+			} else { /* move on to the next y */
+				break;
 			}
 		}
 	}
