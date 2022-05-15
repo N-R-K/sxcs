@@ -479,15 +479,14 @@ circle(XcursorImage *img)
 		for (x = 0; x < w / 2 + (w & 1); ++x) {
 			int tx = x - c;
 			int ty = y - c;
+			int x2y2 = (tx * tx) + (ty * ty);
 
-			if ((tx * tx) + (ty * ty) <= (r * r) &&
-			    (tx * tx) + (ty * ty) > (br * br))
-			{
-				four_point_draw(img, x, y, CIRCLE_COLOR);
-			} else if ((tx * tx) + (ty * ty) > (r * r)) {
+			if (x2y2 > (r * r)) { /* outside the circle border */
 				if (CIRCLE_TRANSPARENT_OUTSIDE)
 					four_point_draw(img, x, y, 0x0);
-			} else { /* move on to the next y */
+			} else if (x2y2 > (br * br)) { /* inside the circle border */
+				four_point_draw(img, x, y, CIRCLE_COLOR);
+			} else { /* inside the circle, nothing to do. move on to the next y */
 				break;
 			}
 		}
