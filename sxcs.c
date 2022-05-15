@@ -447,10 +447,11 @@ grid(XcursorImage *img)
 	const uint c = (img->height / 2) + (z / 2);
 
 	for (y = 0; y < img->height; ++y) {
-		for (x = 0; x < img->width; ++x) {
-			if (DIFF(c, x) % z == 0 || DIFF(c, y) % z == 0) {
+		if (DIFF(c, y) % z == 0) {
+			for (x = 0; x < img->width; ++x)
 				img->pixels[y * img->width + x] = GRID_COLOR;
-			}
+		} else for (x = c % z; x < img->width; x += z) {
+			img->pixels[y * img->width + x] = GRID_COLOR;
 		}
 	}
 }
