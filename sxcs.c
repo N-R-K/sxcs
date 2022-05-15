@@ -483,10 +483,9 @@ circle(XcursorImage *img)
 			    (tx * tx) + (ty * ty) > (br * br))
 			{
 				four_point_draw(img, x, y, CIRCLE_COLOR);
-			} else if (CIRCLE_TRANSPARENT_OUTSIDE &&
-			           (tx * tx) + (ty * ty) > (r * r))
-			{
-				four_point_draw(img, x, y, 0x0);
+			} else if ((tx * tx) + (ty * ty) > (r * r)) {
+				if (CIRCLE_TRANSPARENT_OUTSIDE)
+					four_point_draw(img, x, y, 0x0);
 			} else { /* move on to the next y */
 				break;
 			}
