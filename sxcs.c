@@ -132,10 +132,7 @@ CLEANUP static void cleanup(void);
 /* helpers */
 static ulong get_pixel(int x, int y);
 static void four_point_draw(XcursorImage *img, uint x, uint y, XcursorPixel col);
-/* TODO: trying to grab the pixel from XImage via XGetPixel seems pretty expensive.
- * Maybe using XImage isn't the best idea, try to find if there's a way to grab
- * the ARGB pixmap directly.
- */
+static ulong ximg_pixel_get(const XImage *img, int x, int y);
 /* TODO: look into Shm extension to reduce allocation overhead. */
 /* TODO: document (and stabilize) the filter/zoom function API */
 /* TODO: add bicubic scaling */
@@ -382,6 +379,32 @@ opt_parse(int argc, const char *argv[])
 	return ret;
 }
 
+/*
+ * NOTE: calling XGetPixel is expensive. so manually extract the pixels
+ * instead. it *should* work fine, but only tested it on my system. so it's
+ * possible that this causes some problems, especially if the X server is
+ * running on some funny config.
+ */
+static ulong
+ximg_pixel_get(const XImage *img, int x, int y)
+{
+	ulong ret;
+	uchar *p = (uchar *)&img->data[(y * img->bytes_per_line) + (x * 4)];
+
+	if (img->byte_order == MSBFirst) {
+		ret = (ulong)p[0] << 24 |
+		      (ulong)p[1] << 16 |
+		      (ulong)p[2] <<  8 |
+		      (ulong)p[3] <<  0;
+	} else {
+		ret = (ulong)p[3] << 24 |
+		      (ulong)p[2] << 16 |
+		      (ulong)p[1] <<  8 |
+		      (ulong)p[0] <<  0;
+	}
+	return ret;
+}
+
 static void
 nearest_neighbour(XcursorImage *out, const Image *in)
 {
@@ -402,7 +425,7 @@ nearest_neighbour(XcursorImage *out, const Image *in)
 			if ((iy < 0 || iy >= (int)in->h) || (ix < 0 || ix >= (int)in->w))
 				tmp = 0xff000000;
 			else
-				tmp = XGetPixel(in->im, ix, iy) | 0xff000000;
+				tmp = ximg_pixel_get(in->im, ix, iy) | 0xff000000;
 			out->pixels[y * out->width + x] = (XcursorPixel)tmp;
 		}
 	}
@@ -516,6 +539,8 @@ magnify(const int x, const int y)
 	                   img.w, img.h, AllPlanes, ZPixmap);
 	if (img.im == NULL)
 		die(1, 0, "failed to get image");
+	if (img.im->bits_per_pixel != 32) /* ximg_pixel_get() depends on it */
+		die(1, 0, "unexpected bits_per_pixel");
 	mag_func(cursor_img, &img);
 	XDestroyImage(img.im);
 
