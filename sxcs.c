@@ -666,6 +666,9 @@ main(int argc, const char *argv[])
 				exit(1);
 			break;
 		case MotionNotify:
+			if (opt.no_mag)
+				break;
+
 			do { /* don't act on stale events */
 				if (XPending(x11.dpy) > 0) {
 					XEvent next_ev;
@@ -677,8 +680,7 @@ main(int argc, const char *argv[])
 					break;
 				}
 			} while (discard);
-			if (!opt.no_mag)
-				magnify(ev.xbutton.x_root, ev.xbutton.y_root);
+			magnify(ev.xbutton.x_root, ev.xbutton.y_root);
 			old.valid = 1;
 			old.x = ev.xbutton.x_root;
 			old.y = ev.xbutton.y_root;
