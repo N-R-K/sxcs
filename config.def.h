@@ -1,8 +1,8 @@
-/* magnificaton factor. must be >0.0 */
+/* magnification factor. must be >0.0 */
 static float MAG_FACTOR = 3.0f;
 /* zoom in/out factor */
 static const float MAG_STEP = 1.025f;
-/* size of the mangifier */
+/* size of the magnifier */
 static const uint MAG_SIZE = 192;
 
 /* default scaling function */
@@ -36,13 +36,13 @@ static const FilterFunc sq_cross[] = { square_border, crosshair_square };
 static const FilterFunc sq_grid_cross[] = { grid, square_border, crosshair_square };
 static const FilterFunc circle_grid_cross[] = { grid, circle, crosshair_square };
 
-/* default filter sequence, overriden via cli arg `--mag-filters` */
+/* default filter sequence, overridden via cli arg `--mag-filters` */
 static const FilterSeq filter_default = FILTER_SEQ_FROM_ARRAY(circle_grid_cross);
 
 /* max time (in ms) allowed to go on without a redraw */
 static const int MAX_FRAME_TIME = 16;
 
-/* default output format, overriden via cli arg.
+/* default output format, overridden via cli arg.
  * available options: OUTPUT_{NONE,HEX,RGB,HSL,ALL}
  * the options may be OR-ed together, e.g: `OUTPUT_RGB | OUTPUT_HSL`
  */
