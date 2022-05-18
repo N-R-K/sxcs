@@ -121,7 +121,6 @@ typedef struct {
 
 static void die(int exit_status, int errnum, const char *fmt, ...) ATTR_NORETURN ATTR_FMT(printf, 3, 4);
 static HSL rgb_to_hsl(ulong col);
-static ulong get_pixel(int x, int y);
 static void print_color(int x, int y, enum output fmt);
 static void usage(void) ATTR_NORETURN;
 static void version(void) ATTR_NORETURN;
@@ -131,7 +130,8 @@ static void magnify(const int x, const int y);
 static void sighandler(int sig);
 CLEANUP static void cleanup(void);
 /* helpers */
-static void four_point_draw(XcursorImage *img, int x, int y, XcursorPixel col);
+static ulong get_pixel(int x, int y);
+static void four_point_draw(XcursorImage *img, uint x, uint y, XcursorPixel col);
 /* TODO: trying to grab the pixel from XImage via XGetPixel seems pretty expensive.
  * Maybe using XImage isn't the best idea, try to find if there's a way to grab
  * the ARGB pixmap directly.
@@ -143,6 +143,7 @@ static void four_point_draw(XcursorImage *img, int x, int y, XcursorPixel col);
 static void nearest_neighbour(XcursorImage *out, const Image *in);
 /* filter functions */
 /* TODO: add pixels_grid */
+/* TODO: name these shorter/better so they're easy to type on the cli args */
 static void square_border(XcursorImage *img);
 static void crosshair_square(XcursorImage *img);
 static void grid(XcursorImage *img);
@@ -396,10 +397,8 @@ nearest_neighbour(XcursorImage *out, const Image *in)
 		for (x = 0; x < out->width; ++x) {
 			float oy = ((float)y - ocy) / ocy;
 			float ox = ((float)x - ocx) / ocx;
-			float iyf = (float)in->cy + (icy * oy);
-			float ixf = (float)in->cx + (icx * ox);
-			int iy = ROUNDF(iyf);
-			int ix = ROUNDF(ixf);
+			int iy = ROUNDF((float)in->cy + (icy * oy));
+			int ix = ROUNDF((float)in->cx + (icx * ox));
 			ulong tmp;
 
 			if ((iy < 0 || iy >= (int)in->h) || (ix < 0 || ix >= (int)in->w))
@@ -433,7 +432,7 @@ static void
 crosshair_square(XcursorImage *img)
 {
 	uint x, y;
-	const uint c = (img->height / 2);
+	const uint c = img->height / 2;
 	const uint b = CROSSHAIR_SQUARE_SIZE;
 	const uint bw = CROSSHAIR_SQUARE_BORDER_WIDTH;
 
@@ -463,9 +462,9 @@ grid(XcursorImage *img)
 }
 
 static void
-four_point_draw(XcursorImage *img, int x, int y, XcursorPixel col) /* naming is hard */
+four_point_draw(XcursorImage *img, uint x, uint y, XcursorPixel col) /* naming is hard */
 {
-	int w = (int)img->width, h = (int)img->height;
+	uint w = img->width, h = img->height;
 	img->pixels[y * w + x] = col;
 	img->pixels[y * w + (w - x - 1)] = col;
 	img->pixels[(h - y - 1) * w + x] = col;
@@ -476,16 +475,16 @@ four_point_draw(XcursorImage *img, int x, int y, XcursorPixel col) /* naming is 
 static void
 circle(XcursorImage *img)
 {
-	int x, y, h = (int)img->height, w = (int)img->width;
-	int r = (int)CIRCLE_RADIUS;
-	int br = r - (int)CIRCLE_WIDTH;
-	int c = h / 2;
+	uint x, y, h = img->height, w = img->width;
+	uint r = CIRCLE_RADIUS;
+	uint br = r - CIRCLE_WIDTH;
+	uint c = h / 2;
 
 	for (y = 0; y < h / 2 + (h & 1); ++y) {
 		for (x = 0; x < w / 2 + (w & 1); ++x) {
-			int tx = x - c;
-			int ty = y - c;
-			int x2y2 = (tx * tx) + (ty * ty);
+			uint tx = c - x;
+			uint ty = c - y;
+			uint x2y2 = (tx * tx) + (ty * ty);
 
 			if (x2y2 > (r * r)) { /* outside the circle border */
 				if (CIRCLE_TRANSPARENT_OUTSIDE)
@@ -502,19 +501,19 @@ circle(XcursorImage *img)
 static void
 magnify(const int x, const int y)
 {
-	const uint ms = (uint)((float)MAG_SIZE / MAG_FACTOR);
-	const int moff = ms / 2;
+	const uint c = (uint)((float)MAG_SIZE / MAG_FACTOR);
+	const int off = c / 2;
 	uint i;
 	Image img;
 	Cursor new_cur;
 
-	img.x = (uint)MAX(0, x - moff);
-	img.y = (uint)MAX(0, y - moff);
-	img.w = MIN(ms, x11.root.w - img.x);
-	img.h = MIN(ms, x11.root.h - img.y);
+	img.x = (uint)MAX(0, x - off);
+	img.y = (uint)MAX(0, y - off);
+	img.w = MIN(c, x11.root.w - img.x);
+	img.h = MIN(c, x11.root.h - img.y);
 	img.cx = x - (int)img.x;
 	img.cy = y - (int)img.y;
-	img.wanted.w = img.wanted.h = ms;
+	img.wanted.w = img.wanted.h = c;
 	img.im = XGetImage(x11.dpy, x11.root.win, (int)img.x, (int)img.y,
 	                   img.w, img.h, AllPlanes, ZPixmap);
 	if (img.im == NULL)
@@ -576,12 +575,9 @@ main(int argc, const char *argv[])
 
 	{
 		XVisualInfo q = {0}, *r;
-		int d, dummy, screen;
-		Visual *vis;
+		int d, dummy;
 
-		screen = DefaultScreen(x11.dpy);
-		vis = DefaultVisual(x11.dpy, screen);
-		q.visualid = XVisualIDFromVisual(vis);
+		q.visualid = XVisualIDFromVisual(DefaultVisual(x11.dpy, DefaultScreen(x11.dpy)));
 		if ((r = XGetVisualInfo(x11.dpy, VisualIDMask, &q, &dummy)) == NULL)
 			die(1, 0, "failed to obtain visual info");
 		d = r->depth;
