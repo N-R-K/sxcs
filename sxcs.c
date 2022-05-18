@@ -134,6 +134,7 @@ CLEANUP static void cleanup(void);
 /* helpers */
 static ulong get_pixel(int x, int y);
 static void four_point_draw(XcursorImage *img, uint x, uint y, XcursorPixel col);
+static int xrect_intersect(XRectangle a, XRectangle b);
 /* TODO: trying to grab the pixel from XImage via XGetPixel seems pretty expensive.
  * Maybe using XImage isn't the best idea, try to find if there's a way to grab
  * the ARGB pixmap directly.
