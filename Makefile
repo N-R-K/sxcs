@@ -46,7 +46,7 @@ CTIDY_ARGS = --quiet --warnings-as-errors="*" \
              --checks="$$(sed '/^\#/d' .clangtidychecks | paste -d ',' -s)"
 
 # libs
-X11_LIBS  = -l X11 -l Xcursor
+X11_LIBS  = -l X11 -l Xcursor -l Xdamage
 FEAT_CPP  = -D _POSIX_C_SOURCE=200112L
 
 # Cool stuff

@@ -24,11 +24,13 @@
 #include <stdarg.h>
 #include <poll.h>
 #include <signal.h>
+#include <time.h>
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/cursorfont.h>
 #include <X11/Xcursor/Xcursor.h>
+#include <X11/extensions/Xdamage.h>
 
 #include "version.h"
 
@@ -135,6 +137,7 @@ CLEANUP static void cleanup(void);
 static ulong get_pixel(int x, int y);
 static void four_point_draw(XcursorImage *img, uint x, uint y, XcursorPixel col);
 static ulong ximg_pixel_get(const XImage *img, int x, int y);
+static int xrect_intersect(XRectangle a, XRectangle b);
 /*
  * zoom functions:
  *
@@ -169,6 +172,7 @@ static struct {
 	Display *dpy;
 	Cursor cur;
 	uint grab_mask;
+	Damage dmg;
 	struct {
 		Window win;
 		uint w, h;
@@ -177,6 +181,7 @@ static struct {
 		uint cur         : 1;
 		uint ungrab_ptr  : 1;
 		uint ungrab_kb   : 1;
+		uint dmg         : 1;
 	} valid;
 } x11;
 
@@ -538,6 +543,7 @@ magnify(const int x, const int y)
 	uint i;
 	Image img;
 	Cursor new_cur;
+	static ulong draw;
 
 	img.x = (uint)MAX(0, x - off);
 	img.y = (uint)MAX(0, y - off);
@@ -566,6 +572,20 @@ magnify(const int x, const int y)
 	x11.cur = new_cur;
 	x11.valid.cur = 1;
 	XChangeActivePointerGrab(x11.dpy, x11.grab_mask, x11.cur, CurrentTime);
+	fprintf(stderr, "[%6lu]: redraw done! >_<\n", ++draw);
+
+	{
+		struct timespec nap = {0};
+		nap.tv_nsec = FRAME_TIME_MIN * 1000L * 1000L;
+		nanosleep(&nap, NULL);
+	}
+}
+
+static int
+xrect_intersect(XRectangle a, XRectangle b)
+{
+	return (a.x <= b.x + b.width  && a.x + a.width  >= b.x) &&
+	       (a.y <= b.y + b.height && a.y + a.height >= b.y);
 }
 
 static void
@@ -585,6 +605,8 @@ cleanup(void)
 		XcursorImageDestroy(cursor_img);
 	if (x11.valid.cur)
 		XFreeCursor(x11.dpy, x11.cur);
+	if (x11.valid.dmg)
+		XDamageDestroy(x11.dpy, x11.dmg);
 	if (x11.dpy != NULL)
 		XCloseDisplay(x11.dpy);
 }
@@ -593,6 +615,7 @@ extern int
 main(int argc, const char *argv[])
 {
 	Options opt;
+	int xdamage_ev;
 	struct { int x, y, valid; } old = {0};
 
 	if (atexit(cleanup) != 0)
@@ -622,6 +645,14 @@ main(int argc, const char *argv[])
 		XFree(r);
 		if (d < 24)
 			die(1, 0, "truecolor not supported");
+	}
+
+	{
+		int dummy;
+		if (!XDamageQueryExtension(x11.dpy, &xdamage_ev, &dummy))
+			die(1, 0, "XDamage extension not found");
+		x11.dmg = XDamageCreate(x11.dpy, x11.root.win, XDamageReportRawRectangles);
+		x11.valid.dmg = 1;
 	}
 
 	if (opt.no_mag) {
@@ -664,27 +695,58 @@ main(int argc, const char *argv[])
 	}
 
 	while (1) {
-		XEvent ev;
-		Bool discard = False, pending;
+		XEvent ev, nextev, junk;
+		Bool pending, dmg_discard = False, damaged = False;
 		struct pollfd pfd;
 
 		pfd.fd = ConnectionNumber(x11.dpy);
 		pfd.events = POLLIN;
-		pending = XPending(x11.dpy) > 0 || poll(&pfd, 1, MAX_FRAME_TIME) > 0;
+		pending = XPending(x11.dpy) > 0 || poll(&pfd, 1, -1) > 0;
 
 		if (sig_recieved)
 			exit(sig_recieved);
 
-		/* TODO: rather than updating at certain interval,
-		 * try to check if the window below changed or not
-		 */
-		if (!pending) {
-			if (!opt.no_mag && old.valid)
-				magnify(old.x, old.y);
+		if (!pending)
 			continue;
-		}
 
-		switch (XNextEvent(x11.dpy, &ev), ev.type) {
+		XNextEvent(x11.dpy, &ev);
+		do { /* discard any stale events */
+			if (ev.type == MotionNotify) {
+				dmg_discard = True;
+			} else if (ev.type == xdamage_ev + XDamageNotify) {
+				if (!dmg_discard && old.valid) {
+					XDamageNotifyEvent *dmg = (XDamageNotifyEvent *)&ev;
+					int sz = (int)((float)MAG_SIZE / MAG_FACTOR);
+					XRectangle tmp;
+
+					tmp.x = (short)(old.x - sz/2);
+					tmp.y = (short)(old.y - sz/2);
+					tmp.width = tmp.height = (ushort)sz;
+
+					if (xrect_intersect(tmp, dmg->area))
+						damaged = dmg_discard = True;
+				}
+			} else {
+				break;
+			}
+
+			if (XPending(x11.dpy) <= 0)
+				break;
+
+			XPeekEvent(x11.dpy, &nextev);
+			if (nextev.type == MotionNotify) {
+				ev = nextev;
+				dmg_discard = True;
+			} else if (nextev.type == xdamage_ev + XDamageNotify) {
+				UNUSED(nextev.type);
+			} else {
+				break;
+			}
+
+			XNextEvent(x11.dpy, &junk);
+		} while (XPending(x11.dpy) > 0);
+
+		switch (ev.type) {
 		case ButtonPress:
 			switch (ev.xbutton.button) {
 			case Button1:
@@ -694,9 +756,11 @@ main(int argc, const char *argv[])
 				break;
 			case Button4:
 				MAG_FACTOR *= MAG_STEP;
+				goto do_magnify;
 				break;
 			case Button5:
 				MAG_FACTOR = MAX(1.1f, MAG_FACTOR / MAG_STEP);
+				goto do_magnify;
 				break;
 			default:
 				exit(0);
@@ -704,30 +768,27 @@ main(int argc, const char *argv[])
 			}
 			break;
 		case MotionNotify:
-			if (opt.no_mag)
-				break;
-
-			do { /* don't act on stale events */
-				if (XPending(x11.dpy) > 0) {
-					XEvent next_ev;
-					XPeekEvent(x11.dpy, &next_ev);
-					discard = next_ev.type == MotionNotify;
-					if (discard)
-						XNextEvent(x11.dpy, &ev);
-				} else {
-					break;
-				}
-			} while (discard);
-			magnify(ev.xbutton.x_root, ev.xbutton.y_root);
-			old.valid = 1;
-			old.x = ev.xbutton.x_root;
-			old.y = ev.xbutton.y_root;
+do_magnify:
+			if (!opt.no_mag) {
+				magnify(ev.xbutton.x_root, ev.xbutton.y_root);
+				old.valid = 1;
+				old.x = ev.xbutton.x_root;
+				old.y = ev.xbutton.y_root;
+			}
 			break;
 		case KeyPress:
 			if (opt.quit_on_keypress)
 				exit(1);
 			break;
 		default:
+			/* FIXME: mpv window is either always damaged,
+			 * or when i have scratchpad open, never damaged.
+			 */
+			if (!opt.no_mag && old.valid && damaged &&
+			    ev.type == xdamage_ev + XDamageNotify)
+			{
+				magnify(old.x, old.y);
+			}
 			break;
 		}
 	}
