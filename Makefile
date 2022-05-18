@@ -41,7 +41,7 @@ CPPCHECK_ARGS = --std=c89 --quiet --inline-suppr --force \
                 --suppress=syntaxError --suppress=internalAstError \
 
 # libs
-X11_LIBS  = -lX11 -lXcursor
+X11_LIBS  = -lX11 -lXcursor -lXdamage
 FEAT_CPP  = -D_POSIX_C_SOURCE=200112L
 
 # Cool stuff

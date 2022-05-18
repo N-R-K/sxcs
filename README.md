@@ -69,6 +69,7 @@ $ man sxcs
   * POSIX 2001 C standard library
   * Xlib
   * Xcursor
+  * Xdamage
 
 ```console
 $ make
