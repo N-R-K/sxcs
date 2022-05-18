@@ -39,7 +39,9 @@ static const FilterFunc circle_grid_cross[] = { grid, circle, xhair };
 /* default filter sequence, overridden via cli arg `--mag-filters` */
 static const FilterSeq filter_default = FILTER_SEQ_FROM_ARRAY(circle_grid_cross);
 
-/* minimum delay between each draw, in milliseconds. */
+/* minimum delay between each draw, in milliseconds. value of 0 or below means
+ * there will as many redraws as possible (will blow up cpu usage).
+ */
 static const long FRAME_TIME_MIN = 4;
 
 /* default output format, overridden via cli arg.

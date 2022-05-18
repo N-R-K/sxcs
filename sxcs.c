@@ -574,7 +574,7 @@ magnify(const int x, const int y)
 	XChangeActivePointerGrab(x11.dpy, x11.grab_mask, x11.cur, CurrentTime);
 	fprintf(stderr, "[%6lu]: redraw done! >_<\n", ++draw);
 
-	{
+	if (FRAME_TIME_MIN > 0) {
 		struct timespec nap = {0};
 		nap.tv_nsec = FRAME_TIME_MIN * 1000L * 1000L;
 		nanosleep(&nap, NULL);
