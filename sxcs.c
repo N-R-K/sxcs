@@ -318,8 +318,8 @@ filter_parse(const char *s)
 	if (s == NULL)
 		die(1, 0, "invalid filter (null)");
 
-	strncpy(tok_buf, s, sizeof(tok_buf));
-	tok_buf[sizeof(tok_buf) - 1] = '\0';
+	if (memccpy(tok_buf, s, '\0', sizeof(tok_buf)) == NULL)
+		tok_buf[sizeof(tok_buf) - 1] = '\0';
 
 	tok = strtok(tok_buf, ",");
 	while (tok != NULL) {
