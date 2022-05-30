@@ -42,7 +42,7 @@ CPPCHECK_ARGS = --std=c89 --quiet --inline-suppr --force \
 
 # libs
 X11_LIBS  = -lX11 -lXcursor
-FEAT_CPP  = -D_XOPEN_SOURCE=600
+FEAT_CPP  = -D_POSIX_C_SOURCE=200112L
 
 # Cool stuff
 CC       ?= cc

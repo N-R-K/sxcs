@@ -124,8 +124,8 @@ static HSL rgb_to_hsl(ulong col);
 static void print_color(int x, int y, enum output fmt);
 static void usage(void) ATTR_NORETURN;
 static void version(void) ATTR_NORETURN;
-static void filter_parse(const char *s);
-static Options opt_parse(int argc, const char *argv[]);
+static void filter_parse(char *s);
+static Options opt_parse(int argc, char *argv[]);
 static void magnify(const int x, const int y);
 static void sighandler(int sig);
 CLEANUP static void cleanup(void);
@@ -301,11 +301,10 @@ version(void)
 }
 
 static void
-filter_parse(const char *s)
+filter_parse(char *s)
 {
 	static FilterFunc f_buf[16];
 	static FilterSeq fs_buf = FILTER_SEQ_FROM_ARRAY(f_buf);
-	uint f_len = 0;
 
 	struct { const char *str; FilterFunc f; } table[] = {
 		{ "square_border", square_border },
@@ -313,15 +312,13 @@ filter_parse(const char *s)
 		{ "grid", grid },
 		{ "circle", circle }
 	};
-	char tok_buf[256], *tok = NULL;
+	char *tok = NULL;
+	uint f_len = 0;
 
 	if (s == NULL)
 		die(1, 0, "invalid filter (null)");
 
-	if (memccpy(tok_buf, s, '\0', sizeof(tok_buf)) == NULL)
-		tok_buf[sizeof(tok_buf) - 1] = '\0';
-
-	tok = strtok(tok_buf, ",");
+	tok = strtok(s, ",");
 	while (tok != NULL) {
 		uint i, found_match = 0;
 
@@ -347,7 +344,7 @@ filter_parse(const char *s)
 }
 
 static Options
-opt_parse(int argc, const char *argv[])
+opt_parse(int argc, char *argv[])
 {
 	int i;
 	Options ret = {0};
@@ -553,7 +550,7 @@ cleanup(void)
 }
 
 extern int
-main(int argc, const char *argv[])
+main(int argc, char *argv[])
 {
 	Options opt;
 	struct { int x, y, valid; } old = {0};
