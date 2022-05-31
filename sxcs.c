@@ -647,11 +647,12 @@ main(int argc, char *argv[])
 				break;
 			case Button1:
 				print_color(ev.xbutton.x_root, ev.xbutton.y_root, opt.fmt);
-				if (!opt.oneshot)
-					break;
-				/* fallthrough */
+				if (opt.oneshot)
+					exit(0);
+				break;
 			default:
 				exit(0);
+				break;
 			}
 			break;
 		case KeyPress:
