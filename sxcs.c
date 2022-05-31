@@ -316,7 +316,7 @@ filter_parse(char *s)
 	uint f_len = 0;
 
 	if (s == NULL)
-		die(1, 0, "invalid filter (null)");
+		die(1, 0, "invalid filter `(null)`");
 
 	tok = strtok(s, ",");
 	while (tok != NULL) {
@@ -325,7 +325,7 @@ filter_parse(char *s)
 		for (i = 0; i < ARRLEN(table); ++i) {
 			if (strcmp(tok, table[i].str) == 0) {
 				if (f_len >= ARRLEN(f_buf)) {
-					die(1, 0, "too many filters."
+					die(1, 0, "too many filters. "
 					          "max aloud: %u", (uint)ARRLEN(f_buf));
 				}
 				f_buf[f_len++] = table[i].f;
@@ -335,7 +335,7 @@ filter_parse(char *s)
 		}
 
 		if (!found_match)
-			die(1, 0, "invalid filter %s", tok);
+			die(1, 0, "invalid filter `%s`", tok);
 		tok = strtok(NULL, ",");
 	}
 
