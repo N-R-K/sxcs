@@ -124,8 +124,8 @@ static HSL rgb_to_hsl(ulong col);
 static void print_color(int x, int y, enum output fmt);
 static void usage(void) ATTR_NORETURN;
 static void version(void) ATTR_NORETURN;
-static void filter_parse(char *s);
-static Options opt_parse(int argc, char *argv[]);
+static void filter_parse(const char *s);
+static Options opt_parse(int argc, const char *argv[]);
 static void magnify(const int x, const int y);
 static void sighandler(int sig);
 CLEANUP static void cleanup(void);
@@ -301,7 +301,7 @@ version(void)
 }
 
 static void
-filter_parse(char *s)
+filter_parse(const char *s)
 {
 	static FilterFunc f_buf[16];
 	static FilterSeq fs_buf = FILTER_SEQ_FROM_ARRAY(f_buf);
@@ -312,18 +312,20 @@ filter_parse(char *s)
 		{ "grid", grid },
 		{ "circle", circle }
 	};
-	char *tok = NULL;
+	const char *tok, *tok_end;
+	size_t tok_len;
 	uint f_len = 0;
 
 	if (s == NULL)
 		die(1, 0, "invalid filter `(null)`");
 
-	tok = strtok(s, ",");
-	while (tok != NULL) {
+	for (tok = s, tok_end = s + strlen(s); tok < tok_end; tok += tok_len + 1) {
 		uint i, found_match = 0;
+		char *p = memchr(tok, ',', (size_t)(tok_end - tok));
 
-		for (i = 0; i < ARRLEN(table); ++i) {
-			if (strcmp(tok, table[i].str) == 0) {
+		tok_len = (size_t)((p != NULL ? p : tok_end) - tok);
+		for (i = 0; i < ARRLEN(table) && tok_len > 0; ++i) {
+			if (strncmp(tok, table[i].str, tok_len) == 0) {
 				if (f_len >= ARRLEN(f_buf)) {
 					die(1, 0, "too many filters. "
 					          "max aloud: %u", (uint)ARRLEN(f_buf));
@@ -334,9 +336,8 @@ filter_parse(char *s)
 			}
 		}
 
-		if (!found_match)
-			die(1, 0, "invalid filter `%s`", tok);
-		tok = strtok(NULL, ",");
+		if (!found_match && tok_len > 0)
+			die(1, 0, "invalid filter `%.*s`", (int)tok_len, tok);
 	}
 
 	fs_buf.len = f_len;
@@ -344,7 +345,7 @@ filter_parse(char *s)
 }
 
 static Options
-opt_parse(int argc, char *argv[])
+opt_parse(int argc, const char *argv[])
 {
 	int i;
 	Options ret = {0};
@@ -550,7 +551,7 @@ cleanup(void)
 }
 
 extern int
-main(int argc, char *argv[])
+main(int argc, const char *argv[])
 {
 	Options opt;
 	struct { int x, y, valid; } old = {0};
