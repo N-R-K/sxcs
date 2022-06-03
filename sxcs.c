@@ -639,25 +639,21 @@ main(int argc, char *argv[])
 		switch (XNextEvent(x11.dpy, &ev), ev.type) {
 		case ButtonPress:
 			switch (ev.xbutton.button) {
+			case Button1:
+				print_color(ev.xbutton.x_root, ev.xbutton.y_root, opt.fmt);
+				if (opt.oneshot)
+					exit(0);
+				break;
 			case Button4:
 				MAG_FACTOR *= MAG_STEP;
 				break;
 			case Button5:
 				MAG_FACTOR = MAX(1.1f, MAG_FACTOR / MAG_STEP);
 				break;
-			case Button1:
-				print_color(ev.xbutton.x_root, ev.xbutton.y_root, opt.fmt);
-				if (opt.oneshot)
-					exit(0);
-				break;
 			default:
 				exit(0);
 				break;
 			}
-			break;
-		case KeyPress:
-			if (opt.quit_on_keypress)
-				exit(1);
 			break;
 		case MotionNotify:
 			if (opt.no_mag)
@@ -678,6 +674,10 @@ main(int argc, char *argv[])
 			old.valid = 1;
 			old.x = ev.xbutton.x_root;
 			old.y = ev.xbutton.y_root;
+			break;
+		case KeyPress:
+			if (opt.quit_on_keypress)
+				exit(1);
 			break;
 		default:
 			break;
