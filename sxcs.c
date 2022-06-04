@@ -305,13 +305,13 @@ filter_parse(const char *s)
 {
 	static FilterFunc f_buf[16];
 	static FilterSeq fs_buf = FILTER_SEQ_FROM_ARRAY(f_buf);
-
-	struct { const char *str; FilterFunc f; } table[] = {
+	static const struct { const char *str; FilterFunc f; } table[] = {
 		{ "square_border", square_border },
 		{ "crosshair_square", crosshair_square },
 		{ "grid", grid },
 		{ "circle", circle }
 	};
+
 	const char *tok, *tok_end;
 	size_t tok_len;
 	uint f_len = 0;
