@@ -19,12 +19,13 @@ OFLAGS = $(O_BASIC) $(O_LTO) $(O_GRAPHITE) $(O_IPAPTA) \
 O_FALLBACK    = -O3
 
 # warnings
+STD    = c89
 WGCC   = -Wlogical-op -Wcast-align=strict
 WGCC  += -fanalyzer
 WCLANG = -Weverything
 WCLANG += -Wno-padded -Wno-comma -Wno-unused-macros
 WCLANG += -Wno-implicit-fallthrough -Wno-unreachable-code-break -Wno-unreachable-code-return
-WFLAGS = -std=c89 -Wall -Wextra -Wpedantic \
+WFLAGS = -std=$(STD) -Wall -Wextra -Wpedantic \
          -Wshadow -Wvla -Wpointer-arith -Wwrite-strings -Wfloat-equal \
          -Wcast-align -Wcast-qual -Wbad-function-cast \
          -Wstrict-overflow=2 -Wunreachable-code -Wformat=2 \
@@ -35,7 +36,7 @@ WFLAGS = -std=c89 -Wall -Wextra -Wpedantic \
 
 # CPPCHECK
 CPPCHECK      = $$(command -v cppcheck 2>/dev/null || printf ":")
-CPPCHECK_ARGS = --std=c89 --quiet --inline-suppr --force \
+CPPCHECK_ARGS = --std=$(STD) --quiet --inline-suppr --force \
                 --enable=performance,portability,style \
                 --max-ctu-depth=8 -j8 \
                 --suppress=syntaxError --suppress=internalAstError \
