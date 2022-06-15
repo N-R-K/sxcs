@@ -1,0 +1,10 @@
+# checks
+clang-analyzer-*,clang-diagnostic-*,bugprone-*,performance-*,modernize-*
+misc-*,readability-*,android-cloexec-*,cert-*
+
+# silence
+-bugprone-easily-swappable-parameters,-bugprone-incorrect-roundings
+-bugprone-narrowing-conversions,-bugprone-implicit-widening-of-multiplication-result
+-readability-braces-around-statements,-readability-magic-numbers,-readability-isolate-declaration
+-readability-function-cognitive-complexity,-readability-else-after-return
+-readability-uppercase-literal-suffix,-readability-avoid-const-params-in-decls

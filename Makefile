@@ -41,6 +41,10 @@ CPPCHECK_ARGS = --std=$(STD) --quiet --inline-suppr --force \
                 --max-ctu-depth=8 -j8 \
                 --suppress=syntaxError --suppress=internalAstError \
 
+CTIDY      = $$(command -v clang-tidy 2>/dev/null || printf ":")
+CTIDY_ARGS = --quiet --warnings-as-errors="*" \
+             --checks="$$(sed '/^\#/d' .clangtidychecks | paste -d ',' -s)"
+
 # libs
 X11_LIBS  = -lX11 -lXcursor
 FEAT_CPP  = -D_POSIX_C_SOURCE=200112L
@@ -76,6 +80,7 @@ $(BIN): $(OBJS)
 
 .c.o:
 	$(CPPCHECK) $(CPPCHECK_ARGS) $<
+	$(CTIDY) $(CTIDY_ARGS) $< -- -std=$(STD) $$(make CC=clang dump_cppflags)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 config.h:
@@ -95,6 +100,9 @@ analyze:
 
 run:
 	tcc $(CPPFLAGS) -DDFLAGS="$(_DFLAGS)" -DDEBUG $(LDLIBS) -b -run $(BIN).c
+
+dump_cppflags:
+	@echo $(CPPFLAGS)
 
 clean:
 	rm -f *.o $(OBJS) $(BIN) $(BIN)-debug version.h
