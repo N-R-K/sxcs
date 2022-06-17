@@ -133,12 +133,26 @@ CLEANUP static void cleanup(void);
 static ulong get_pixel(int x, int y);
 static void four_point_draw(XcursorImage *img, uint x, uint y, XcursorPixel col);
 static ulong ximg_pixel_get(const XImage *img, int x, int y);
-/* TODO: look into Shm extension to reduce allocation overhead. */
-/* TODO: document (and stabilize) the filter/zoom function API */
+/*
+ * zoom functions:
+ *
+ * The zoom functions are given a `XcursorImage` pointer where it must output
+ * the zoomed image. As input, an `Image` pointer is given.
+ * NOTE: In case of clipping (cursor at the edge of the screen) the input may
+ * not be of expected size. `in->{cx,cy}` are the co-ordinate of the cursor
+ * position and `in->wanted.{w,h}` are w/h if no clipping had occurred.
+ * so the zoom function must ensure that the middle of the output maps to the
+ * cx,cy of the input and it must fill any of the clipped area with transparent
+ * pixel (0xff000000).
+ */
 /* TODO: add bicubic scaling */
-/* zoom functions */
 static void nearest_neighbour(XcursorImage *out, const Image *in);
-/* filter functions */
+/*
+ * filter functions:
+ *
+ * The filter functions are given a pointer to `XcursorImage` as input. There
+ * is no output, the functions can modify it's input as it wants.
+ */
 /* TODO: add pixels_grid */
 static void square(XcursorImage *img);
 static void xhair(XcursorImage *img);
@@ -534,6 +548,7 @@ magnify(const int x, const int y)
 	img.cx = x - (int)img.x;
 	img.cy = y - (int)img.y;
 	img.wanted.w = img.wanted.h = c;
+	/* TODO: look into Shm extension to reduce allocation overhead. */
 	img.im = XGetImage(x11.dpy, x11.root.win, (int)img.x, (int)img.y,
 	                   img.w, img.h, AllPlanes, ZPixmap);
 	if (img.im == NULL)
