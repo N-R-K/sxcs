@@ -322,7 +322,7 @@ filter_parse(const char *s)
 
 		tok_len = (size_t)((p != NULL ? p : tok_end) - tok);
 		for (i = 0; i < ARRLEN(table) && tok_len > 0; ++i) {
-			if (strncmp(tok, table[i].str, tok_len) == 0) {
+			if (tok_len == strlen(table[i].str) && strncmp(tok, table[i].str, tok_len) == 0) {
 				if (f_len >= ARRLEN(f_buf)) {
 					die(1, 0, "too many filters. "
 					          "max aloud: %u", (uint)ARRLEN(f_buf));
