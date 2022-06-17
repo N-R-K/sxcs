@@ -41,7 +41,7 @@ $ sxcs --mag-filters "grid,circle,crosshair_square"
 Following are a couple more examples:
 
 ```console
-$ sxcs --mag-filters "square_border,crosshair_square"
+$ sxcs --mag-filters "square,crosshair_square"
 ```
 
 <img width="256" height="256" src="preview/square_x.png"/>

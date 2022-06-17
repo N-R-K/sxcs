@@ -12,9 +12,9 @@ static const MagFunc mag_func = nearest_neighbour;
  * COLORS: All the colors here are in ARGB32 format, e.g 0xAARRGGBB.
  */
 
-/* square_border() options */
-static const uint SQUARE_BORDER_WIDTH = 2;
-static const XcursorPixel SQUARE_BORDER_COLOR = 0xffff3838;
+/* square() options */
+static const uint SQUARE_WIDTH = 2;
+static const XcursorPixel SQUARE_COLOR = 0xffff3838;
 
 /* crosshair_square() options */
 static const uint CROSSHAIR_SQUARE_SIZE = 5;
@@ -32,8 +32,8 @@ static const XcursorPixel CIRCLE_COLOR = 0xffff3838;
 static const Bool CIRCLE_TRANSPARENT_OUTSIDE = True;
 
 /* example filter sequences */
-static const FilterFunc sq_cross[] = { square_border, crosshair_square };
-static const FilterFunc sq_grid_cross[] = { grid, square_border, crosshair_square };
+static const FilterFunc sq_cross[] = { square, crosshair_square };
+static const FilterFunc sq_grid_cross[] = { grid, square, crosshair_square };
 static const FilterFunc circle_grid_cross[] = { grid, circle, crosshair_square };
 
 /* default filter sequence, overridden via cli arg `--mag-filters` */

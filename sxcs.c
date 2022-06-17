@@ -141,7 +141,7 @@ static void nearest_neighbour(XcursorImage *out, const Image *in);
 /* filter functions */
 /* TODO: add pixels_grid */
 /* TODO: name these shorter/better so they're easy to type on the cli args */
-static void square_border(XcursorImage *img);
+static void square(XcursorImage *img);
 static void crosshair_square(XcursorImage *img);
 static void grid(XcursorImage *img);
 static void circle(XcursorImage *img);
@@ -303,7 +303,7 @@ filter_parse(const char *s)
 	static FilterFunc f_buf[16];
 	static FilterSeq fs_buf = FILTER_SEQ_FROM_ARRAY(f_buf);
 	static const struct { const char *str; FilterFunc f; } table[] = {
-		{ "square_border", square_border },
+		{ "square", square },
 		{ "crosshair_square", crosshair_square },
 		{ "grid", grid },
 		{ "circle", circle }
@@ -432,21 +432,21 @@ nearest_neighbour(XcursorImage *out, const Image *in)
 }
 
 static void
-square_border(XcursorImage *img)
+square(XcursorImage *img)
 {
 	size_t i, k;
-	const uint b = SQUARE_BORDER_WIDTH;
+	const uint b = SQUARE_WIDTH;
 
 	i = 0;
 	while (i < img->width * b + b) /* draw the top border + 1 left side */
-		img->pixels[i++] = SQUARE_BORDER_COLOR;
+		img->pixels[i++] = SQUARE_COLOR;
 	do {
 		i += img->width - b * 2; /* skip the mid */
 		for (k = 0; k < b*2; ++k)
-			img->pixels[i++] = SQUARE_BORDER_COLOR;
+			img->pixels[i++] = SQUARE_COLOR;
 	} while (i < (img->height - b) * img->width);
 	while (i < img->width * img->height) /* draw the rest */
-		img->pixels[i++] = SQUARE_BORDER_COLOR;
+		img->pixels[i++] = SQUARE_COLOR;
 }
 
 static void
