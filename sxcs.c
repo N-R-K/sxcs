@@ -140,7 +140,6 @@ static ulong ximg_pixel_get(const XImage *img, int x, int y);
 static void nearest_neighbour(XcursorImage *out, const Image *in);
 /* filter functions */
 /* TODO: add pixels_grid */
-/* TODO: name these shorter/better so they're easy to type on the cli args */
 static void square(XcursorImage *img);
 static void xhair(XcursorImage *img);
 static void grid(XcursorImage *img);
