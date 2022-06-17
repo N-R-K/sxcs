@@ -47,3 +47,13 @@ static const int MAX_FRAME_TIME = 16;
  * the options may be OR-ed together, e.g: `OUTPUT_RGB | OUTPUT_HSL`
  */
 static const enum output OUTPUT_DEFAULT = OUTPUT_ALL;
+
+/* convenient macro for populating the filter table */
+#define FILTER_TABLE_ENTRY(X) #X, sizeof (#X) - 1, X
+/* table of filter functions, used by filter_parse() for mapping --mag-filters */
+static const struct { const char *str; size_t len; FilterFunc f; } FILTER_TABLE[] = {
+	{ FILTER_TABLE_ENTRY(square) },
+	{ FILTER_TABLE_ENTRY(xhair)  },
+	{ FILTER_TABLE_ENTRY(grid)   },
+	{ FILTER_TABLE_ENTRY(circle) },
+};

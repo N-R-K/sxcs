@@ -315,12 +315,6 @@ filter_parse(const char *s)
 {
 	static FilterFunc f_buf[16];
 	static FilterSeq fs_buf = FILTER_SEQ_FROM_ARRAY(f_buf);
-	static const struct { const char *str; FilterFunc f; } table[] = {
-		{ "square", square },
-		{ "xhair", xhair },
-		{ "grid", grid },
-		{ "circle", circle }
-	};
 
 	const char *tok, *tok_end;
 	size_t tok_len;
@@ -334,13 +328,13 @@ filter_parse(const char *s)
 		char *p = memchr(tok, ',', (size_t)(tok_end - tok));
 
 		tok_len = (size_t)((p != NULL ? p : tok_end) - tok);
-		for (i = 0; i < ARRLEN(table) && tok_len > 0; ++i) {
-			if (tok_len == strlen(table[i].str) && strncmp(tok, table[i].str, tok_len) == 0) {
+		for (i = 0; i < ARRLEN(FILTER_TABLE) && tok_len > 0; ++i) {
+			if (tok_len == FILTER_TABLE[i].len && memcmp(tok, FILTER_TABLE[i].str, tok_len) == 0) {
 				if (f_len >= ARRLEN(f_buf)) {
 					die(1, 0, "too many filters. "
 					          "max aloud: %u", (uint)ARRLEN(f_buf));
 				}
-				f_buf[f_len++] = table[i].f;
+				f_buf[f_len++] = FILTER_TABLE[i].f;
 				found_match = 1;
 				break;
 			}
