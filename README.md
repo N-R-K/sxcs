@@ -35,19 +35,19 @@ filter-list will be applied in order, as given by the user.
 The default filter list is the following:
 
 ```console
-$ sxcs --mag-filters "grid,circle,crosshair_square"
+$ sxcs --mag-filters "grid,circle,xhair"
 ```
 
 Following are a couple more examples:
 
 ```console
-$ sxcs --mag-filters "square,crosshair_square"
+$ sxcs --mag-filters "square,xhair"
 ```
 
 <img width="256" height="256" src="preview/square_x.png"/>
 
 ```console
-$ sxcs --mag-filters "grid,crosshair_square"
+$ sxcs --mag-filters "grid,xhair"
 ```
 
 <img width="256" height="256" src="preview/grid_x.png"/>

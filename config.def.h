@@ -16,13 +16,13 @@ static const MagFunc mag_func = nearest_neighbour;
 static const uint SQUARE_WIDTH = 2;
 static const XcursorPixel SQUARE_COLOR = 0xffff3838;
 
-/* crosshair_square() options */
-static const uint CROSSHAIR_SQUARE_SIZE = 5;
-static const uint CROSSHAIR_SQUARE_BORDER_WIDTH = 2;
-static const XcursorPixel CROSSHAIR_SQUARE_COLOR = 0xffff3838;
+/* xhair() options */
+static const uint XHAIR_SIZE = 5;
+static const uint XHAIR_BORDER_WIDTH = 2;
+static const XcursorPixel XHAIR_COLOR = 0xffff3838;
 
 /* grid() options */
-static const uint GRID_SIZE = 5 * 2; /* best kept 2x CROSSHAIR_SQUARE_SIZE */
+static const uint GRID_SIZE = 5 * 2; /* best kept 2x XHAIR_SIZE */
 static const XcursorPixel GRID_COLOR = 0xff3C3836;
 
 /* circle_border() options */
@@ -32,9 +32,9 @@ static const XcursorPixel CIRCLE_COLOR = 0xffff3838;
 static const Bool CIRCLE_TRANSPARENT_OUTSIDE = True;
 
 /* example filter sequences */
-static const FilterFunc sq_cross[] = { square, crosshair_square };
-static const FilterFunc sq_grid_cross[] = { grid, square, crosshair_square };
-static const FilterFunc circle_grid_cross[] = { grid, circle, crosshair_square };
+static const FilterFunc sq_cross[] = { square, xhair };
+static const FilterFunc sq_grid_cross[] = { grid, square, xhair };
+static const FilterFunc circle_grid_cross[] = { grid, circle, xhair };
 
 /* default filter sequence, overridden via cli arg `--mag-filters` */
 static const FilterSeq filter_default = FILTER_SEQ_FROM_ARRAY(circle_grid_cross);

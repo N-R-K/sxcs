@@ -142,7 +142,7 @@ static void nearest_neighbour(XcursorImage *out, const Image *in);
 /* TODO: add pixels_grid */
 /* TODO: name these shorter/better so they're easy to type on the cli args */
 static void square(XcursorImage *img);
-static void crosshair_square(XcursorImage *img);
+static void xhair(XcursorImage *img);
 static void grid(XcursorImage *img);
 static void circle(XcursorImage *img);
 
@@ -304,7 +304,7 @@ filter_parse(const char *s)
 	static FilterSeq fs_buf = FILTER_SEQ_FROM_ARRAY(f_buf);
 	static const struct { const char *str; FilterFunc f; } table[] = {
 		{ "square", square },
-		{ "crosshair_square", crosshair_square },
+		{ "xhair", xhair },
 		{ "grid", grid },
 		{ "circle", circle }
 	};
@@ -450,17 +450,17 @@ square(XcursorImage *img)
 }
 
 static void
-crosshair_square(XcursorImage *img)
+xhair(XcursorImage *img)
 {
 	uint x, y;
 	const uint c = img->height / 2;
-	const uint b = CROSSHAIR_SQUARE_SIZE;
-	const uint bw = CROSSHAIR_SQUARE_BORDER_WIDTH;
+	const uint b = XHAIR_SIZE;
+	const uint bw = XHAIR_BORDER_WIDTH ;
 
 	for (y = c - b; y <= c + b; ++y) {
 		for (x = c - b; x <= c + b; ++x) {
 			if (DIFF(x, c) > b - bw || DIFF(y, c) > b - bw)
-				img->pixels[y * img->width + x] = CROSSHAIR_SQUARE_COLOR;
+				img->pixels[y * img->width + x] = XHAIR_COLOR;
 		}
 	}
 }
