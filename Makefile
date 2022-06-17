@@ -54,9 +54,9 @@ CC       ?= cc
 CFLAGS   ?= $$(test "$(CC)" = "gcc" && printf "%s " $(OFLAGS) || printf "%s " $(O_FALLBACK))
 CFLAGS   += $(WFLAGS) $(DFLAGS)
 CPPFLAGS  = $(DEBUG_CPP) $(PROGNAME) $(FEAT_CPP)
-LDFLAGS  ?= $(CFLAGS)
+STRIP    ?= -s
+LDFLAGS  ?= $(CFLAGS) $(STRIP)
 LDLIBS    = $(X11_LIBS)
-STRIP    ?= strip
 
 PREFIX   ?= /usr/local
 MANPREFIX ?= $(PREFIX)/share/man
@@ -76,7 +76,6 @@ $(OBJS): Makefile config.h version.h
 
 $(BIN): $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LDLIBS)
-	$(STRIP) $@
 
 .c.o:
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
@@ -91,7 +90,7 @@ version.h: Makefile .git/index
 .git/index:
 
 debug:
-	make BIN="$(BIN)-debug" DFLAGS="$(_DFLAGS)" DEBUG_CPP="-DDEBUG" STRIP=":" all
+	make BIN="$(BIN)-debug" DFLAGS="$(_DFLAGS)" DEBUG_CPP="-DDEBUG" STRIP="" all
 
 analyze:
 	make clean; make CC="clang" OFLAGS="-march=native -Ofast -flto"
