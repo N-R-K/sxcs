@@ -79,8 +79,6 @@ $(BIN): $(OBJS)
 	$(STRIP) $@
 
 .c.o:
-	$(CPPCHECK) $(CPPCHECK_ARGS) $<
-	$(CTIDY) $(CTIDY_ARGS) $< -- -std=$(STD) $$(make CC=clang dump_cppflags)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 config.h:
@@ -97,6 +95,8 @@ debug:
 
 analyze:
 	make clean; make CC="clang" OFLAGS="-march=native -Ofast -flto"
+	find . -type f -name '*.c' -print | xargs -I{} $(CPPCHECK) $(CPPCHECK_ARGS) {}
+	find . -type f -name '*.c' -print | xargs -I{} $(CTIDY) $(CTIDY_ARGS) {} "--" -std=$(STD) $$(make CC=clang dump_cppflags)
 
 run:
 	tcc $(CPPFLAGS) -DDFLAGS="$(_DFLAGS)" -DDEBUG $(LDLIBS) -b -run $(BIN).c
