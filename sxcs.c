@@ -395,21 +395,19 @@ opt_parse(int argc, const char *argv[])
 static ulong
 ximg_pixel_get(const XImage *img, int x, int y)
 {
-	ulong ret;
 	uchar *p = (uchar *)&img->data[(y * img->bytes_per_line) + (x * 4)];
 
 	if (img->byte_order == MSBFirst) {
-		ret = (ulong)p[0] << 24 |
-		      (ulong)p[1] << 16 |
-		      (ulong)p[2] <<  8 |
-		      (ulong)p[3] <<  0;
+		return (ulong)p[0] << 24 |
+		       (ulong)p[1] << 16 |
+		       (ulong)p[2] <<  8 |
+		       (ulong)p[3] <<  0;
 	} else {
-		ret = (ulong)p[3] << 24 |
-		      (ulong)p[2] << 16 |
-		      (ulong)p[1] <<  8 |
-		      (ulong)p[0] <<  0;
+		return (ulong)p[3] << 24 |
+		       (ulong)p[2] << 16 |
+		       (ulong)p[1] <<  8 |
+		       (ulong)p[0] <<  0;
 	}
-	return ret;
 }
 
 static void
