@@ -30,7 +30,7 @@ WFLAGS = -std=$(STD) -Wall -Wextra -Wpedantic \
          -Wcast-align -Wcast-qual -Wbad-function-cast \
          -Wstrict-overflow=2 -Wunreachable-code -Wformat=2 \
          -Wundef -Wstrict-prototypes -Wmissing-declarations \
-         -Wmissing-prototypes -Wold-style-definition  \
+         -Wmissing-prototypes -Wold-style-definition \
          $$(test "$(CC)" = "gcc" && printf "%s " $(WGCC)) \
          $$(test "$(CC)" = "clang" && printf "%s " $(WCLANG)) \
 
