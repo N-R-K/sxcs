@@ -1,5 +1,7 @@
 # sxcs - Simple X Color Sniper
 
+[![CodeBerg](https://img.shields.io/badge/Hosted_at-Codeberg-%232185D0?style=flat-square&logo=CodeBerg)](https://codeberg.org/NRK/sxcs)
+
 Color picker and magnifier for X11.
 
 ![preview/preview.gif](preview/preview.gif)
