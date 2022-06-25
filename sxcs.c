@@ -82,9 +82,9 @@ enum output {
 };
 
 typedef struct {
-	uint h   : 9;
-	uint s   : 7;
-	uint l   : 7;
+	uint h   : 16; /* only 9 needed */
+	uint s   : 8;  /* only 7 needed */
+	uint l   : 8;  /* only 7 needed */
 } HSL;
 
 typedef struct {
