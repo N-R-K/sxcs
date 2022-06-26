@@ -82,9 +82,9 @@ enum output {
 };
 
 typedef struct {
-	uint h   : 16; /* only 9 needed */
-	uint s   : 8;  /* only 7 needed */
-	uint l   : 8;  /* only 7 needed */
+	ushort h; /* only 9bits needed */
+	uchar  s; /* only 7bits needed */
+	uchar  l; /* only 7bits needed */
 } HSL;
 
 typedef struct {
@@ -240,9 +240,9 @@ rgb_to_hsl(ulong col)
 			h += 360;
 	}
 
-	ret.h = (uint)h;
-	ret.l = (uint)l;
-	ret.s = (uint)s;
+	ret.h = (ushort)h;
+	ret.l = (uchar)l;
+	ret.s = (uchar)s;
 	return ret;
 }
 
