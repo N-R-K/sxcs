@@ -200,12 +200,12 @@ die(int exit_status, int errnum, const char *fmt, ...)
 	fprintf(stderr, "%s: ", PROGNAME);
 
 	va_start(ap, fmt);
-	if (fmt)
+	if (fmt != NULL)
 		vfprintf(stderr, fmt, ap);
 	va_end(ap);
 
 	if (errnum)
-		fprintf(stderr, "%s%s", fmt ? ": " : "", strerror(errnum));
+		fprintf(stderr, "%s%s", fmt == NULL ? "" : ": ", strerror(errnum));
 	fputc('\n', stderr);
 
 	exit(exit_status);
@@ -256,8 +256,7 @@ get_pixel(int x, int y)
 		ret = cursor_img->pixels[m * cursor_img->width + m];
 		ret &= 0x00ffffff; /* cut off the alpha */
 	} else {
-		XImage *im;
-		im = XGetImage(x11.dpy, x11.root.win, x, y, 1, 1, AllPlanes, ZPixmap);
+		XImage *im = XGetImage(x11.dpy, x11.root.win, x, y, 1, 1, AllPlanes, ZPixmap);
 		if (im == NULL)
 			die(1, 0, "failed to get image");
 		ret = XGetPixel(im, 0, 0);
@@ -329,10 +328,12 @@ filter_parse(const char *s)
 
 		tok_len = (size_t)((p != NULL ? p : tok_end) - tok);
 		for (i = 0; i < ARRLEN(FILTER_TABLE) && tok_len > 0; ++i) {
-			if (tok_len == FILTER_TABLE[i].len && memcmp(tok, FILTER_TABLE[i].str, tok_len) == 0) {
+			if (tok_len == FILTER_TABLE[i].len &&
+			    memcmp(tok, FILTER_TABLE[i].str, tok_len) == 0)
+			{
 				if (f_len >= ARRLEN(f_buf)) {
-					die(1, 0, "too many filters. "
-					          "max aloud: %u", (uint)ARRLEN(f_buf));
+					die(1, 0, "too many filters. max aloud: %u",
+					    (uint)ARRLEN(f_buf));
 				}
 				f_buf[f_len++] = FILTER_TABLE[i].f;
 				found_match = 1;
@@ -395,7 +396,7 @@ opt_parse(int argc, const char *argv[])
 static ulong
 ximg_pixel_get(const XImage *img, int x, int y)
 {
-	uchar *p = (uchar *)&img->data[(y * img->bytes_per_line) + (x * 4)];
+	const uchar *p = (uchar *)&img->data[(y * img->bytes_per_line) + (x * 4)];
 
 	if (img->byte_order == MSBFirst) {
 		return (ulong)p[0] << 24 |
