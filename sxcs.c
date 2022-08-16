@@ -166,7 +166,6 @@ static void circle(XcursorImage *img);
 static struct {
 	Display *dpy;
 	Cursor cur;
-	uint w, h;
 	uint grab_mask;
 	struct {
 		Window win;
@@ -588,7 +587,8 @@ main(int argc, const char *argv[])
 	Options opt;
 	struct { int x, y, valid; } old = {0};
 
-	atexit(cleanup);
+	if (atexit(cleanup) != 0)
+		die(1, 0, "atexit() failed");
 
 	opt = opt_parse(argc, argv);
 

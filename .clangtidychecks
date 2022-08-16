@@ -8,3 +8,5 @@ misc-*,readability-*,android-cloexec-*,cert-*
 -readability-braces-around-statements,-readability-magic-numbers,-readability-isolate-declaration
 -readability-function-cognitive-complexity,-readability-else-after-return
 -readability-uppercase-literal-suffix,-readability-avoid-const-params-in-decls
+-readability-identifier-length
+-cert-err33-c
