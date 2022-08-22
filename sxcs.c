@@ -43,9 +43,9 @@
 /* not correct. but works fine for our usecase in this program */
 #define ROUNDF(X)        ((int)((X) + 0.50f))
 
-#define R(X)             (((unsigned long)(X) & 0xFF0000) >> 16)
-#define G(X)             (((unsigned long)(X) & 0x00FF00) >>  8)
-#define B(X)             (((unsigned long)(X) & 0x0000FF) >>  0)
+#define R(X)             ( ((ulong)(X) & 0xFF0000) >> 16 )
+#define G(X)             ( ((ulong)(X) & 0x00FF00) >>  8 )
+#define B(X)             ( ((ulong)(X) & 0x0000FF) >>  0 )
 
 #define FILTER_SEQ_FROM_ARRAY(X)  { X, ARRLEN(X) }
 
@@ -119,7 +119,8 @@ typedef struct {
  * function prototype
  */
 
-static void die(int exit_status, int errnum, const char *fmt, ...) ATTR_NORETURN ATTR_FMT(printf, 3, 4);
+static void die(int exit_status, int errnum, const char *fmt, ...)
+	ATTR_NORETURN ATTR_FMT(printf, 3, 4);
 static HSL rgb_to_hsl(ulong col);
 static void print_color(int x, int y, enum output fmt);
 static void usage(void) ATTR_NORETURN;
@@ -541,8 +542,10 @@ magnify(const int x, const int y)
 	img.cy = y - (int)img.y;
 	img.wanted.w = img.wanted.h = c;
 	/* TODO: look into Shm extension to reduce allocation overhead. */
-	img.im = XGetImage(x11.dpy, x11.root.win, (int)img.x, (int)img.y,
-	                   img.w, img.h, AllPlanes, ZPixmap);
+	img.im = XGetImage(
+		x11.dpy, x11.root.win, (int)img.x, (int)img.y, img.w, img.h,
+		AllPlanes, ZPixmap
+	);
 	if (img.im == NULL)
 		die(1, 0, "failed to get image");
 	if (img.im->bits_per_pixel != 32) /* ximg_pixel_get() depends on it */
@@ -626,18 +629,25 @@ main(int argc, const char *argv[])
 		cursor_img->xhot = cursor_img->yhot = MAG_SIZE / 2;
 	}
 
-	x11.grab_mask = ButtonPressMask | PointerMotionMask;
-	x11.valid.ungrab_ptr = XGrabPointer(x11.dpy, x11.root.win, 0,
-	                                    x11.grab_mask, GrabModeAsync, GrabModeAsync,
-	                                    x11.root.win, x11.cur,
-	                                    CurrentTime) == GrabSuccess;
-	if (!x11.valid.ungrab_ptr)
-		die(1, 0, "failed to grab cursor");
+	{
+		int tmp;
+
+		x11.grab_mask = ButtonPressMask | PointerMotionMask;
+		tmp = XGrabPointer(
+			x11.dpy, x11.root.win, 0, x11.grab_mask, GrabModeAsync,
+			GrabModeAsync, x11.root.win, x11.cur, CurrentTime
+		);
+		x11.valid.ungrab_ptr = tmp == GrabSuccess;
+		if (!x11.valid.ungrab_ptr)
+			die(1, 0, "failed to grab cursor");
+	}
 
 	if (opt.quit_on_keypress) {
-		x11.valid.ungrab_kb = XGrabKeyboard(x11.dpy, x11.root.win, 0,
-		                                    GrabModeAsync, GrabModeAsync,
-		                                    CurrentTime) == GrabSuccess;
+		int tmp = XGrabKeyboard(
+			x11.dpy, x11.root.win, 0,
+			GrabModeAsync, GrabModeAsync, CurrentTime
+		);
+		x11.valid.ungrab_kb = tmp == GrabSuccess;
 		if (!x11.valid.ungrab_kb)
 			die(1, 0, "failed to grab keyboard");
 	}
