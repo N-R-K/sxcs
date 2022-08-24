@@ -17,6 +17,7 @@
  * along with sxcs. If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -284,7 +285,8 @@ print_color(int x, int y, enum output fmt)
 		printf("hsl:\t%u %u %u\t", tmp.h, tmp.s, tmp.l);
 	}
 	printf("\n");
-	fflush(stdout);
+	if (fflush(stdout) != 0)
+		die(1, errno, "write failed");
 }
 
 static void
