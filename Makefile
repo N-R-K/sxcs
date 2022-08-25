@@ -46,8 +46,8 @@ CTIDY_ARGS = --quiet --warnings-as-errors="*" \
              --checks="$$(sed '/^\#/d' .clangtidychecks | paste -d ',' -s)"
 
 # libs
-X11_LIBS  = -lX11 -lXcursor
-FEAT_CPP  = -D_POSIX_C_SOURCE=200112L
+X11_LIBS  = -l X11 -l Xcursor
+FEAT_CPP  = -D _POSIX_C_SOURCE=200112L
 
 # Cool stuff
 CC       ?= cc
@@ -60,7 +60,7 @@ LDLIBS    = $(X11_LIBS)
 
 PREFIX   ?= /usr/local
 MANPREFIX ?= $(PREFIX)/share/man
-PROGNAME  = -DPROGNAME=\"$(BIN)\"
+PROGNAME  = -D PROGNAME=\"$(BIN)\"
 VERSION   = v0.5
 
 
@@ -90,7 +90,7 @@ version.h: Makefile .git/index
 .git/index:
 
 debug:
-	make BIN="$(BIN)-debug" DFLAGS="$(_DFLAGS)" DEBUG_CPP="-DDEBUG" STRIP="" all
+	make BIN="$(BIN)-debug" DFLAGS="$(_DFLAGS)" DEBUG_CPP="-D DEBUG" STRIP="" all
 
 analyze:
 	make clean; make CC="clang" OFLAGS="-march=native -Ofast -flto"
@@ -98,7 +98,7 @@ analyze:
 	find . -type f -name '*.c' -print | xargs -I{} $(CTIDY) $(CTIDY_ARGS) {} "--" -std=$(STD) $$(make CC=clang dump_cppflags)
 
 run:
-	tcc $(CPPFLAGS) -DDFLAGS="$(_DFLAGS)" -DDEBUG $(LDLIBS) -b -run $(BIN).c
+	tcc $(CPPFLAGS) -D DFLAGS="$(_DFLAGS)" -D DEBUG $(LDLIBS) -b -run $(BIN).c
 
 dump_cppflags:
 	@echo $(CPPFLAGS)
