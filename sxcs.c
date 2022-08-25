@@ -334,8 +334,11 @@ filter_parse(const char *s)
 			    memcmp(tok, FILTER_TABLE[i].str, tok_len) == 0)
 			{
 				if (f_len >= ARRLEN(f_buf)) {
-					die(1, 0, "too many filters. max aloud: %u",
-					    (uint)ARRLEN(f_buf));
+					die(
+						1, 0, "too many filters. "
+						"max aloud: %u",
+						(uint)ARRLEN(f_buf)
+					);
 				}
 				f_buf[f_len++] = FILTER_TABLE[i].f;
 				found_match = 1;
