@@ -77,6 +77,13 @@ $ make
 # sudo make install
 ```
 
+NOTE: the Makefile assumes `CC` is set to either `gcc` or `clang`. Use the
+following if you're using another compiler and experience build failure:
+
+```console
+$ make CC=${your_c_compiler} CFLAGS=""
+```
+
 ## Limitation
 
 Cursor size bigger than 255x255 causes visual glitches, it seems to be a
