@@ -61,7 +61,7 @@ LDLIBS    = $(X11_LIBS)
 PREFIX   ?= /usr/local
 MANPREFIX ?= $(PREFIX)/share/man
 PROGNAME  = -D PROGNAME=\"$(BIN)\"
-VERSION   = v0.5
+VERSION   = v0.6
 
 
 BIN  = sxcs
