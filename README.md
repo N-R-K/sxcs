@@ -4,7 +4,7 @@
 
 Color picker and magnifier for X11.
 
-![preview/preview.gif](preview/preview.gif)
+![preview](https://images2.imgbox.com/4c/d0/LC6pYmrB_o.gif)
 
 ## Usage
 
@@ -46,13 +46,13 @@ Following are a couple more examples:
 $ sxcs --mag-filters "square,xhair"
 ```
 
-<img width="256" height="256" src="preview/square_x.png"/>
+<img width="256" height="256" src="https://images2.imgbox.com/a4/ff/yUOGtRnn_o.png"/>
 
 ```console
 $ sxcs --mag-filters "grid,xhair"
 ```
 
-<img width="256" height="256" src="preview/grid_x.png"/>
+<img width="256" height="256" src="https://images2.imgbox.com/73/f6/ScP4MQT2_o.png"/>
 
 Consult the manpage to see a list of all available cli arguments and filters:
 
