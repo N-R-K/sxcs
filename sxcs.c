@@ -292,22 +292,24 @@ print_color(int x, int y, enum output fmt)
 static void
 usage(void)
 {
-	fprintf(stderr, "%s\n%s\n",
-	        "usage: "PROGNAME" [options]",
-	        "See the manpage for more details."
-	       );
+	fputs(
+		"usage: "PROGNAME" [options]\n"
+		"See the manpage for more details.\n",
+		stderr
+	);
 	exit(1);
 }
 
 static void
 version(void)
 {
-	fprintf(stderr, "%s\n%s\n%s\n%s\n",
-	        PROGNAME" "VERSION,
-	        "Copyright (C) 2022 NRK and contributors.",
-	        "GPLv3 license.",
-	        "https://codeberg.org/NRK/sxcs"
-	       );
+	fputs(
+		PROGNAME" "VERSION"\n"
+		"Copyright (C) 2022 NRK and contributors.\n"
+		"GPLv3 license.\n"
+		"https://codeberg.org/NRK/sxcs\n",
+		stderr
+	);
 	exit(1);
 }
 
