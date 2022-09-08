@@ -230,11 +230,11 @@ rgb_to_hsl(ulong col)
 		const int d = max - min;
 		s = (d * 100) / max;
 		if (max == r) {
-			h = ((g - b) * 1000) / d + (g < b ? 6000 : 0);
+			h = ((g - b) * 1000L) / d + (g < b ? 6000L : 0);
 		} else if (max == g) {
-			h = ((b - r) * 1000) / d + 2000;
+			h = ((b - r) * 1000L) / d + 2000L;
 		} else {
-			h = ((r - g) * 1000) / d + 4000;
+			h = ((r - g) * 1000L) / d + 4000L;
 		}
 		h *= 6;
 		h = (h / 100) + (h % 100 >= 50);
