@@ -17,6 +17,7 @@
  * along with sxcs. If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -223,8 +224,8 @@ rgb_to_hsl(ulong col)
 	const int min = MIN(MIN(r, g), b);
 	const int ltmp = (int)(((max + min) * 500L) / 255L);
 	const int l = (ltmp / 10) + (ltmp % 10 >= 5);
-	long s = 0;
-	long h = 0; /* should work even if long == 32bits */
+	/* should work even if long == 32bits */
+	long s = 0, h = 0;
 
 	if (max != min) {
 		const int d = max - min;
@@ -247,8 +248,11 @@ rgb_to_hsl(ulong col)
 			h += 360;
 	}
 
+	assert(h >= 0 && h <= 360);
 	ret.h = (ushort)h;
+	assert(l >= 0 && l <= 100);
 	ret.l = (uchar)l;
+	assert(s >= 0 && s <= 100);
 	ret.s = (uchar)s;
 	return ret;
 }
