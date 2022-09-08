@@ -228,7 +228,7 @@ rgb_to_hsl(ulong col)
 	long s = 0, h = 0;
 
 	if (max != min) {
-		const int d = max - min;
+		const long d = max - min;
 		const long M = (max * 1000L) / 255, m = (min * 1000L) / 255;
 		if (l <= 50)
 			s = ((M - m) * 1000L) / (M + m);
@@ -236,7 +236,7 @@ rgb_to_hsl(ulong col)
 			s = ((M - m) * 1000L) / (2000L - M - m);
 		s = (s / 10) + (s % 10 >= 5);
 		if (max == r) {
-			h = ((g - b) * 1000L) / d + (g < b ? 6000L : 0);
+			h = ((g - b) * 1000L) / d + (g < b ? 6000L : 0L);
 		} else if (max == g) {
 			h = ((b - r) * 1000L) / d + 2000L;
 		} else {
