@@ -31,8 +31,6 @@
 #include <X11/cursorfont.h>
 #include <X11/Xcursor/Xcursor.h>
 
-#include "version.h"
-
 /*
  * macros
  */

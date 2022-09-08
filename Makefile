@@ -1,8 +1,7 @@
 # debug
-_DFLAGS      ?= -g -fsanitize=address,undefined,leak
+DFLAGS_DEFAULT  ?= -g -fsanitize=address,undefined,leak
 # optimizations
 O_BASIC       = -pipe -march=native -Ofast
-O_LTO         = -flto=auto -fuse-linker-plugin
 O_GRAPHITE    = -fgraphite-identity -floop-nest-optimize
 O_IPAPTA      = -fipa-pta
 O_BUILTIN     = -fbuiltin
@@ -48,63 +47,52 @@ CTIDY_ARGS = --quiet --warnings-as-errors="*" \
 # libs
 X11_LIBS  = -l X11 -l Xcursor
 FEAT_CPP  = -D _POSIX_C_SOURCE=200112L
+VERSION_CPP = -D VERSION=\"$$(git describe --tags --dirty 2>/dev/null || printf '%s' $(VERSION))\"
+PROGNAME_CPP  = -D PROGNAME=\"$(BIN)\"
 
 # Cool stuff
 CC       ?= cc
 CFLAGS   ?= $$(test "$(CC)" = "gcc" && printf "%s " $(OFLAGS) || printf "%s " $(O_FALLBACK))
 CFLAGS   += $(WFLAGS) $(DFLAGS)
-CPPFLAGS  = $(DEBUG_CPP) $(PROGNAME) $(FEAT_CPP)
+CPPFLAGS  = $(FEAT_CPP) $(PROGNAME_CPP) $(VERSION_CPP)
 STRIP    ?= -s
 LDFLAGS  ?= $(CFLAGS) $(STRIP)
 LDLIBS    = $(X11_LIBS)
 
 PREFIX   ?= /usr/local
 MANPREFIX ?= $(PREFIX)/share/man
-PROGNAME  = -D PROGNAME=\"$(BIN)\"
 VERSION   = v0.6
 
 
 BIN  = sxcs
-OBJS = sxcs.o
+SRC  = sxcs.c
 
 .PHONY: clean
-.SUFFIXES:
-.SUFFIXES: .c .o
 
 all: $(BIN)
-$(OBJS): Makefile config.h version.h
 
-$(BIN): $(OBJS)
-	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LDLIBS)
-
-.c.o:
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+$(BIN): $(SRC) Makefile config.h
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(SRC) -o $@ $(LDLIBS)
 
 config.h:
 	cp config.def.h config.h
 
-version.h: Makefile .git/index
-	v="$$(git describe --tags --dirty 2>/dev/null || true)"; \
-	echo "#define VERSION \"$${v:-$(VERSION)}\"" >$@
-
-.git/index:
-
 debug:
-	make BIN="$(BIN)-debug" DFLAGS="$(_DFLAGS)" DEBUG_CPP="-D DEBUG" STRIP="" all
+	make BIN="$(BIN)-debug" DFLAGS="$(DFLAGS_DEFAULT)" STRIP="" all
 
 analyze:
-	make clean; make CC="clang" OFLAGS="-march=native -Ofast -flto"
-	find . -type f -name '*.c' -print | xargs -I{} $(CPPCHECK) $(CPPCHECK_ARGS) {}
-	find . -type f -name '*.c' -print | xargs -I{} $(CTIDY) $(CTIDY_ARGS) {} "--" -std=$(STD) $$(make CC=clang dump_cppflags)
+	make clean; make CC="clang" OFLAGS="-march=native -Ofast -pipe"
+	$(CPPCHECK) $(CPPCHECK_ARGS) $(SRC)
+	$(CTIDY) $(CTIDY_ARGS) $(SRC) "--" -std=$(STD) $$(make CC=clang dump_cppflags)
 
 run:
-	tcc $(CPPFLAGS) -D DFLAGS="$(_DFLAGS)" -D DEBUG $(LDLIBS) -b -run $(BIN).c
+	tcc $(CPPFLAGS) -D DFLAGS="$(DFLAGS_DEFAULT)" $(LDLIBS) -b -run $(SRC)
 
 dump_cppflags:
 	@echo $(CPPFLAGS)
 
 clean:
-	rm -f *.o $(OBJS) $(BIN) $(BIN)-debug version.h
+	rm -f *.o $(OBJS) $(BIN) $(BIN)-debug
 
 install: $(BIN)
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
