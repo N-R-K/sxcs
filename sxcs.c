@@ -223,12 +223,17 @@ rgb_to_hsl(ulong col)
 	const int min = MIN(MIN(r, g), b);
 	const int ltmp = (int)(((max + min) * 500L) / 255L);
 	const int l = (ltmp / 10) + (ltmp % 10 >= 5);
-	int s = 0;
+	long s = 0;
 	long h = 0; /* should work even if long == 32bits */
 
 	if (max != min) {
 		const int d = max - min;
-		s = (d * 100) / max;
+		const long M = (max * 1000L) / 255, m = (min * 1000L) / 255;
+		if (l <= 50)
+			s = ((M - m) * 1000L) / (M + m);
+		else
+			s = ((M - m) * 1000L) / (2000L - M - m);
+		s = (s / 10) + (s % 10 >= 5);
 		if (max == r) {
 			h = ((g - b) * 1000L) / d + (g < b ? 6000L : 0);
 		} else if (max == g) {
