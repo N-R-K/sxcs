@@ -49,12 +49,13 @@ X11_LIBS  = -l X11 -l Xcursor
 FEAT_CPP  = -D _POSIX_C_SOURCE=200112L
 VERSION_CPP = -D VERSION=\"$$(git describe --tags --dirty 2>/dev/null || printf '%s' $(VERSION))\"
 PROGNAME_CPP  = -D PROGNAME=\"$(BIN)\"
+DEBUG_CPP = -D NDEBUG
 
 # Cool stuff
 CC       ?= cc
 CFLAGS   ?= $$(test "$(CC)" = "gcc" && printf "%s " $(OFLAGS) || printf "%s " $(O_FALLBACK))
 CFLAGS   += $(WFLAGS) $(DFLAGS)
-CPPFLAGS  = $(FEAT_CPP) $(PROGNAME_CPP) $(VERSION_CPP)
+CPPFLAGS  = $(FEAT_CPP) $(PROGNAME_CPP) $(VERSION_CPP) $(DEBUG_CPP)
 STRIP    ?= -s
 LDFLAGS  ?= $(CFLAGS) $(STRIP)
 LDLIBS    = $(X11_LIBS)
@@ -78,7 +79,7 @@ config.h:
 	cp config.def.h config.h
 
 debug:
-	make BIN="$(BIN)-debug" DFLAGS="$(DFLAGS_DEFAULT)" STRIP="" all
+	make BIN="$(BIN)-debug" DFLAGS="$(DFLAGS_DEFAULT)" DEBUG_CPP="" STRIP="" all
 
 analyze:
 	make CC="clang" OFLAGS="-march=native -Ofast -pipe" BIN="/dev/null"
@@ -86,7 +87,7 @@ analyze:
 	$(CTIDY) $(CTIDY_ARGS) $(SRC) "--" -std=$(STD) $$(make CC=clang dump_cppflags)
 
 run:
-	tcc $(CPPFLAGS) -D DFLAGS="$(DFLAGS_DEFAULT)" $(LDLIBS) -b -run $(SRC)
+	tcc $(CPPFLAGS) $(LDLIBS) -U NDEBUG -g -b -run $(SRC)
 
 dump_cppflags:
 	@echo $(CPPFLAGS)
