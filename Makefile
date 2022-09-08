@@ -81,7 +81,7 @@ debug:
 	make BIN="$(BIN)-debug" DFLAGS="$(DFLAGS_DEFAULT)" STRIP="" all
 
 analyze:
-	make clean; make CC="clang" OFLAGS="-march=native -Ofast -pipe"
+	make CC="clang" OFLAGS="-march=native -Ofast -pipe" BIN="/dev/null"
 	$(CPPCHECK) $(CPPCHECK_ARGS) $(SRC)
 	$(CTIDY) $(CTIDY_ARGS) $(SRC) "--" -std=$(STD) $$(make CC=clang dump_cppflags)
 
