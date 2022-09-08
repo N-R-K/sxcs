@@ -38,7 +38,6 @@ CPPCHECK      = $$(command -v cppcheck 2>/dev/null || printf ":")
 CPPCHECK_ARGS = --std=$(STD) --quiet --inline-suppr --force \
                 --enable=performance,portability,style \
                 --max-ctu-depth=8 -j8 \
-                --suppress=syntaxError --suppress=internalAstError \
 
 CTIDY      = $$(command -v clang-tidy 2>/dev/null || printf ":")
 CTIDY_ARGS = --quiet --warnings-as-errors="*" \

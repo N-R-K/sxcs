@@ -1,12 +1,11 @@
 # checks
 clang-analyzer-*,clang-diagnostic-*,bugprone-*,performance-*,modernize-*
-misc-*,readability-*,android-cloexec-*,cert-*
+misc-*,android-cloexec-*,cert-*
+# disable "readability" checks by default
+-readability-*
+readability-duplicate-include,readability-misleading-indentation
 
 # silence
 -bugprone-easily-swappable-parameters,-bugprone-incorrect-roundings
 -bugprone-narrowing-conversions,-bugprone-implicit-widening-of-multiplication-result
--readability-braces-around-statements,-readability-magic-numbers,-readability-isolate-declaration
--readability-function-cognitive-complexity,-readability-else-after-return
--readability-uppercase-literal-suffix,-readability-avoid-const-params-in-decls
--readability-identifier-length
 -cert-err33-c
