@@ -312,10 +312,10 @@ static void
 version(void)
 {
 	fputs(
-		PROGNAME" "VERSION"\n"
+		PROGNAME" "VERSION"\n\n"
 		"Copyright (C) 2022 NRK and contributors.\n"
 		"License: GPLv3+ <https://gnu.org/licenses/gpl.html>.\n"
-		"https://codeberg.org/NRK/sxcs\n",
+		"Upstream: <https://codeberg.org/NRK/sxcs>\n",
 		stderr
 	);
 	exit(1);
