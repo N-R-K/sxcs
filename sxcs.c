@@ -314,7 +314,7 @@ version(void)
 	fputs(
 		PROGNAME" "VERSION"\n"
 		"Copyright (C) 2022 NRK and contributors.\n"
-		"GPLv3 license.\n"
+		"License: GPLv3+ <https://gnu.org/licenses/gpl.html>.\n"
 		"https://codeberg.org/NRK/sxcs\n",
 		stderr
 	);
