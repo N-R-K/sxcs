@@ -411,7 +411,8 @@ opt_parse(int argc, const char *argv[])
 static ulong
 ximg_pixel_get(const XImage *img, int x, int y)
 {
-	const uchar *p = (uchar *)&img->data[(y * img->bytes_per_line) + (x * 4)];
+	const size_t off = ((size_t)y * (size_t)img->bytes_per_line) + ((size_t)x * 4);
+	const uchar *const p = (uchar *)img->data + off;
 
 	if (img->byte_order == MSBFirst) {
 		return (ulong)p[0] << 24 |
