@@ -686,9 +686,6 @@ main(int argc, const char *argv[])
 		if (sig_recieved)
 			exit(sig_recieved);
 
-		/* TODO: rather than updating at certain interval,
-		 * try to check if the window below changed or not
-		 */
 		if (!pending) {
 			if (!opt.no_mag && old.valid)
 				magnify(old.x, old.y);
