@@ -49,12 +49,13 @@ FEAT_CPP  = -D _POSIX_C_SOURCE=200112L
 VERSION_CPP = -D VERSION=\"$$(git describe --tags --dirty 2>/dev/null || printf '%s' $(VERSION))\"
 PROGNAME_CPP  = -D PROGNAME=\"$(BIN)\"
 DEBUG_CPP = -D NDEBUG
+NOFORTIFY_CPP = -U _FORTIFY_SOURCE
 
 # Cool stuff
 CC       ?= cc
 CFLAGS   ?= $$(test "$(CC)" = "gcc" && printf "%s " $(OFLAGS) || printf "%s " $(O_FALLBACK))
 CFLAGS   += $(WFLAGS) $(DFLAGS)
-CPPFLAGS  = $(FEAT_CPP) $(PROGNAME_CPP) $(VERSION_CPP) $(DEBUG_CPP)
+CPPFLAGS  = $(FEAT_CPP) $(PROGNAME_CPP) $(VERSION_CPP) $(DEBUG_CPP) $(NOFORTIFY_CPP)
 STRIP    ?= -s
 LDFLAGS  ?= $(CFLAGS) $(STRIP)
 LDLIBS    = $(X11_LIBS)
