@@ -57,7 +57,7 @@ CFLAGS   ?= $$(test "$(CC)" = "gcc" && printf "%s " $(OFLAGS) || printf "%s " $(
 CFLAGS   += $(WFLAGS) $(DFLAGS)
 CPPFLAGS  = $(FEAT_CPP) $(PROGNAME_CPP) $(VERSION_CPP) $(DEBUG_CPP) $(NOFORTIFY_CPP)
 STRIP    ?= -s
-LDFLAGS  ?= $(CFLAGS) $(STRIP)
+CFLAGS   += $(STRIP)
 LDLIBS    = $(X11_LIBS)
 
 PREFIX   ?= /usr/local
