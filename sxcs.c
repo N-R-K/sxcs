@@ -684,7 +684,7 @@ main(int argc, const char *argv[])
 		pending = XPending(x11.dpy) > 0 || poll(&pfd, 1, MAX_FRAME_TIME) > 0;
 
 		if (sig_recieved)
-			exit(sig_recieved);
+			exit(sig_recieved); /* TODO: exit with 128 + sig_recieved ? */
 
 		if (!pending) {
 			if (!opt.no_mag && old.valid)
@@ -733,7 +733,7 @@ main(int argc, const char *argv[])
 			break;
 		case KeyPress:
 			if (opt.quit_on_keypress)
-				exit(1);
+				exit(0);
 			break;
 		default:
 			break;
