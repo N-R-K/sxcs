@@ -42,6 +42,7 @@
 #define UNUSED(X)        ((void)(X))
 /* not correct. but works fine for our usecase in this program */
 #define ROUNDF(X)        ((int)((X) + 0.50f))
+#define assert_unreachable()  assert(0 && "reached unreachable")
 
 #define R(X)             ( ((ulong)(X) & 0xFF0000) >> 16 )
 #define G(X)             ( ((ulong)(X) & 0x00FF00) >>  8 )
@@ -413,6 +414,7 @@ ximg_pixel_get(const XImage *img, int x, int y)
 {
 	const size_t off = ((size_t)y * (size_t)img->bytes_per_line) + ((size_t)x * 4);
 	const uchar *const p = (uchar *)img->data + off;
+	assert(x >= 0); assert(y >= 0);
 
 	if (img->byte_order == MSBFirst) {
 		return (ulong)p[0] << 24 |
@@ -508,6 +510,7 @@ static void
 four_point_draw(XcursorImage *img, uint x, uint y, XcursorPixel col) /* naming is hard */
 {
 	uint w = img->width, h = img->height;
+	assert(x <= w/2); assert(y <= h/2);
 	img->pixels[y * w + x] = col;
 	img->pixels[y * w + (w - x - 1)] = col;
 	img->pixels[(h - y - 1) * w + x] = col;
@@ -740,5 +743,5 @@ main(int argc, const char *argv[])
 		}
 	}
 
-	return 0; /* unreachable */
+	assert_unreachable();
 }
