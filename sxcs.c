@@ -683,7 +683,7 @@ main(int argc, const char *argv[])
 			signal(sigs[i], sighandler);
 	}
 
-	{
+	if (!opt.no_mag) {
 		int tmp, ncounter;
 		XSyncSystemCounter *counters;
 		XSyncTrigger *t = &sync.attr.trigger;
@@ -715,6 +715,8 @@ main(int argc, const char *argv[])
 		sync.flags |= XSyncCATestType;
 		XSyncIntToValue(&t->wait_value, MAX_FRAME_TIME);
 		sync.flags |= XSyncCAValue;
+		XSyncIntToValue(&sync.attr.delta, MAX_FRAME_TIME);
+		sync.flags |= XSyncCADelta;
 
 		sync.alarm = XSyncCreateAlarm(x11.dpy, sync.flags, &sync.attr);
 		/* Only error defined is if display doesn't support SYNC extension.
@@ -724,8 +726,9 @@ main(int argc, const char *argv[])
 	}
 
 	while (!sig_recieved) {
-		XEvent ev;
+		XEvent ev, junk_ev;
 		Bool discard = False;
+		Status ret;
 
 		XNextEvent(x11.dpy, &ev);
 		if (sig_recieved)
@@ -769,29 +772,25 @@ main(int argc, const char *argv[])
 			old.valid = 1;
 			old.x = ev.xbutton.x_root;
 			old.y = ev.xbutton.y_root;
+
+			/* remove any existing alarm from the queue ? */
+			XCheckTypedEvent(x11.dpy, sync.event + XSyncAlarmNotify, &junk_ev);
+			ret = XSyncChangeAlarm(
+				x11.dpy, sync.alarm, sync.flags, &sync.attr
+			);
+			assert(ret == True); UNUSED(ret);
 			break;
 		case KeyPress:
 			if (opt.quit_on_keypress)
 				exit(0);
 			break;
 		default:
-			if (ev.type == (sync.event + XSyncAlarmNotify) &&
-			    !opt.no_mag && old.valid)
+			if (!opt.no_mag && old.valid &&
+			    ev.type == (sync.event + XSyncAlarmNotify))
 			{
 				magnify(old.x, old.y);
 			}
 			break;
-		}
-
-		{
-			Status ret;
-			XEvent junk;
-			/* remove any existing alarm from the queue ? */
-			XCheckTypedEvent(x11.dpy, sync.event + XSyncAlarmNotify, &junk);
-			ret = XSyncChangeAlarm(
-				x11.dpy, sync.alarm, sync.flags, &sync.attr
-			);
-			assert(ret == True); UNUSED(ret);
 		}
 	}
 
