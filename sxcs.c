@@ -613,19 +613,21 @@ set_alarm(XSyncAlarm *alarm, XSyncCounter counter)
 
 	attr.trigger.counter = counter;
 	flags |= XSyncCACounter;
-	attr.trigger.test_type = XSyncPositiveComparison;
-	flags |= XSyncCATestType;
 	attr.trigger.value_type = XSyncRelative;
 	flags |= XSyncCAValueType;
+	attr.trigger.test_type = XSyncPositiveComparison;
+	flags |= XSyncCATestType;
 	XSyncIntToValue(&attr.trigger.wait_value, MAX_FRAME_TIME);
 	flags |= XSyncCAValue;
-	XSyncIntToValue(&attr.delta, 0);
-	flags |= XSyncCADelta;
 
 	if (*alarm == None) {
 		*alarm = XSyncCreateAlarm(x11.dpy, flags, &attr);
 	} else {
-		XSyncChangeAlarm(x11.dpy, *alarm, flags, &attr);
+		Status ret = XSyncChangeAlarm(x11.dpy, *alarm, flags, &attr);
+		/* Only error defined is if display doesn't support SYNC extension.
+		 * But that should never happen since we check for it at init.
+		 */
+		assert(ret == True);
 	}
 }
 
@@ -638,7 +640,7 @@ main(int argc, const char *argv[])
 		int event;
 		XSyncAlarm alarm;
 		XSyncCounter counter;
-	} sync = { 0, None, -1 };
+	} sync = {0};
 
 	if (atexit(cleanup) != 0)
 		die(1, 0, "atexit() failed");
@@ -709,36 +711,52 @@ main(int argc, const char *argv[])
 	}
 
 	{
-		int tmp, i;
+		int tmp, ncounter, counter_found = 0;
 		XSyncSystemCounter *counters;
-		if (XSyncQueryExtension(x11.dpy, &sync.event, &tmp) != True)
-			die(1, 0, "no sync extension available");
-		XSyncInitialize(x11.dpy, &tmp, &tmp);
+		if (!XSyncQueryExtension(x11.dpy, &sync.event, &tmp)) {
+			die(1, 0, "XSync extension not available");
+		}
+		if (!XSyncInitialize(x11.dpy, &tmp, &tmp)) {
+			die(1, 0, "failed to initialize XSync extension");
+		}
 
-		if ((counters = XSyncListSystemCounters(x11.dpy, &tmp)) != NULL) {
-			for (i = 0; counters != NULL && i < tmp; i++) {
-				if (!strcmp(counters[i].name, "IDLETIME")) {
+		if ((counters = XSyncListSystemCounters(x11.dpy, &ncounter)) != NULL) {
+			/* TODO: why use IDLETIME instead of creating a counter ourself? */
+			int i;
+			for (i = 0; i < ncounter; i++) {
+				if (strcmp(counters[i].name, "IDLETIME") == 0) {
 					sync.counter = counters[i].counter;
+					counter_found = 1;
 					break;
 				}
 			}
 			XSyncFreeSystemCounterList(counters);
 		}
 
-		if (sync.counter == (XSyncCounter)-1)
+		if (!counter_found)
 			die(1, 0, "no idle counter");
 	}
 
 	while (1) {
 		XEvent ev;
 		Bool discard = False;
+		int n = 0;
 
-		if (sig_recieved)
-			exit(sig_recieved); /* TODO: exit with 128 + sig_recieved ? */
-
-		if (XPending(x11.dpy) == 0)
+		/* TODO: reset the alarm and remove stale ones from the queue properly */
+		if (XPending(x11.dpy) == 0) {
 			set_alarm(&sync.alarm, sync.counter);
-		switch (XNextEvent(x11.dpy, &ev), ev.type) {
+		}
+
+		for (n = 0; n < 2; ++n) {
+			if (sig_recieved) {
+				exit(sig_recieved); /* TODO: exit with 128 + sig_recieved ? */
+			}
+			if (n == 0) {
+				XNextEvent(x11.dpy, &ev);
+			}
+		}
+
+		switch (ev.type) {
 		case ButtonPress:
 			switch (ev.xbutton.button) {
 			case Button1:
