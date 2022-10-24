@@ -697,7 +697,7 @@ main(int argc, const char *argv[])
 			int i;
 			assert(sync.flags == 0);
 			for (i = 0; i < ncounter; i++) {
-				if (strcmp(counters[i].name, "IDLETIME") == 0) {
+				if (strcmp(counters[i].name, "SERVERTIME") == 0) {
 					t->counter = counters[i].counter;
 					sync.flags |= XSyncCACounter;
 					break;
@@ -778,16 +778,17 @@ main(int argc, const char *argv[])
 			if (ev.type == (sync.event + XSyncAlarmNotify) &&
 			    !opt.no_mag && old.valid)
 			{
-				Status ret;
-
 				magnify(old.x, old.y);
-				ret = XSyncChangeAlarm(
-					x11.dpy, sync.alarm,
-					sync.flags, &sync.attr
-				);
-				assert(ret == True); UNUSED(ret);
 			}
 			break;
+		}
+
+		{
+			/* TODO: remove any existing alarm from the queue ? */
+			Status ret = XSyncChangeAlarm(
+				x11.dpy, sync.alarm, sync.flags, &sync.attr
+			);
+			assert(ret == True); UNUSED(ret);
 		}
 	}
 
