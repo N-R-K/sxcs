@@ -30,6 +30,7 @@
 #include <X11/Xutil.h>
 #include <X11/cursorfont.h>
 #include <X11/Xcursor/Xcursor.h>
+#include <X11/extensions/sync.h>
 
 /*
  * macros
@@ -131,6 +132,7 @@ static Options opt_parse(int argc, const char *argv[]);
 static void magnify(const int x, const int y);
 static void sighandler(int sig);
 CLEANUP static void cleanup(void);
+static void set_alarm(XSyncAlarm *alarm, XSyncCounter counter);
 /* helpers */
 static ulong get_pixel(int x, int y);
 static void four_point_draw(XcursorImage *img, uint x, uint y, XcursorPixel col);
@@ -603,11 +605,40 @@ cleanup(void)
 		XCloseDisplay(x11.dpy);
 }
 
+static void
+set_alarm(XSyncAlarm *alarm, XSyncCounter counter)
+{
+	XSyncAlarmAttributes attr;
+	unsigned long flags = 0;
+
+	attr.trigger.counter = counter;
+	flags |= XSyncCACounter;
+	attr.trigger.test_type = XSyncPositiveComparison;
+	flags |= XSyncCATestType;
+	attr.trigger.value_type = XSyncRelative;
+	flags |= XSyncCAValueType;
+	XSyncIntToValue(&attr.trigger.wait_value, MAX_FRAME_TIME);
+	flags |= XSyncCAValue;
+	XSyncIntToValue(&attr.delta, 0);
+	flags |= XSyncCADelta;
+
+	if (*alarm == None) {
+		*alarm = XSyncCreateAlarm(x11.dpy, flags, &attr);
+	} else {
+		XSyncChangeAlarm(x11.dpy, *alarm, flags, &attr);
+	}
+}
+
 extern int
 main(int argc, const char *argv[])
 {
 	Options opt;
 	struct { int x, y, valid; } old = {0};
+	struct {
+		int event;
+		XSyncAlarm alarm;
+		XSyncCounter counter;
+	} sync = { 0, None, -1 };
 
 	if (atexit(cleanup) != 0)
 		die(1, 0, "atexit() failed");
@@ -677,24 +708,36 @@ main(int argc, const char *argv[])
 			signal(sigs[i], sighandler);
 	}
 
+	{
+		int tmp, i;
+		XSyncSystemCounter *counters;
+		if (XSyncQueryExtension(x11.dpy, &sync.event, &tmp) != True)
+			die(1, 0, "no sync extension available");
+		XSyncInitialize(x11.dpy, &tmp, &tmp);
+
+		if ((counters = XSyncListSystemCounters(x11.dpy, &tmp)) != NULL) {
+			for (i = 0; counters != NULL && i < tmp; i++) {
+				if (!strcmp(counters[i].name, "IDLETIME")) {
+					sync.counter = counters[i].counter;
+					break;
+				}
+			}
+			XSyncFreeSystemCounterList(counters);
+		}
+
+		if (sync.counter == (XSyncCounter)-1)
+			die(1, 0, "no idle counter");
+	}
+
 	while (1) {
 		XEvent ev;
-		Bool discard = False, pending;
-		struct pollfd pfd;
-
-		pfd.fd = ConnectionNumber(x11.dpy);
-		pfd.events = POLLIN;
-		pending = XPending(x11.dpy) > 0 || poll(&pfd, 1, MAX_FRAME_TIME) > 0;
+		Bool discard = False;
 
 		if (sig_recieved)
 			exit(sig_recieved); /* TODO: exit with 128 + sig_recieved ? */
 
-		if (!pending) {
-			if (!opt.no_mag && old.valid)
-				magnify(old.x, old.y);
-			continue;
-		}
-
+		if (XPending(x11.dpy) == 0)
+			set_alarm(&sync.alarm, sync.counter);
 		switch (XNextEvent(x11.dpy, &ev), ev.type) {
 		case ButtonPress:
 			switch (ev.xbutton.button) {
@@ -739,6 +782,11 @@ main(int argc, const char *argv[])
 				exit(0);
 			break;
 		default:
+			if (ev.type == (sync.event + XSyncAlarmNotify) &&
+			    !opt.no_mag && old.valid)
+			{
+				magnify(old.x, old.y);
+			}
 			break;
 		}
 	}

@@ -44,7 +44,7 @@ CTIDY_ARGS = --quiet --warnings-as-errors="*" \
              --checks="$$(sed '/^\#/d' .clangtidychecks | paste -d ',' -s)"
 
 # libs
-X11_LIBS  = -l X11 -l Xcursor
+X11_LIBS  = -l X11 -l Xcursor -l Xext
 FEAT_CPP  = -D _POSIX_C_SOURCE=200112L
 VERSION_CPP = -D VERSION=\"$$(git describe --tags --dirty 2>/dev/null || printf '%s' $(VERSION))\"
 PROGNAME_CPP  = -D PROGNAME=\"$(BIN)\"
