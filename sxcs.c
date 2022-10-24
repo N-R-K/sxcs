@@ -784,8 +784,11 @@ main(int argc, const char *argv[])
 		}
 
 		{
-			/* TODO: remove any existing alarm from the queue ? */
-			Status ret = XSyncChangeAlarm(
+			Status ret;
+			XEvent junk;
+			/* remove any existing alarm from the queue ? */
+			XCheckTypedEvent(x11.dpy, sync.event + XSyncAlarmNotify, &junk);
+			ret = XSyncChangeAlarm(
 				x11.dpy, sync.alarm, sync.flags, &sync.attr
 			);
 			assert(ret == True); UNUSED(ret);
