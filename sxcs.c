@@ -686,20 +686,19 @@ main(int argc, const char *argv[])
 	{
 		int tmp, ncounter;
 		XSyncSystemCounter *counters;
+		XSyncTrigger *t = &sync.attr.trigger;
 
-		if (!XSyncQueryExtension(x11.dpy, &sync.event, &tmp)) {
+		if (!XSyncQueryExtension(x11.dpy, &sync.event, &tmp))
 			die(1, 0, "XSync extension not available");
-		}
-		if (!XSyncInitialize(x11.dpy, &tmp, &tmp)) {
+		if (!XSyncInitialize(x11.dpy, &tmp, &tmp))
 			die(1, 0, "failed to initialize XSync extension");
-		}
 
 		if ((counters = XSyncListSystemCounters(x11.dpy, &ncounter)) != NULL) {
 			int i;
 			assert(sync.flags == 0);
 			for (i = 0; i < ncounter; i++) {
 				if (strcmp(counters[i].name, "IDLETIME") == 0) {
-					sync.attr.trigger.counter = counters[i].counter;
+					t->counter = counters[i].counter;
 					sync.flags |= XSyncCACounter;
 					break;
 				}
@@ -710,11 +709,11 @@ main(int argc, const char *argv[])
 		if (!(sync.flags & XSyncCACounter))
 			die(1, 0, "idle counter not found");
 
-		sync.attr.trigger.value_type = XSyncRelative;
+		t->value_type = XSyncRelative;
 		sync.flags |= XSyncCAValueType;
-		sync.attr.trigger.test_type = XSyncPositiveComparison;
+		t->test_type = XSyncPositiveComparison;
 		sync.flags |= XSyncCATestType;
-		XSyncIntToValue(&sync.attr.trigger.wait_value, MAX_FRAME_TIME);
+		XSyncIntToValue(&t->wait_value, MAX_FRAME_TIME);
 		sync.flags |= XSyncCAValue;
 
 		sync.alarm = XSyncCreateAlarm(x11.dpy, sync.flags, &sync.attr);

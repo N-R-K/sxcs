@@ -71,7 +71,7 @@ $ man sxcs
   * C standard library
   * Xlib
   * Xcursor
-  * XSync Extension
+  * XSync Extension (libXext)
 
 ```console
 $ make
