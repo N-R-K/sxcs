@@ -45,7 +45,7 @@ CTIDY_ARGS = --quiet --warnings-as-errors="*" \
 
 # libs
 X11_LIBS  = -l X11 -l Xcursor -l Xext
-FEAT_CPP  = -D _POSIX_C_SOURCE=200112L
+FEAT_CPP  =
 VERSION_CPP = -D VERSION=\"$$(git describe --tags --dirty 2>/dev/null || printf '%s' $(VERSION))\"
 PROGNAME_CPP  = -D PROGNAME=\"$(BIN)\"
 DEBUG_CPP = -D NDEBUG

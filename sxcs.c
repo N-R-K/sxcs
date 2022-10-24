@@ -23,7 +23,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-#include <poll.h>
 #include <signal.h>
 
 #include <X11/Xlib.h>
@@ -132,7 +131,6 @@ static Options opt_parse(int argc, const char *argv[]);
 static void magnify(const int x, const int y);
 static void sighandler(int sig);
 CLEANUP static void cleanup(void);
-static void set_alarm(XSyncAlarm *alarm, XSyncCounter counter);
 /* helpers */
 static ulong get_pixel(int x, int y);
 static void four_point_draw(XcursorImage *img, uint x, uint y, XcursorPixel col);
@@ -605,32 +603,6 @@ cleanup(void)
 		XCloseDisplay(x11.dpy);
 }
 
-static void
-set_alarm(XSyncAlarm *alarm, XSyncCounter counter)
-{
-	XSyncAlarmAttributes attr;
-	unsigned long flags = 0;
-
-	attr.trigger.counter = counter;
-	flags |= XSyncCACounter;
-	attr.trigger.value_type = XSyncRelative;
-	flags |= XSyncCAValueType;
-	attr.trigger.test_type = XSyncPositiveComparison;
-	flags |= XSyncCATestType;
-	XSyncIntToValue(&attr.trigger.wait_value, MAX_FRAME_TIME);
-	flags |= XSyncCAValue;
-
-	if (*alarm == None) {
-		*alarm = XSyncCreateAlarm(x11.dpy, flags, &attr);
-	} else {
-		Status ret = XSyncChangeAlarm(x11.dpy, *alarm, flags, &attr);
-		/* Only error defined is if display doesn't support SYNC extension.
-		 * But that should never happen since we check for it at init.
-		 */
-		assert(ret == True);
-	}
-}
-
 extern int
 main(int argc, const char *argv[])
 {
@@ -639,7 +611,8 @@ main(int argc, const char *argv[])
 	struct {
 		int event;
 		XSyncAlarm alarm;
-		XSyncCounter counter;
+		XSyncAlarmAttributes attr;
+		unsigned long flags;
 	} sync = {0};
 
 	if (atexit(cleanup) != 0)
@@ -711,8 +684,9 @@ main(int argc, const char *argv[])
 	}
 
 	{
-		int tmp, ncounter, counter_found = 0;
+		int tmp, ncounter;
 		XSyncSystemCounter *counters;
+
 		if (!XSyncQueryExtension(x11.dpy, &sync.event, &tmp)) {
 			die(1, 0, "XSync extension not available");
 		}
@@ -721,40 +695,42 @@ main(int argc, const char *argv[])
 		}
 
 		if ((counters = XSyncListSystemCounters(x11.dpy, &ncounter)) != NULL) {
-			/* TODO: why use IDLETIME instead of creating a counter ourself? */
 			int i;
+			assert(sync.flags == 0);
 			for (i = 0; i < ncounter; i++) {
 				if (strcmp(counters[i].name, "IDLETIME") == 0) {
-					sync.counter = counters[i].counter;
-					counter_found = 1;
+					sync.attr.trigger.counter = counters[i].counter;
+					sync.flags |= XSyncCACounter;
 					break;
 				}
 			}
 			XSyncFreeSystemCounterList(counters);
 		}
 
-		if (!counter_found)
-			die(1, 0, "no idle counter");
+		if (!(sync.flags & XSyncCACounter))
+			die(1, 0, "idle counter not found");
+
+		sync.attr.trigger.value_type = XSyncRelative;
+		sync.flags |= XSyncCAValueType;
+		sync.attr.trigger.test_type = XSyncPositiveComparison;
+		sync.flags |= XSyncCATestType;
+		XSyncIntToValue(&sync.attr.trigger.wait_value, MAX_FRAME_TIME);
+		sync.flags |= XSyncCAValue;
+
+		sync.alarm = XSyncCreateAlarm(x11.dpy, sync.flags, &sync.attr);
+		/* Only error defined is if display doesn't support SYNC extension.
+		 * But that should never happen since we already checked for it.
+		 */
+		assert(sync.alarm != None);
 	}
 
-	while (1) {
+	while (!sig_recieved) {
 		XEvent ev;
 		Bool discard = False;
-		int n = 0;
 
-		/* TODO: reset the alarm and remove stale ones from the queue properly */
-		if (XPending(x11.dpy) == 0) {
-			set_alarm(&sync.alarm, sync.counter);
-		}
-
-		for (n = 0; n < 2; ++n) {
-			if (sig_recieved) {
-				exit(sig_recieved); /* TODO: exit with 128 + sig_recieved ? */
-			}
-			if (n == 0) {
-				XNextEvent(x11.dpy, &ev);
-			}
-		}
+		XNextEvent(x11.dpy, &ev);
+		if (sig_recieved)
+			break;
 
 		switch (ev.type) {
 		case ButtonPress:
@@ -803,11 +779,19 @@ main(int argc, const char *argv[])
 			if (ev.type == (sync.event + XSyncAlarmNotify) &&
 			    !opt.no_mag && old.valid)
 			{
+				Status ret;
+
 				magnify(old.x, old.y);
+				ret = XSyncChangeAlarm(
+					x11.dpy, sync.alarm,
+					sync.flags, &sync.attr
+				);
+				assert(ret == True); UNUSED(ret);
 			}
 			break;
 		}
 	}
 
-	assert_unreachable();
+	assert(sig_recieved);
+	exit(sig_recieved); /* TODO: exit with 128 + sig_recieved ? */
 }

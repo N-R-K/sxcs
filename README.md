@@ -68,9 +68,10 @@ $ man sxcs
   * necessary headers
 
 - Runtime Dependencies:
-  * POSIX 2001 C standard library
+  * C standard library
   * Xlib
   * Xcursor
+  * XSync Extension
 
 ```console
 $ make
