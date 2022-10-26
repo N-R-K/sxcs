@@ -707,7 +707,7 @@ main(int argc, const char *argv[])
 		}
 
 		if (!(sync.flags & XSyncCACounter))
-			die(1, 0, "idle counter not found");
+			die(1, 0, "SERVERTIME counter not found");
 
 		t->value_type = XSyncRelative;
 		sync.flags |= XSyncCAValueType;
