@@ -57,7 +57,7 @@ CFLAGS   ?= $$(test "$(CC)" = "gcc" && printf "%s " $(OFLAGS) || printf "%s " $(
 CFLAGS   += $(WFLAGS) $(DFLAGS)
 CPPFLAGS  = $(FEAT_CPP) $(PROGNAME_CPP) $(VERSION_CPP) $(DEBUG_CPP) $(NOFORTIFY_CPP)
 STRIP    ?= -s
-CFLAGS   += $(STRIP)
+LDFLAGS  ?= $(STRIP)
 LDLIBS    = $(X11_LIBS)
 
 PREFIX   ?= /usr/local
@@ -73,7 +73,7 @@ SRC  = sxcs.c
 all: $(BIN)
 
 $(BIN): $(SRC) Makefile config.h
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(SRC) -o $@ $(LDLIBS)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) $(SRC) -o $@ $(LDLIBS)
 
 config.h:
 	cp config.def.h config.h
