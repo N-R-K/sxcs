@@ -31,6 +31,13 @@
 #include <X11/cursorfont.h>
 #include <X11/Xcursor/Xcursor.h>
 
+#ifndef PROGNAME
+	#define PROGNAME "sxcs"
+#endif
+#ifndef VERSION
+	#define VERSION "v0.7-dirty"
+#endif
+
 /*
  * macros
  */

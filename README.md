@@ -64,13 +64,15 @@ $ man sxcs
 
 - Build Dependencies:
   * C89 compiler
-  * make
   * necessary headers
+  * make (optional)
 
 - Runtime Dependencies:
   * POSIX 2001 C standard library
   * Xlib
   * Xcursor
+
+* Building and installing with `make`:
 
 ```console
 $ make
@@ -82,6 +84,14 @@ following if you're using another compiler and experience build failure:
 
 ```console
 $ make CC=${your_c_compiler} CFLAGS=""
+```
+
+* Building and installing manually:
+
+```console
+$ cc -o sxcs sxcs.c -l X11 -l Xcursor
+# sudo cp sxcs /usr/bin/
+# sudo cp sxcs.1 /usr/share/man/man1/
 ```
 
 ## Limitation
