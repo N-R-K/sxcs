@@ -654,8 +654,7 @@ main(int argc, const char *argv[])
 		x11.grab_mask = ButtonPressMask | PointerMotionMask;
 		tmp = XGrabPointer(
 			x11.dpy, x11.root.win, 0, x11.grab_mask, GrabModeAsync,
-			GrabModeAsync, x11.root.win, opt.no_mag ? cur : None,
-			CurrentTime
+			GrabModeAsync, x11.root.win, cur, CurrentTime
 		);
 		if (opt.no_mag)
 			XFreeCursor(x11.dpy, cur);
