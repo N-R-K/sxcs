@@ -62,7 +62,7 @@ LDLIBS    = $(X11_LIBS)
 
 PREFIX   ?= /usr/local
 MANPREFIX ?= $(PREFIX)/share/man
-VERSION   = v0.7.1
+VERSION   = v0.7.1-dirty
 
 
 BIN  = sxcs
