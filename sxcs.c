@@ -174,14 +174,12 @@ static void circle(XcursorImage *img);
 
 static struct {
 	Display *dpy;
-	Cursor cur;
 	uint grab_mask;
 	struct {
 		Window win;
 		uint w, h;
 	} root;
 	struct {
-		uint cur         : 1;
 		uint ungrab_ptr  : 1;
 		uint ungrab_kb   : 1;
 	} valid;
@@ -582,11 +580,8 @@ magnify(const int x, const int y)
 	for (i = 0; i < filter->len; ++i)
 		filter->f[i](cursor_img);
 	new_cur = XcursorImageLoadCursor(x11.dpy, cursor_img);
-	if (x11.valid.cur)
-		XFreeCursor(x11.dpy, x11.cur);
-	x11.cur = new_cur;
-	x11.valid.cur = 1;
-	XChangeActivePointerGrab(x11.dpy, x11.grab_mask, x11.cur, CurrentTime);
+	XChangeActivePointerGrab(x11.dpy, x11.grab_mask, new_cur, CurrentTime);
+	XFreeCursor(x11.dpy, new_cur);
 }
 
 static void
@@ -604,8 +599,6 @@ cleanup(void)
 		XUngrabPointer(x11.dpy, CurrentTime);
 	if (cursor_img != NULL)
 		XcursorImageDestroy(cursor_img);
-	if (x11.valid.cur)
-		XFreeCursor(x11.dpy, x11.cur);
 	if (x11.dpy != NULL)
 		XCloseDisplay(x11.dpy);
 }
@@ -614,6 +607,7 @@ extern int
 main(int argc, const char *argv[])
 {
 	Options opt;
+	Cursor cur = None;
 	struct { int x, y, valid; } old = {0};
 
 	if (atexit(cleanup) != 0)
@@ -646,8 +640,7 @@ main(int argc, const char *argv[])
 	}
 
 	if (opt.no_mag) {
-		x11.cur = XCreateFontCursor(x11.dpy, XC_tcross);
-		x11.valid.cur = 1;
+		cur = XCreateFontCursor(x11.dpy, XC_tcross);
 	} else {
 		cursor_img = XcursorImageCreate(MAG_SIZE, MAG_SIZE);
 		if (cursor_img == NULL)
@@ -661,8 +654,11 @@ main(int argc, const char *argv[])
 		x11.grab_mask = ButtonPressMask | PointerMotionMask;
 		tmp = XGrabPointer(
 			x11.dpy, x11.root.win, 0, x11.grab_mask, GrabModeAsync,
-			GrabModeAsync, x11.root.win, x11.cur, CurrentTime
+			GrabModeAsync, x11.root.win, opt.no_mag ? cur : None,
+			CurrentTime
 		);
+		if (opt.no_mag)
+			XFreeCursor(x11.dpy, cur);
 		x11.valid.ungrab_ptr = tmp == GrabSuccess;
 		if (!x11.valid.ungrab_ptr)
 			die(1, 0, "failed to grab cursor");
