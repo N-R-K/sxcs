@@ -8,7 +8,7 @@ O_BUILTIN     = -fbuiltin
 O_SEMINTERPOS = -fno-semantic-interposition
 O_NOCOMMON    = -fno-common
 O_NOPLT       = -fno-plt
-O_NOPIE       = -no-pie
+O_NOPIE       = -fno-pie -no-pie
 O_NOSSP       = -fno-stack-protector
 OFLAGS = $(O_BASIC) $(O_LTO) $(O_GRAPHITE) $(O_IPAPTA) \
          $(O_SEMINTERPOS) $(O_NOCOMMON) $(O_NOPLT) \
