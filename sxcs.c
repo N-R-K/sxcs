@@ -52,14 +52,6 @@
 /* not correct. but works fine for our usecase in this program */
 #define ROUNDF(X)        ((int)((X) + 0.50f))
 
-#if DEBUG
-	#define ASSERT(X)              ((X) ? (void)0 : abort())
-	#define ASSERT_UNREACHABLE()   ASSERT(0 && "reached unreachable")
-#else /* TODO: utilize __builtin_unreachable() ? */
-	#define ASSERT(X)              ((void)0)
-	#define ASSERT_UNREACHABLE()   ((void)0)
-#endif
-
 #define R(X)             ( ((ulong)(X) & 0xFF0000) >> 16 )
 #define G(X)             ( ((ulong)(X) & 0x00FF00) >>  8 )
 #define B(X)             ( ((ulong)(X) & 0x0000FF) >>  0 )
@@ -79,6 +71,20 @@
 	#define ATTR_NORETURN __attribute__ ((noreturn))
 #else
 	#define ATTR_NORETURN
+#endif
+
+#ifndef __has_builtin
+	#define __has_builtin(X) (0)
+#endif
+#if DEBUG
+	#define ASSERT(X)              ((X) ? (void)0 : abort())
+	#define ASSERT_UNREACHABLE()   ASSERT(0 && "reached unreachable")
+#elif __has_builtin(__builtin_unreachable)
+	#define ASSERT(X)              ((X) ? (void)0 : __builtin_unreachable())
+	#define ASSERT_UNREACHABLE()   ASSERT(0)
+#else
+	#define ASSERT(X)              ((void)0)
+	#define ASSERT_UNREACHABLE()   ((void)0)
 #endif
 
 /*
