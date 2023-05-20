@@ -53,7 +53,7 @@
 #define ROUNDF(X)        ((int)((X) + 0.50f))
 
 #if DEBUG
-	#define ASSERT(X)              ((X) ? (0) : (abort(), 0))
+	#define ASSERT(X)              ((X) ? (void)0 : abort())
 	#define ASSERT_UNREACHABLE()   ASSERT(0 && "reached unreachable")
 #else /* TODO: utilize __builtin_unreachable() ? */
 	#define ASSERT(X)              ((void)0)

@@ -24,6 +24,7 @@ WGCC  += -fanalyzer
 WCLANG = -Weverything
 WCLANG += -Wno-padded -Wno-comma -Wno-unused-macros
 WCLANG += -Wno-implicit-fallthrough -Wno-unreachable-code-break -Wno-unreachable-code-return
+WCLANG += -Wno-disabled-macro-expansion
 WFLAGS = -std=$(STD) -Wall -Wextra -Wpedantic \
          -Wshadow -Wvla -Wpointer-arith -Wwrite-strings -Wfloat-equal \
          -Wcast-align -Wcast-qual -Wbad-function-cast \

@@ -8,4 +8,5 @@ readability-duplicate-include,readability-misleading-indentation
 # silence
 -bugprone-easily-swappable-parameters,-bugprone-incorrect-roundings
 -bugprone-narrowing-conversions,-bugprone-implicit-widening-of-multiplication-result
+-bugprone-assignment-in-if-condition
 -cert-err33-c
