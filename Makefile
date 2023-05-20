@@ -1,5 +1,5 @@
 # debug
-DFLAGS_DEFAULT  ?= -g -fsanitize=address,undefined,leak
+DFLAGS_DEFAULT  ?= -g3 -fsanitize=address,undefined,leak
 # optimizations
 O_BASIC       = -pipe -march=native -Ofast
 O_GRAPHITE    = -fgraphite-identity -floop-nest-optimize
@@ -87,7 +87,7 @@ analyze:
 	$(CTIDY) $(CTIDY_ARGS) $(SRC) "--" -std=$(STD) $$(make CC=clang dump_cppflags)
 
 run:
-	tcc $(CPPFLAGS) $(LDLIBS) -D DEBUG -g -b -run $(SRC)
+	tcc $(CPPFLAGS) $(LDLIBS) -D DEBUG -g3 -b -run $(SRC)
 
 dump_cppflags:
 	@echo $(CPPFLAGS)
