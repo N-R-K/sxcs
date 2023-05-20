@@ -48,7 +48,7 @@ X11_LIBS  = -l X11 -l Xcursor
 FEAT_CPP  = -D _POSIX_C_SOURCE=200112L
 VERSION_CPP = -D VERSION=\"$$(git describe --tags --dirty 2>/dev/null || printf '%s' $(VERSION))\"
 PROGNAME_CPP  = -D PROGNAME=\"$(BIN)\"
-DEBUG_CPP = -D NDEBUG
+DEBUG_CPP =
 NOFORTIFY_CPP = -U _FORTIFY_SOURCE
 
 # Cool stuff
@@ -79,7 +79,7 @@ config.h:
 	cp config.def.h config.h
 
 debug:
-	make BIN="$(BIN)-debug" DFLAGS="$(DFLAGS_DEFAULT)" DEBUG_CPP="" STRIP="" all
+	make BIN="$(BIN)-debug" DFLAGS="$(DFLAGS_DEFAULT)" DEBUG_CPP="-D DEBUG" STRIP="" all
 
 analyze:
 	make CC="clang" OFLAGS="-march=native -Ofast -pipe" BIN="/dev/null"
@@ -87,7 +87,7 @@ analyze:
 	$(CTIDY) $(CTIDY_ARGS) $(SRC) "--" -std=$(STD) $$(make CC=clang dump_cppflags)
 
 run:
-	tcc $(CPPFLAGS) $(LDLIBS) -U NDEBUG -g -b -run $(SRC)
+	tcc $(CPPFLAGS) $(LDLIBS) -D DEBUG -g -b -run $(SRC)
 
 dump_cppflags:
 	@echo $(CPPFLAGS)
