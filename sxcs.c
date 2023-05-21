@@ -78,13 +78,10 @@
 #endif
 #if DEBUG
 	#define ASSERT(X)              ((X) ? (void)0 : abort())
-	#define ASSERT_UNREACHABLE()   ASSERT(0 && "reached unreachable")
 #elif __has_builtin(__builtin_unreachable)
 	#define ASSERT(X)              ((X) ? (void)0 : __builtin_unreachable())
-	#define ASSERT_UNREACHABLE()   ASSERT(0)
 #else
 	#define ASSERT(X)              ((void)0)
-	#define ASSERT_UNREACHABLE()   ((void)0)
 #endif
 
 /*
@@ -765,5 +762,5 @@ main(int argc, const char *argv[])
 		}
 	}
 
-	ASSERT_UNREACHABLE();
+	ASSERT(0 && "unreachable");
 }
