@@ -2,6 +2,7 @@
 DFLAGS_DEFAULT  ?= -g3 -fsanitize=address,undefined,leak
 # optimizations
 O_BASIC       = -pipe -march=native -Ofast
+O_WHOLEPROG   = -fwhole-program
 O_GRAPHITE    = -fgraphite-identity -floop-nest-optimize
 O_IPAPTA      = -fipa-pta
 O_BUILTIN     = -fbuiltin
@@ -10,7 +11,7 @@ O_NOCOMMON    = -fno-common
 O_NOPLT       = -fno-plt
 O_NOPIE       = -fno-pie -no-pie
 O_NOSSP       = -fno-stack-protector
-OFLAGS = $(O_BASIC) $(O_LTO) $(O_GRAPHITE) $(O_IPAPTA) \
+OFLAGS = $(O_BASIC) $(O_WHOLEPROG) $(O_GRAPHITE) $(O_IPAPTA) \
          $(O_SEMINTERPOS) $(O_NOCOMMON) $(O_NOPLT) \
          $(O_NOPIE) $(O_NOSSP) $(O_BUILTIN) \
 
