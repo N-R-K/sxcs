@@ -71,15 +71,6 @@ $ man sxcs
   * Xcursor
   * POSIX 2001 C standard library
 
-* First create a `config.h` file:
-
-```console
-$ cp config.def.h config.h
-$ ln -s config.def.h config.h   # OR make a symlink like this
-```
-
-Feel free to customize `config.h` to your liking.
-
 * Simple build:
 
 ```console
