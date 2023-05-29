@@ -84,8 +84,8 @@ $ cc -o sxcs sxcs.c -s -l X11 -l Xcursor
 ```console
 $ gcc -o sxcs sxcs.c -Ofast -march=native -fwhole-program -fno-plt \
     -fno-semantic-interposition -fgraphite-identity -floop-nest-optimize \
-    -fipa-pta -fno-asynchronous-unwind-tables -fno-ident \
-    -s -l X11 -l Xcursor
+    -fipa-pta -fno-asynchronous-unwind-tables -fno-ident -fno-pie \
+    -s -no-pie -l X11 -l Xcursor
 ```
 
 * Recommended debug build:
