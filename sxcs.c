@@ -761,5 +761,5 @@ main(int argc, const char *argv[])
 		}
 	}
 
-	ASSERT(0 && "unreachable");
+	ASSERT(!"unreachable");
 }
