@@ -38,9 +38,6 @@
 #ifndef VERSION
 	#define VERSION "v0.7.1-dirty"
 #endif
-#ifndef DEBUG
-	#define DEBUG 0
-#endif
 
 /*
  * macros
@@ -78,7 +75,7 @@
 #ifndef __has_builtin
 	#define __has_builtin(X) (0)
 #endif
-#if DEBUG
+#ifdef DEBUG
 	#define ASSERT(X)              ((X) ? (void)0 : abort())
 #elif __has_builtin(__builtin_unreachable)
 	#define ASSERT(X)              ((X) ? (void)0 : __builtin_unreachable())
