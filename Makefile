@@ -47,7 +47,6 @@ CTIDY_ARGS = --quiet --warnings-as-errors="*" \
 
 # libs
 X11_LIBS  = -l X11 -l Xcursor
-FEAT_CPP  = -D _POSIX_C_SOURCE=200112L
 VERSION_CPP = -D VERSION=\"$$(git describe --tags --dirty 2>/dev/null || printf '%s' $(VERSION))\"
 PROGNAME_CPP  = -D PROGNAME=\"$(BIN)\"
 DEBUG_CPP =
@@ -57,7 +56,7 @@ NOFORTIFY_CPP = -U _FORTIFY_SOURCE
 CC       ?= cc
 CFLAGS   ?= $$(test "$(CC)" = "gcc" && printf "%s " $(OFLAGS) || printf "%s " $(O_FALLBACK))
 CFLAGS   += $(WFLAGS) $(DFLAGS)
-CPPFLAGS  = $(FEAT_CPP) $(PROGNAME_CPP) $(VERSION_CPP) $(DEBUG_CPP) $(NOFORTIFY_CPP)
+CPPFLAGS  = $(PROGNAME_CPP) $(VERSION_CPP) $(DEBUG_CPP) $(NOFORTIFY_CPP)
 STRIP    ?= -s
 LDFLAGS  ?= $(STRIP)
 LDLIBS    = $(X11_LIBS)

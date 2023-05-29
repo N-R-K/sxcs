@@ -17,6 +17,8 @@
  * along with sxcs. If not, see <https://www.gnu.org/licenses/>.
  */
 
+#define _POSIX_C_SOURCE 200112L /* NOLINT */
+
 #include <errno.h>
 #include <poll.h>
 #include <signal.h>
