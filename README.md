@@ -65,31 +65,45 @@ $ man sxcs
 - Build Dependencies:
   * C89 compiler
   * necessary headers
-  * make (optional)
 
 - Runtime Dependencies:
-  * POSIX 2001 C standard library
   * Xlib
   * Xcursor
+  * POSIX 2001 C standard library
 
-* Building and installing with `make`:
+* First create a `config.h` file:
 
 ```console
-$ make
-# sudo make install
+$ cp config.def.h config.h
+$ ln -s config.def.h config.h   # OR make a symlink like this
 ```
 
-NOTE: the Makefile assumes `CC` is set to either `gcc` or `clang`. Use the
-following if you're using another compiler and experience build failure:
+Feel free to customize `config.h` to your liking.
+
+* Simple build:
 
 ```console
-$ make CC=${your_c_compiler} CFLAGS=""
+$ cc -o sxcs sxcs.c -s -l X11 -l Xcursor
 ```
 
-* Building and installing manually:
+* Recommended optimized build:
 
 ```console
-$ cc -o sxcs sxcs.c -l X11 -l Xcursor
+$ gcc -o sxcs sxcs.c -Ofast -march=native -fwhole-program -fno-plt \
+    -fno-semantic-interposition -fgraphite-identity -floop-nest-optimize \
+    -fipa-pta -fno-asynchronous-unwind-tables -fno-ident \
+    -s -l X11 -l Xcursor
+```
+
+* Recommended debug build:
+
+```console
+$ gcc -o sxcs sxcs.c -g3 -D DEBUG -O0 -fsanitize=address,undefined -l X11 -l Xcursor
+```
+
+* Installing:
+
+```console
 # sudo cp sxcs /usr/bin/
 # sudo cp sxcs.1 /usr/share/man/man1/
 ```
