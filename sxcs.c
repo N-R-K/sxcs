@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 NRK and contributors.
+ * Copyright (C) 2022-2023 NRK and contributors.
  *
  * This file is part of sxcs.
  *
