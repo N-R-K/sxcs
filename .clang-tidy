@@ -1,0 +1,24 @@
+Checks: >
+    clang-analyzer-*,
+    clang-diagnostic-*,
+    bugprone-*,
+    performance-*,
+    modernize-*
+    misc-*,
+    android-cloexec-*,
+    cert-*,
+    readability-duplicate-include,
+    readability-misleading-indentation,
+    -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
+    -bugprone-easily-swappable-parameters,
+    -bugprone-incorrect-roundings,
+    -bugprone-narrowing-conversions,
+    -bugprone-implicit-widening-of-multiplication-result,
+    -bugprone-assignment-in-if-condition,
+    -cert-err33-c,
+
+CheckOptions:
+  - key:             bugprone-assert-side-effect.AssertMacros
+    value:           'ASSERT'
+
+ExtraArgs: [-std=c89,-DDEBUG]
