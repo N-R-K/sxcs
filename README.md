@@ -60,7 +60,7 @@ Consult the manpage to see a list of all available cli arguments and filters:
 $ man sxcs
 ```
 
-## Building
+## Dependencies
 
 - Build Dependencies:
   * C89 compiler
@@ -70,6 +70,8 @@ $ man sxcs
   * Xlib
   * Xcursor
   * POSIX 2001 C standard library
+
+## Building
 
 * Simple build:
 
@@ -93,7 +95,9 @@ $ gcc -o sxcs sxcs.c -std=c89 -Wall -Wextra -Wpedantic \
     -g3 -D DEBUG -O0 -fsanitize=address,undefined -l X11 -l Xcursor
 ```
 
-* Installing:
+## Installing
+
+Just copy the binary and the manpage to the appropriate location:
 
 ```console
 # sudo cp sxcs /usr/bin/
