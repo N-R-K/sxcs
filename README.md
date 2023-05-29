@@ -89,7 +89,8 @@ $ gcc -o sxcs sxcs.c -Ofast -march=native -fwhole-program -fno-plt \
 * Recommended debug build:
 
 ```console
-$ gcc -o sxcs sxcs.c -g3 -D DEBUG -O0 -fsanitize=address,undefined -l X11 -l Xcursor
+$ gcc -o sxcs sxcs.c -std=c89 -Wall -Wextra -Wpedantic \
+    -g3 -D DEBUG -O0 -fsanitize=address,undefined -l X11 -l Xcursor
 ```
 
 * Installing:
