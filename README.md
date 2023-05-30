@@ -103,11 +103,18 @@ $ make -f analyze.mk
 
 ## Installing
 
-Just copy the binary and the manpage to the appropriate location:
+Just copy the executable and the man-page to the appropriate location:
 
 ```console
 $ sudo cp sxcs /usr/local/bin
 $ sudo cp sxcs.1 /usr/local/share/man/man1
+```
+
+Or using the `install` utility:
+
+```console
+$ sudo install -Dm755 sxcs /usr/local/bin/sxcs
+$ sudo install -Dm644 sxcs.1 /usr/local/share/man/man1/sxcs.1
 ```
 
 ## Limitation
