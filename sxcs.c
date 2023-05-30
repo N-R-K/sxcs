@@ -311,9 +311,10 @@ print_color(int x, int y, enum output fmt)
 		HSL tmp = rgb_to_hsl(pix);
 		printf("hsl:\t%u %u %u\t", tmp.h, tmp.s, tmp.l);
 	}
-	printf("\n");
-	if (fflush(stdout) != 0)
-		die(1, errno, "write failed");
+	putchar('\n');
+	fflush(stdout);
+	if (ferror(stdout))
+		die(1, 0, "writing to stdout failed");
 }
 
 static void
