@@ -287,7 +287,7 @@ get_pixel(int x, int y)
 		XImage *im = XGetImage(x11.dpy, x11.root.win, x, y, 1, 1, AllPlanes, ZPixmap);
 		if (im == NULL)
 			die(1, 0, "failed to get image");
-		ret = XGetPixel(im, 0, 0);
+		ret = ximg_pixel_get(im, 0, 0);
 		XDestroyImage(im);
 	}
 
