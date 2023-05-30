@@ -95,6 +95,12 @@ $ gcc -o sxcs sxcs.c -std=c89 -Wall -Wextra -Wpedantic \
     -g3 -D DEBUG -O0 -fsanitize=address,undefined -l X11 -l Xcursor
 ```
 
+* Optionally run some static analysis:
+
+```console
+$ make -f analyze.mk
+```
+
 ## Installing
 
 Just copy the binary and the manpage to the appropriate location:
