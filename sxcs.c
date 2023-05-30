@@ -333,7 +333,7 @@ version(void)
 {
 	fputs(
 		PROGNAME" "VERSION"\n\n"
-		"Copyright (C) 2022 NRK and contributors.\n"
+		"Copyright (C) 2022-2023 NRK and contributors.\n"
 		"License: GPLv3+ <https://gnu.org/licenses/gpl.html>.\n"
 		"Upstream: <https://codeberg.org/NRK/sxcs>\n",
 		stderr
