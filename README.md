@@ -106,8 +106,8 @@ $ make -f analyze.mk
 Just copy the binary and the manpage to the appropriate location:
 
 ```console
-# sudo cp sxcs /usr/bin/
-# sudo cp sxcs.1 /usr/share/man/man1/
+# sudo cp sxcs /usr/local/bin
+# sudo cp sxcs.1 /usr/local/share/man/man1
 ```
 
 ## Limitation
