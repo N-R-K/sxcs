@@ -36,7 +36,7 @@
 	#define PROGNAME "sxcs"
 #endif
 #ifndef VERSION
-	#define VERSION "v0.7.1-dirty"
+	#define VERSION "v0.7.2"
 #endif
 
 /*
