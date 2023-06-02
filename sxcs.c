@@ -159,7 +159,7 @@ static ulong ximg_pixel_get(const XImage *img, int x, int y);
  * The zoom functions are given a `XcursorImage` pointer where it must output
  * the zoomed image. As input, an `Image` pointer is given.
  * NOTE: In case of clipping (cursor at the edge of the screen) the input may
- * not be of expected size. `in->{cx,cy}` are the co-ordinate of the cursor
+ * not be of expected size. `in->{cx,cy}` are the coordinates of the cursor
  * position and `in->wanted.{w,h}` are w/h if no clipping had occurred.
  * so the zoom function must ensure that the middle of the output maps to the
  * cx,cy of the input and it must fill any of the clipped area with transparent
