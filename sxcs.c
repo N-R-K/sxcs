@@ -748,10 +748,10 @@ main(int argc, const char *argv[])
 					break;
 				}
 			} while (discard);
-			magnify(ev.xbutton.x_root, ev.xbutton.y_root);
+			magnify(ev.xmotion.x_root, ev.xmotion.y_root);
 			old.valid = 1;
-			old.x = ev.xbutton.x_root;
-			old.y = ev.xbutton.y_root;
+			old.x = ev.xmotion.x_root;
+			old.y = ev.xmotion.y_root;
 			break;
 		case KeyPress:
 			if (opt.quit_on_keypress)
