@@ -698,7 +698,7 @@ main(int argc, const char *argv[])
 
 	while (1) {
 		XEvent ev;
-		Bool discard = False, pending;
+		Bool pending;
 		struct pollfd pfd;
 
 		pfd.fd = ConnectionNumber(x11.dpy);
@@ -737,17 +737,15 @@ main(int argc, const char *argv[])
 			if (opt.no_mag)
 				break;
 
-			do { /* don't act on stale events */
-				if (XPending(x11.dpy) > 0) {
-					XEvent next_ev;
-					XPeekEvent(x11.dpy, &next_ev);
-					discard = next_ev.type == MotionNotify;
-					if (discard)
-						XNextEvent(x11.dpy, &ev);
-				} else {
+			while (XPending(x11.dpy) > 0) { /* don't act on stale events */
+				XEvent next_ev;
+				XPeekEvent(x11.dpy, &next_ev);
+				if (next_ev.type == MotionNotify)
+					XNextEvent(x11.dpy, &ev);
+				else
 					break;
-				}
-			} while (discard);
+			}
+
 			magnify(ev.xmotion.x_root, ev.xmotion.y_root);
 			old.valid = 1;
 			old.x = ev.xmotion.x_root;
