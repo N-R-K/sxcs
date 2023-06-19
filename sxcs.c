@@ -610,6 +610,7 @@ sighandler(int sig)
 CLEANUP static void
 cleanup(void)
 {
+#ifdef DEBUG
 	if (x11.valid.ungrab_kb)
 		XUngrabKeyboard(x11.dpy, CurrentTime);
 	if (x11.valid.ungrab_ptr)
@@ -618,6 +619,7 @@ cleanup(void)
 		XcursorImageDestroy(cursor_img);
 	if (x11.valid.cur)
 		XFreeCursor(x11.dpy, x11.cur);
+#endif
 	if (x11.dpy != NULL)
 		XCloseDisplay(x11.dpy);
 }
