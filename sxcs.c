@@ -641,7 +641,8 @@ main(int argc, const char *argv[])
 	{ /* TODO: update the x11.root.{w,h} if root changes size */
 		XWindowAttributes tmp;
 		x11.root.win = DefaultRootWindow(x11.dpy);
-		XGetWindowAttributes(x11.dpy, x11.root.win, &tmp);
+		if (XGetWindowAttributes(x11.dpy, x11.root.win, &tmp) == 0)
+			die(1, 0, "failed to get root window attributes");
 		x11.root.h = (uint)tmp.height;
 		x11.root.w = (uint)tmp.width;
 	}
