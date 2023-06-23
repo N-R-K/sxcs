@@ -631,6 +631,7 @@ main(int argc, const char *argv[])
 	struct { int x, y, valid; } old = {0};
 	XEvent ev;
 	Bool queued;
+	int npending;
 
 	if (atexit(cleanup) != 0)
 		die(1, 0, "atexit() failed");
@@ -701,13 +702,13 @@ main(int argc, const char *argv[])
 			signal(sigs[i], sighandler);
 	}
 
-	for (queued = False; 1;) {
+	for (queued = False, npending = 0; 1;) {
 		Bool pending;
 		struct pollfd pfd;
 
 		pfd.fd = ConnectionNumber(x11.dpy);
 		pfd.events = POLLIN;
-		pending = queued || XPending(x11.dpy) > 0 ||
+		pending = queued || npending > 0 || (npending = XPending(x11.dpy)) > 0 ||
 		          poll(&pfd, 1, MAX_FRAME_TIME) > 0;
 
 		if (sig_recieved)
@@ -719,8 +720,10 @@ main(int argc, const char *argv[])
 			continue;
 		}
 
-		if (!queued)
+		if (!queued) {
 			XNextEvent(x11.dpy, &ev);
+			--npending;
+		}
 		queued = False;
 
 		switch (ev.type) {
@@ -746,12 +749,13 @@ main(int argc, const char *argv[])
 			if (opt.no_mag)
 				break;
 
-			old.valid = 1;
 			old.x = ev.xmotion.x_root;
 			old.y = ev.xmotion.y_root;
-			while (XPending(x11.dpy) > 0) { /* don't act on stale events */
+			old.valid = 1;
+			while (npending > 0 || (npending = XPending(x11.dpy)) > 0) {
 				XNextEvent(x11.dpy, &ev);
-				if (ev.type == MotionNotify) {
+				--npending;
+				if (ev.type == MotionNotify) { /* don't act on stale events */
 					old.x = ev.xmotion.x_root;
 					old.y = ev.xmotion.y_root;
 				} else {
