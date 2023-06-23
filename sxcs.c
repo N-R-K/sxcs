@@ -129,12 +129,6 @@ typedef struct {
 } FilterSeq;
 
 /*
- * Annotation for functions called atexit()
- * These functions are not allowed to call die() or exit().
- */
-#define CLEANUP
-
-/*
  * function prototype
  */
 
@@ -148,7 +142,6 @@ static void filter_parse(const char *s);
 static Options opt_parse(int argc, const char *argv[]);
 static void magnify(const int x, const int y);
 static void sighandler(int sig);
-CLEANUP static void cleanup(void);
 /* helpers */
 static ulong get_pixel(int x, int y);
 static void four_point_draw(XcursorImage *img, uint x, uint y, XcursorPixel col);
@@ -607,23 +600,6 @@ sighandler(int sig)
 	sig_recieved = sig_recieved ? sig_recieved : sig;
 }
 
-CLEANUP static void
-cleanup(void)
-{
-#ifdef DEBUG
-	if (x11.valid.ungrab_kb)
-		XUngrabKeyboard(x11.dpy, CurrentTime);
-	if (x11.valid.ungrab_ptr)
-		XUngrabPointer(x11.dpy, CurrentTime);
-	if (cursor_img != NULL)
-		XcursorImageDestroy(cursor_img);
-	if (x11.valid.cur)
-		XFreeCursor(x11.dpy, x11.cur);
-#endif
-	if (x11.dpy != NULL)
-		XCloseDisplay(x11.dpy);
-}
-
 extern int
 main(int argc, const char *argv[])
 {
@@ -632,9 +608,6 @@ main(int argc, const char *argv[])
 	XEvent ev;
 	Bool queued;
 	int npending;
-
-	if (atexit(cleanup) != 0)
-		die(1, 0, "atexit() failed");
 
 	opt = opt_parse(argc, argv);
 
@@ -732,7 +705,7 @@ main(int argc, const char *argv[])
 			case Button1:
 				print_color(ev.xbutton.x_root, ev.xbutton.y_root, opt.fmt);
 				if (opt.oneshot)
-					exit(0);
+					goto out;
 				break;
 			case Button4:
 				MAG_FACTOR *= MAG_STEP;
@@ -741,7 +714,7 @@ main(int argc, const char *argv[])
 				MAG_FACTOR = MAX(1.1f, MAG_FACTOR / MAG_STEP);
 				break;
 			default:
-				exit(0);
+				goto out;
 				break;
 			}
 			break;
@@ -767,12 +740,26 @@ main(int argc, const char *argv[])
 			break;
 		case KeyPress:
 			if (opt.quit_on_keypress)
-				exit(0);
+				goto out;
 			break;
 		default:
 			break;
 		}
 	}
 
-	ASSERT(!"unreachable");
+out:
+#ifdef DEBUG
+	if (x11.valid.ungrab_kb)
+		XUngrabKeyboard(x11.dpy, CurrentTime);
+	if (x11.valid.ungrab_ptr)
+		XUngrabPointer(x11.dpy, CurrentTime);
+	if (cursor_img != NULL)
+		XcursorImageDestroy(cursor_img);
+	if (x11.valid.cur)
+		XFreeCursor(x11.dpy, x11.cur);
+#endif
+	if (x11.dpy != NULL)
+		XCloseDisplay(x11.dpy);
+
+	return 0;
 }
