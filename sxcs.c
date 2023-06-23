@@ -225,7 +225,7 @@ die(int exit_status, int errnum, const char *fmt, ...)
 
 	if (errnum)
 		fprintf(stderr, "%s%s", fmt == NULL ? "" : ": ", strerror(errnum));
-	fputc('\n', stderr);
+	fwrite("\n", 1, 1, stderr);
 
 	exit(exit_status);
 }
@@ -304,14 +304,14 @@ print_color(int x, int y, enum output fmt)
 
 	pix = get_pixel(x, y);
 	if (fmt & OUTPUT_HEX)
-		printf("hex:\t#%.6lX\t", pix);
+		fprintf(stdout, "hex:\t#%.6lX\t", pix);
 	if (fmt & OUTPUT_RGB)
-		printf("rgb:\t%lu %lu %lu\t", R(pix), G(pix), B(pix));
+		fprintf(stdout, "rgb:\t%lu %lu %lu\t", R(pix), G(pix), B(pix));
 	if (fmt & OUTPUT_HSL) {
 		HSL tmp = rgb_to_hsl(pix);
-		printf("hsl:\t%u %u %u\t", tmp.h, tmp.s, tmp.l);
+		fprintf(stdout, "hsl:\t%u %u %u\t", tmp.h, tmp.s, tmp.l);
 	}
-	putchar('\n');
+	fwrite("\n", 1, 1, stdout);
 	fflush(stdout);
 	if (ferror(stdout))
 		die(1, 0, "writing to stdout failed");
@@ -320,24 +320,24 @@ print_color(int x, int y, enum output fmt)
 static void
 usage(void)
 {
-	fputs(
+	char s[] =
 		"usage: "PROGNAME" [options]\n"
-		"See the manpage for more details.\n",
-		stderr
-	);
+		"See the manpage for more details.\n"
+	;
+	fwrite(s, 1, sizeof s - 1, stderr);
 	exit(1);
 }
 
 static void
 version(void)
 {
-	fputs(
+	char s[] =
 		PROGNAME" "VERSION"\n\n"
 		"Copyright (C) 2022-2023 NRK and contributors.\n"
 		"License: GPLv3+ <https://gnu.org/licenses/gpl.html>.\n"
-		"Upstream: <https://codeberg.org/NRK/sxcs>\n",
-		stderr
-	);
+		"Upstream: <https://codeberg.org/NRK/sxcs>\n"
+	;
+	fwrite(s, 1, sizeof s - 1, stderr);
 	exit(1);
 }
 
