@@ -629,6 +629,8 @@ main(int argc, const char *argv[])
 {
 	Options opt;
 	struct { int x, y, valid; } old = {0};
+	XEvent ev;
+	Bool queued;
 
 	if (atexit(cleanup) != 0)
 		die(1, 0, "atexit() failed");
@@ -699,14 +701,14 @@ main(int argc, const char *argv[])
 			signal(sigs[i], sighandler);
 	}
 
-	while (1) {
-		XEvent ev;
+	for (queued = False; 1;) {
 		Bool pending;
 		struct pollfd pfd;
 
 		pfd.fd = ConnectionNumber(x11.dpy);
 		pfd.events = POLLIN;
-		pending = XPending(x11.dpy) > 0 || poll(&pfd, 1, MAX_FRAME_TIME) > 0;
+		pending = queued || XPending(x11.dpy) > 0 ||
+		          poll(&pfd, 1, MAX_FRAME_TIME) > 0;
 
 		if (sig_recieved)
 			exit(128 + sig_recieved);
@@ -717,7 +719,11 @@ main(int argc, const char *argv[])
 			continue;
 		}
 
-		switch (XNextEvent(x11.dpy, &ev), ev.type) {
+		if (!queued)
+			XNextEvent(x11.dpy, &ev);
+		queued = False;
+
+		switch (ev.type) {
 		case ButtonPress:
 			switch (ev.xbutton.button) {
 			case Button1:
@@ -740,19 +746,20 @@ main(int argc, const char *argv[])
 			if (opt.no_mag)
 				break;
 
-			while (XPending(x11.dpy) > 0) { /* don't act on stale events */
-				XEvent next_ev;
-				XPeekEvent(x11.dpy, &next_ev);
-				if (next_ev.type == MotionNotify)
-					XNextEvent(x11.dpy, &ev);
-				else
-					break;
-			}
-
-			magnify(ev.xmotion.x_root, ev.xmotion.y_root);
 			old.valid = 1;
 			old.x = ev.xmotion.x_root;
 			old.y = ev.xmotion.y_root;
+			while (XPending(x11.dpy) > 0) { /* don't act on stale events */
+				XNextEvent(x11.dpy, &ev);
+				if (ev.type == MotionNotify) {
+					old.x = ev.xmotion.x_root;
+					old.y = ev.xmotion.y_root;
+				} else {
+					queued = True;
+					break;
+				}
+			}
+			magnify(old.x, old.y);
 			break;
 		case KeyPress:
 			if (opt.quit_on_keypress)
