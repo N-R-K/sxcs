@@ -57,6 +57,8 @@
 
 #define FILTER_SEQ_FROM_ARRAY(X)  { X, ARRLEN(X) }
 
+#define S(X)       str_c89_workaround((char *)(X), sizeof(X) - 1)
+
 /* portable compiler attributes */
 #ifndef __has_attribute
 	#define __has_attribute(X) (0)
@@ -91,6 +93,8 @@ typedef unsigned int     uint;
 typedef unsigned short   ushort;
 typedef unsigned long    ulong;
 typedef unsigned char    uchar;
+
+typedef struct { uchar *s; ptrdiff_t len; } Str;
 
 enum output {
 	OUTPUT_NONE = 0,
@@ -138,8 +142,8 @@ static HSL rgb_to_hsl(ulong col);
 static void print_color(int x, int y, enum output fmt);
 static void usage(void) ATTR_NORETURN;
 static void version(void) ATTR_NORETURN;
-static void filter_parse(const char *s);
-static Options opt_parse(int argc, const char *argv[]);
+static void filter_parse(Str arg);
+static Options opt_parse(int argc, char *argv[]);
 static void magnify(const int x, const int y);
 static void sighandler(int sig);
 /* helpers */
@@ -221,6 +225,48 @@ die(int exit_status, int errnum, const char *fmt, ...)
 	fwrite("\n", 1, 1, stderr);
 
 	exit(exit_status);
+}
+
+/* c89 no compound literal support */
+static Str
+str_c89_workaround(char *s, ptrdiff_t len)
+{
+	Str ret;
+	ASSERT(s != NULL && len >= 0);
+	ret.s = (uchar *)s;
+	ret.len = len;
+	return ret;
+}
+
+static Str
+str_from_cstr(char *s)
+{
+	Str ret = {0};
+	for (ret.s = (uchar *)s; ret.s != NULL && ret.s[ret.len] != '\0'; ++ret.len) {}
+	return ret;
+}
+
+static int
+str_eq(Str a, Str b)
+{
+	ptrdiff_t n = -1;
+	ASSERT(a.len >= 0 && b.len >= 0);
+	if (a.len == b.len) {
+		for (n = 0; n < a.len && a.s[n] == b.s[n]; ++n) {}
+	}
+	return n == a.len;
+}
+
+static int
+str_tok(Str *s, Str *t, uchar ch)
+{
+	ptrdiff_t l = s->len;
+	ASSERT(l >= 0);
+	t->s = s->s;
+	for (t->len = 0; t->len < l && t->s[t->len] != ch; ++t->len) {}
+	s->s   += t->len + (t->len < l);
+	s->len -= t->len + (t->len < l);
+	return l != 0;
 }
 
 static HSL
@@ -335,75 +381,66 @@ version(void)
 }
 
 static void
-filter_parse(const char *s)
+filter_parse(Str arg)
 {
 	static FilterFunc f_buf[16];
 	static FilterSeq fs_buf = FILTER_SEQ_FROM_ARRAY(f_buf);
 
-	const char *tok, *tok_end;
-	size_t tok_len;
-	uint f_len = 0;
+	Str tok;
+	uint i, f_len = 0;
 
-	if (s == NULL)
-		die(1, 0, "invalid filter `(null)`");
+	if (arg.len == 0)
+		die(1, 0, "--mag-filters: no argument provided");
 
-	for (tok = s, tok_end = s + strlen(s); tok < tok_end; tok += tok_len + 1) {
-		uint i, found_match = 0;
-		char *p = memchr(tok, ',', (size_t)(tok_end - tok));
-
-		tok_len = (size_t)((p != NULL ? p : tok_end) - tok);
-		for (i = 0; i < ARRLEN(FILTER_TABLE) && tok_len > 0; ++i) {
-			if (tok_len == FILTER_TABLE[i].len &&
-			    memcmp(tok, FILTER_TABLE[i].str, tok_len) == 0)
-			{
-				if (f_len >= ARRLEN(f_buf)) {
-					die(
-						1, 0, "too many filters. "
-						"max aloud: %u",
-						(uint)ARRLEN(f_buf)
-					);
-				}
+	while (str_tok(&arg, &tok, ',')) {
+		int found_match = 0;
+		for (i = 0; i < ARRLEN(FILTER_TABLE); ++i) {
+			if (str_eq(tok, FILTER_TABLE[i].str)) {
+				if (f_len >= ARRLEN(f_buf))
+					die(1, 0, "--mag-filters: too many filters");
 				f_buf[f_len++] = FILTER_TABLE[i].f;
 				found_match = 1;
 				break;
 			}
 		}
 
-		if (!found_match && tok_len > 0)
-			die(1, 0, "invalid filter `%.*s`", (int)tok_len, tok);
+		if (!found_match)
+			die(1, 0, "invalid filter `%.*s`", (int)tok.len, tok.s);
 	}
 
+	ASSERT(arg.len == 0);
 	fs_buf.len = f_len;
 	filter = &fs_buf;
 }
 
 static Options
-opt_parse(int argc, const char *argv[])
+opt_parse(int argc, char *argv[])
 {
 	int i;
 	Options ret = {0};
 	int no_color = 0;
 
 	for (i = 1; i < argc; ++i) {
-		if (strcmp(argv[i], "--rgb") == 0)
+		Str a = str_from_cstr(argv[i]);
+		if (str_eq(a, S("--rgb")))
 			ret.fmt |= OUTPUT_RGB;
-		else if (strcmp(argv[i], "--hex") == 0)
+		else if (str_eq(a, S("--hex")))
 			ret.fmt |= OUTPUT_HEX;
-		else if (strcmp(argv[i], "--hsl") == 0)
+		else if (str_eq(a, S("--hsl")))
 			ret.fmt |= OUTPUT_HSL;
-		else if (strcmp(argv[i], "--color-none") == 0)
+		else if (str_eq(a, S("--color-none")))
 			no_color = 1;
-		else if (strcmp(argv[i], "--one-shot") == 0 || strcmp(argv[i], "-o") == 0)
+		else if (str_eq(a, S("--one-shot")) || str_eq(a, S("-o")))
 			ret.oneshot = 1;
-		else if (strcmp(argv[i], "--quit-on-keypress") == 0 || strcmp(argv[i], "-q") == 0)
+		else if (str_eq(a, S("--quit-on-keypress")) || str_eq(a, S("-q")))
 			ret.quit_on_keypress = 1;
-		else if (strcmp(argv[i], "--mag-none") == 0)
+		else if (str_eq(a, S("--mag-none")))
 			ret.no_mag = 1;
-		else if (strcmp(argv[i], "--mag-filters") == 0)
-			filter_parse(argv[++i]);
-		else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0)
+		else if (str_eq(a, S("--mag-filters")))
+			filter_parse(str_from_cstr(argv[++i]));
+		else if (str_eq(a, S("--help")) || str_eq(a, S("-h")))
 			usage();
-		else if (strcmp(argv[i], "--version") == 0)
+		else if (str_eq(a, S("--version")))
 			version();
 		else
 			die(1, 0, "unknown argument `%s`.", argv[i]);
@@ -601,7 +638,7 @@ sighandler(int sig)
 }
 
 extern int
-main(int argc, const char *argv[])
+main(int argc, char *argv[])
 {
 	Options opt;
 	struct { int x, y, valid; } old = {0};
