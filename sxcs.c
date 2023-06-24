@@ -197,11 +197,11 @@ ATTR_NORETURN ATTR_FMT(printf, 1, 2)
 static void
 fatal(const char *fmt, ...)
 {
+	char prefix[] = PROGNAME ": ";
 	va_list ap;
 
 	fflush(stdout);
-	fprintf(stderr, "%s: ", PROGNAME);
-
+	fwrite(prefix, 1, sizeof prefix - 1, stderr);
 	va_start(ap, fmt);
 	if (fmt != NULL)
 		vfprintf(stderr, fmt, ap);
