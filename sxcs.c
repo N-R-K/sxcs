@@ -136,20 +136,6 @@ typedef struct {
  * function prototype
  */
 
-static void die(int exit_status, int errnum, const char *fmt, ...)
-	ATTR_NORETURN ATTR_FMT(printf, 3, 4);
-static HSL rgb_to_hsl(ulong col);
-static void print_color(int x, int y, enum output fmt);
-static void usage(void) ATTR_NORETURN;
-static void version(void) ATTR_NORETURN;
-static void filter_parse(Str arg);
-static Options opt_parse(int argc, char *argv[]);
-static void magnify(const int x, const int y);
-static void sighandler(int sig);
-/* helpers */
-static ulong get_pixel(int x, int y);
-static void four_point_draw(XcursorImage *img, uint x, uint y, XcursorPixel col);
-static ulong ximg_pixel_get(const XImage *img, int x, int y);
 /*
  * zoom functions:
  *
@@ -207,6 +193,7 @@ static const FilterSeq *filter = &filter_default;
  * function implementation
  */
 
+ATTR_NORETURN ATTR_FMT(printf, 3, 4)
 static void
 die(int exit_status, int errnum, const char *fmt, ...)
 {
@@ -313,6 +300,32 @@ rgb_to_hsl(ulong col)
 	return ret;
 }
 
+/*
+ * NOTE: calling XGetPixel is expensive. so manually extract the pixels
+ * instead. it *should* work fine, but only tested it on my system. so it's
+ * possible that this causes some problems, especially if the X server is
+ * running on some funny config.
+ */
+static ulong
+ximg_pixel_get(const XImage *img, int x, int y)
+{
+	const size_t off = ((size_t)y * (size_t)img->bytes_per_line) + ((size_t)x * 4);
+	const uchar *const p = (uchar *)img->data + off;
+	ASSERT(x >= 0); ASSERT(y >= 0);
+
+	if (img->byte_order == MSBFirst) {
+		return (ulong)p[0] << 24 |
+		       (ulong)p[1] << 16 |
+		       (ulong)p[2] <<  8 |
+		       (ulong)p[3] <<  0;
+	} else {
+		return (ulong)p[3] << 24 |
+		       (ulong)p[2] << 16 |
+		       (ulong)p[1] <<  8 |
+		       (ulong)p[0] <<  0;
+	}
+}
+
 static ulong
 get_pixel(int x, int y)
 {
@@ -356,6 +369,7 @@ print_color(int x, int y, enum output fmt)
 		die(1, 0, "writing to stdout failed");
 }
 
+ATTR_NORETURN
 static void
 usage(void)
 {
@@ -367,6 +381,7 @@ usage(void)
 	exit(1);
 }
 
+ATTR_NORETURN
 static void
 version(void)
 {
@@ -450,32 +465,6 @@ opt_parse(int argc, char *argv[])
 		ret.fmt = OUTPUT_DEFAULT;
 
 	return ret;
-}
-
-/*
- * NOTE: calling XGetPixel is expensive. so manually extract the pixels
- * instead. it *should* work fine, but only tested it on my system. so it's
- * possible that this causes some problems, especially if the X server is
- * running on some funny config.
- */
-static ulong
-ximg_pixel_get(const XImage *img, int x, int y)
-{
-	const size_t off = ((size_t)y * (size_t)img->bytes_per_line) + ((size_t)x * 4);
-	const uchar *const p = (uchar *)img->data + off;
-	ASSERT(x >= 0); ASSERT(y >= 0);
-
-	if (img->byte_order == MSBFirst) {
-		return (ulong)p[0] << 24 |
-		       (ulong)p[1] << 16 |
-		       (ulong)p[2] <<  8 |
-		       (ulong)p[3] <<  0;
-	} else {
-		return (ulong)p[3] << 24 |
-		       (ulong)p[2] << 16 |
-		       (ulong)p[1] <<  8 |
-		       (ulong)p[0] <<  0;
-	}
 }
 
 static void
