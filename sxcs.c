@@ -682,11 +682,20 @@ main(int argc, char *argv[])
 	}
 
 	if (opt.quit_on_keypress) {
-		int tmp = XGrabKeyboard(
-			x11.dpy, x11.root.win, 0,
-			GrabModeAsync, GrabModeAsync, CurrentTime
-		);
-		x11.valid.ungrab_kb = tmp == GrabSuccess;
+		/* when launched via dwm keybinding, it fails the grab since
+		 * dwm has it grabbed already. listen for FocusChangeMask and
+		 * keep retrying. */
+		int res;
+		XSelectInput(x11.dpy, x11.root.win, FocusChangeMask);
+		do {
+			res = XGrabKeyboard(
+				x11.dpy, x11.root.win, 0,
+				GrabModeAsync, GrabModeAsync, CurrentTime
+			);
+			XNextEvent(x11.dpy, &ev);
+		} while (res == AlreadyGrabbed);
+		XSelectInput(x11.dpy, x11.root.win, 0x0);
+		x11.valid.ungrab_kb = res == GrabSuccess;
 		if (!x11.valid.ungrab_kb)
 			fatal("failed to grab keyboard");
 	}
