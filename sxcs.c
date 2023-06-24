@@ -193,9 +193,9 @@ static const FilterSeq *filter = &filter_default;
  * function implementation
  */
 
-ATTR_NORETURN ATTR_FMT(printf, 3, 4)
+ATTR_NORETURN ATTR_FMT(printf, 1, 2)
 static void
-die(int exit_status, int errnum, const char *fmt, ...)
+fatal(const char *fmt, ...)
 {
 	va_list ap;
 
@@ -206,12 +206,8 @@ die(int exit_status, int errnum, const char *fmt, ...)
 	if (fmt != NULL)
 		vfprintf(stderr, fmt, ap);
 	va_end(ap);
-
-	if (errnum)
-		fprintf(stderr, "%s%s", fmt == NULL ? "" : ": ", strerror(errnum));
 	fwrite("\n", 1, 1, stderr);
-
-	exit(exit_status);
+	exit(1);
 }
 
 /* c89 no compound literal support */
@@ -338,7 +334,7 @@ get_pixel(int x, int y)
 	} else {
 		XImage *im = XGetImage(x11.dpy, x11.root.win, x, y, 1, 1, AllPlanes, ZPixmap);
 		if (im == NULL)
-			die(1, 0, "failed to get image");
+			fatal("failed to get image");
 		ret = ximg_pixel_get(im, 0, 0);
 		XDestroyImage(im);
 	}
@@ -366,7 +362,7 @@ print_color(int x, int y, enum output fmt)
 	fwrite("\n", 1, 1, stdout);
 	fflush(stdout);
 	if (ferror(stdout))
-		die(1, 0, "writing to stdout failed");
+		fatal("writing to stdout failed");
 }
 
 ATTR_NORETURN
@@ -405,14 +401,14 @@ filter_parse(Str arg)
 	uint i, f_len = 0;
 
 	if (arg.len == 0)
-		die(1, 0, "--mag-filters: no argument provided");
+		fatal("--mag-filters: no argument provided");
 
 	while (str_tok(&arg, &tok, ',')) {
 		int found_match = 0;
 		for (i = 0; i < ARRLEN(FILTER_TABLE); ++i) {
 			if (str_eq(tok, FILTER_TABLE[i].str)) {
 				if (f_len >= ARRLEN(f_buf))
-					die(1, 0, "--mag-filters: too many filters");
+					fatal("--mag-filters: too many filters");
 				f_buf[f_len++] = FILTER_TABLE[i].f;
 				found_match = 1;
 				break;
@@ -420,7 +416,7 @@ filter_parse(Str arg)
 		}
 
 		if (!found_match)
-			die(1, 0, "invalid filter `%.*s`", (int)tok.len, tok.s);
+			fatal("invalid filter `%.*s`", (int)tok.len, tok.s);
 	}
 
 	ASSERT(arg.len == 0);
@@ -458,7 +454,7 @@ opt_parse(int argc, char *argv[])
 		else if (str_eq(a, S("--version")))
 			version();
 		else
-			die(1, 0, "unknown argument `%s`.", argv[i]);
+			fatal("unknown argument `%s`.", argv[i]);
 	}
 
 	if (ret.fmt == OUTPUT_NONE && !no_color)
@@ -604,9 +600,9 @@ magnify(const int x, const int y)
 		AllPlanes, ZPixmap
 	);
 	if (img.im == NULL)
-		die(1, 0, "failed to get image");
+		fatal("failed to get image");
 	if (img.im->bits_per_pixel != 32) /* ximg_pixel_get() depends on it */
-		die(1, 0, "unexpected bits_per_pixel");
+		fatal("unexpected bits_per_pixel");
 	mag_func(cursor_img, &img);
 	XDestroyImage(img.im);
 
@@ -638,13 +634,13 @@ main(int argc, char *argv[])
 	opt = opt_parse(argc, argv);
 
 	if ((x11.dpy = XOpenDisplay(NULL)) == NULL)
-		die(1, 0, "failed to open x11 display");
+		fatal("failed to open x11 display");
 
 	{ /* TODO: update the x11.root.{w,h} if root changes size */
 		XWindowAttributes tmp;
 		x11.root.win = DefaultRootWindow(x11.dpy);
 		if (XGetWindowAttributes(x11.dpy, x11.root.win, &tmp) == 0)
-			die(1, 0, "failed to get root window attributes");
+			fatal("failed to get root window attributes");
 		x11.root.h = (uint)tmp.height;
 		x11.root.w = (uint)tmp.width;
 	}
@@ -655,11 +651,11 @@ main(int argc, char *argv[])
 
 		q.visualid = XVisualIDFromVisual(DefaultVisual(x11.dpy, DefaultScreen(x11.dpy)));
 		if ((r = XGetVisualInfo(x11.dpy, VisualIDMask, &q, &dummy)) == NULL)
-			die(1, 0, "failed to obtain visual info");
+			fatal("failed to obtain visual info");
 		d = r->depth;
 		XFree(r);
 		if (d < 24)
-			die(1, 0, "truecolor not supported");
+			fatal("X server does not support truecolor");
 	}
 
 	if (opt.no_mag) {
@@ -668,7 +664,7 @@ main(int argc, char *argv[])
 	} else {
 		cursor_img = XcursorImageCreate(MAG_SIZE, MAG_SIZE);
 		if (cursor_img == NULL)
-			die(1, 0, "failed to create image");
+			fatal("failed to create cursor image");
 		cursor_img->xhot = cursor_img->yhot = MAG_SIZE / 2;
 	}
 
@@ -682,7 +678,7 @@ main(int argc, char *argv[])
 		);
 		x11.valid.ungrab_ptr = tmp == GrabSuccess;
 		if (!x11.valid.ungrab_ptr)
-			die(1, 0, "failed to grab cursor");
+			fatal("failed to grab cursor");
 	}
 
 	if (opt.quit_on_keypress) {
@@ -692,7 +688,7 @@ main(int argc, char *argv[])
 		);
 		x11.valid.ungrab_kb = tmp == GrabSuccess;
 		if (!x11.valid.ungrab_kb)
-			die(1, 0, "failed to grab keyboard");
+			fatal("failed to grab keyboard");
 	}
 
 	{
