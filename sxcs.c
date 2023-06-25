@@ -668,19 +668,6 @@ main(int argc, char *argv[])
 		cursor_img->xhot = cursor_img->yhot = MAG_SIZE / 2;
 	}
 
-	{
-		int tmp;
-
-		x11.grab_mask = ButtonPressMask | PointerMotionMask;
-		tmp = XGrabPointer(
-			x11.dpy, x11.root.win, 0, x11.grab_mask, GrabModeAsync,
-			GrabModeAsync, x11.root.win, x11.cur, CurrentTime
-		);
-		x11.valid.ungrab_ptr = tmp == GrabSuccess;
-		if (!x11.valid.ungrab_ptr)
-			fatal("failed to grab cursor");
-	}
-
 	if (opt.quit_on_keypress) {
 		/* when launched via dwm keybinding, it fails the grab since
 		 * dwm has it grabbed already. listen for FocusChangeMask and
@@ -698,6 +685,19 @@ main(int argc, char *argv[])
 		x11.valid.ungrab_kb = res == GrabSuccess;
 		if (!x11.valid.ungrab_kb)
 			fatal("failed to grab keyboard");
+	}
+
+	{
+		int tmp;
+
+		x11.grab_mask = ButtonPressMask | PointerMotionMask;
+		tmp = XGrabPointer(
+			x11.dpy, x11.root.win, 0, x11.grab_mask, GrabModeAsync,
+			GrabModeAsync, x11.root.win, x11.cur, CurrentTime
+		);
+		x11.valid.ungrab_ptr = tmp == GrabSuccess;
+		if (!x11.valid.ungrab_ptr)
+			fatal("failed to grab cursor");
 	}
 
 	{
