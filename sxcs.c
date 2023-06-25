@@ -152,6 +152,7 @@ static void square(Image *img);
 static void xhair(Image *img);
 static void grid(Image *img);
 static void circle(Image *img);
+static void icircle(Image *img);
 
 /*
  * static globals
@@ -544,12 +545,13 @@ four_point_draw(Image *img, uint x, uint y, uint col) /* naming is hard */
 
 /* TODO: reduce jaggedness */
 static void
-circle(Image *img)
+circle_core(Image *img, int xcolor)
 {
 	uint x, y, h = img->h, w = img->w;
 	uint r = CIRCLE_RADIUS;
 	uint br = r - CIRCLE_WIDTH;
 	uint c = h / 2;
+	ulong col = xcolor ? (get_pixel(-1,-1) | 0xff000000) : CIRCLE_COLOR;
 
 	for (y = 0; y < h / 2 + (h & 1); ++y) {
 		for (x = 0; x < w / 2 + (w & 1); ++x) {
@@ -561,13 +563,16 @@ circle(Image *img)
 				if (CIRCLE_TRANSPARENT_OUTSIDE)
 					four_point_draw(img, x, y, 0x0);
 			} else if (x2y2 > (br * br)) { /* inside the circle border */
-				four_point_draw(img, x, y, CIRCLE_COLOR);
+				four_point_draw(img, x, y, col);
 			} else { /* inside the circle, nothing to do. move on to the next y */
 				break;
 			}
 		}
 	}
 }
+
+static void  circle(Image *img) { circle_core(img, 0); }
+static void icircle(Image *img) { circle_core(img, 1); }
 
 static void
 magnify(const int x, const int y)
