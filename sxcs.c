@@ -75,15 +75,14 @@
 	#define ATTR_NORETURN
 #endif
 
-#ifndef __has_builtin
-	#define __has_builtin(X) (0)
-#endif
-#ifdef DEBUG
-	#define ASSERT(X)              ((X) ? (void)0 : abort())
-#elif __has_builtin(__builtin_unreachable)
-	#define ASSERT(X)              ((X) ? (void)0 : __builtin_unreachable())
+#ifdef __GNUC__
+	/* when debugging, use gcc/clang and compile with
+	 * `-fsanitize=undefined -fsanitize-undefined-trap-on-error`
+	 * it'll trap if an unreachable code-path is ever reached.
+	 */
+	#define ASSERT(X)  ((X) ? (void)0 : __builtin_unreachable())
 #else
-	#define ASSERT(X)              ((void)0)
+	#define ASSERT(X)  ((void)0)
 #endif
 
 /*
