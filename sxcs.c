@@ -20,17 +20,22 @@
 #define _POSIX_C_SOURCE 200112L /* NOLINT */
 
 #include <errno.h>
-#include <poll.h>
 #include <signal.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include <poll.h>
+
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/cursorfont.h>
 #include <X11/Xcursor/Xcursor.h>
+
+/*
+ * macros
+ */
 
 #ifndef PROGNAME
 	#define PROGNAME "sxcs"
@@ -38,10 +43,6 @@
 #ifndef VERSION
 	#define VERSION "v0.7.2-dirty"
 #endif
-
-/*
- * macros
- */
 
 #define ARRLEN(X)        (sizeof(X) / sizeof((X)[0]))
 #define MAX(A, B)        ((A) > (B) ? (A) : (B))
