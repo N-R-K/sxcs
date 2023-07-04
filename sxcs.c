@@ -41,7 +41,7 @@
 	#define PROGNAME "sxcs"
 #endif
 #ifndef VERSION
-	#define VERSION "v0.7.2-dirty"
+	#define VERSION "v0.7.3"
 #endif
 
 #define ARRLEN(X)        (sizeof(X) / sizeof((X)[0]))
