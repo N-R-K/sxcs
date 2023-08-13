@@ -13,6 +13,24 @@ The output is TAB separated hex, rgb and hsl.
 .B "Scroll Up/Down"
 will zoom in and out.
 Any other mouse button will quit sxcs.
+.P
+The keyboard can also be used when
+.B \-\-keyboard
+is enabled.
+The arrow keys
+.BR Left ", " Right ", " Up ", " Down
+as well as vi\-like
+.BR h ", " j ", " k ", " l
+are supported for moving the cursor.
+By default they move by 16 pixels, if
+.B Shift
+is used then they move by 1 pixel instead.
+.B Space
+makes a selection.
+.BR q " and " Escape
+quits.
+.BR + " and " \-
+zooms in and out.
 .SH OPTIONS
 .TP
 .BR "--color-none"
@@ -39,6 +57,9 @@ quit after a single selection.
 .TP
 .BR "-q, --quit-on-keypress"
 quit on keypress.
+.TP
+.BR "--keyboard"
+enable keyboard control.
 .TP
 .BR "-h, --help"
 Show usage and exit.

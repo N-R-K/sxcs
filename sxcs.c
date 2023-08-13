@@ -114,6 +114,7 @@ typedef struct {
 	uint oneshot           : 1;
 	uint quit_on_keypress  : 1;
 	uint no_mag            : 1;
+	uint keyboard          : 1;
 	enum output fmt;
 } Options;
 
@@ -445,6 +446,8 @@ opt_parse(int argc, char *argv[])
 			ret.oneshot = 1;
 		else if (str_eq(a, S("--quit-on-keypress")) || str_eq(a, S("-q")))
 			ret.quit_on_keypress = 1;
+		else if (str_eq(a, S("--keyboard")))
+			ret.keyboard = 1;
 		else if (str_eq(a, S("--mag-none")))
 			ret.no_mag = 1;
 		else if (str_eq(a, S("--mag-filters")))
@@ -459,6 +462,9 @@ opt_parse(int argc, char *argv[])
 
 	if (ret.fmt == OUTPUT_NONE && !no_color)
 		ret.fmt = OUTPUT_DEFAULT;
+
+	if (ret.quit_on_keypress && ret.keyboard)
+		fatal("--quit-on-keypress and --keyboard cannot be enabled at the same time");
 
 	return ret;
 }
@@ -668,7 +674,7 @@ main(int argc, char *argv[])
 		cursor_img->xhot = cursor_img->yhot = MAG_SIZE / 2;
 	}
 
-	if (opt.quit_on_keypress) {
+	if (opt.quit_on_keypress || opt.keyboard) {
 		/* when launched via dwm keybinding, it fails the grab since
 		 * dwm has it grabbed already. listen for FocusChangeMask and
 		 * keep retrying. */
@@ -769,10 +775,40 @@ main(int argc, char *argv[])
 			}
 			magnify(old.x, old.y);
 			break;
-		case KeyPress:
+		case KeyPress: {
+			KeySym k = None;
+			int x = ev.xkey.x_root, y = ev.xkey.y_root;
+			int delta = (ev.xkey.state & ShiftMask) ? 1 : 16;
+
 			if (opt.quit_on_keypress)
 				goto out;
-			break;
+
+			if (opt.keyboard) {
+				char junk;
+				XLookupString(&ev.xkey, &junk, 1, &k, NULL);
+			}
+
+			switch (k) {
+			case XK_h: case XK_H: case XK_Left:  x -= delta; break;
+			case XK_l: case XK_L: case XK_Right: x += delta; break;
+			case XK_k: case XK_K: case XK_Up:    y -= delta; break;
+			case XK_j: case XK_J: case XK_Down:  y += delta; break;
+			case XK_q: case XK_Q: case XK_Escape: goto out; break;
+			case XK_minus: case XK_KP_Subtract:
+				MAG_FACTOR = MAX(1.1f, MAG_FACTOR / MAG_STEP);
+				break;
+			case XK_plus: case XK_KP_Add:
+				MAG_FACTOR *= MAG_STEP;
+				break;
+			case XK_space:
+				print_color(ev.xkey.x_root, ev.xkey.y_root, opt.fmt);
+				if (opt.oneshot)
+					goto out;
+				break;
+			}
+			if (x != ev.xkey.x_root || y != ev.xkey.y_root)
+				XWarpPointer(x11.dpy, None, x11.root.win, 0, 0, 0, 0, x, y);
+		} break;
 		default:
 			break;
 		}
