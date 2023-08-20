@@ -6,9 +6,13 @@ sxcs [\fBoptions\fR]
 .SH DESCRIPTION
 .B sxcs
 is a minimal X11 color picker and magnifier.
-\fIButton1\fR will select and print the color to stdout, the output is TAB
-separated hex, rgb and hsl. \fIScroll Up/Down\fR will zoom in and out. Any
-other mouse button will quit sxcs.
+Mouse
+.B Button1
+will select and print the color to stdout.
+The output is TAB separated hex, rgb and hsl.
+.B "Scroll Up/Down"
+will zoom in and out.
+Any other mouse button will quit sxcs.
 .SH OPTIONS
 .TP
 .BR "--color-none"
@@ -28,7 +32,7 @@ disable magnifier.
 .TP
 .BI "--mag-filters " "filters"
 comma separated list of filter to apply in order.
-See section FILTERS for more information.
+See the FILTERS section.
 .TP
 .BR "-o, --one-shot"
 quit after a single selection.
