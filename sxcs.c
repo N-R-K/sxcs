@@ -778,7 +778,8 @@ main(int argc, char *argv[])
 		case KeyPress: {
 			KeySym k = None;
 			int x = ev.xkey.x_root, y = ev.xkey.y_root;
-			int delta = (ev.xkey.state & ShiftMask) ? 1 : 16;
+			int delta = (ev.xkey.state & ControlMask) ? 1 :
+			            ((ev.xkey.state & ShiftMask) ? 128 : 16);
 
 			if (opt.quit_on_keypress)
 				goto out;

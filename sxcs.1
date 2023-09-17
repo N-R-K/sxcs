@@ -23,8 +23,10 @@ as well as vi\-like
 .BR h ", " j ", " k ", " l
 are supported for moving the cursor.
 By default they move by 16 pixels, if
+.B Control
+is used then they move by 1 pixel, otherwise if
 .B Shift
-is used then they move by 1 pixel instead.
+is used they move by 128 pixels instead.
 .B Space
 makes a selection.
 .BR q " and " Escape
