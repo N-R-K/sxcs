@@ -17,6 +17,6 @@ analyze-clang-weverything:
 	clang sxcs.c -o /dev/null -c -std=c89 -Ofast -Weverything \
 		-Wno-unreachable-code-break -Wno-string-conversion \
 		-Wno-unused-macros -Wno-comma -Wno-padded \
-		-Wno-disabled-macro-expansion
+		-Wno-disabled-macro-expansion -Wno-unsafe-buffer-usage
 
 .PHONY: analyze
