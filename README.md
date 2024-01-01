@@ -127,11 +127,3 @@ window. Which is what was being done (incorrectly) before commit
 [33490dd](https://codeberg.org/NRK/sxcs/commit/33490ddf9164655bf6decafa6f85082e413fa333).
 I suspect doing this correctly would require way too much code, probably above
 my self imposed limit of ~800 SLoC for this project.
-
-## TODOs
-
-grep the source to find TODOs:
-
-```console
-$ grep -Hn -E 'TODO|FIXME' sxcs.c
-```
