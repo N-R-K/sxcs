@@ -642,7 +642,7 @@ main(int argc, char *argv[])
 	if ((x11.dpy = XOpenDisplay(NULL)) == NULL)
 		fatal("failed to open x11 display");
 
-	{ /* TODO: update the x11.root.{w,h} if root changes size */
+	{
 		XWindowAttributes tmp;
 		x11.root.win = DefaultRootWindow(x11.dpy);
 		if (XGetWindowAttributes(x11.dpy, x11.root.win, &tmp) == 0)
