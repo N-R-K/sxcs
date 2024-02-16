@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023 NRK and contributors.
+ * Copyright (C) 2022-2024 NRK and contributors.
  *
  * This file is part of sxcs.
  *
@@ -41,7 +41,7 @@
 	#define PROGNAME "sxcs"
 #endif
 #ifndef VERSION
-	#define VERSION "v0.7.3"
+	#define VERSION "v1.0.0"
 #endif
 
 #define ARRLEN(X)        (sizeof(X) / sizeof((X)[0]))
@@ -384,7 +384,7 @@ version(void)
 {
 	char s[] =
 		PROGNAME" "VERSION"\n\n"
-		"Copyright (C) 2022-2023 NRK and contributors.\n"
+		"Copyright (C) 2022-2024 NRK and contributors.\n"
 		"License: GPLv3+ <https://gnu.org/licenses/gpl.html>.\n"
 		"Upstream: <https://codeberg.org/NRK/sxcs>\n"
 	;
