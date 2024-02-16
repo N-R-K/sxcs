@@ -446,7 +446,7 @@ opt_parse(int argc, char *argv[])
 			ret.oneshot = 1;
 		else if (str_eq(a, S("--quit-on-keypress")) || str_eq(a, S("-q")))
 			ret.quit_on_keypress = 1;
-		else if (str_eq(a, S("--keyboard")))
+		else if (str_eq(a, S("--keyboard")) || str_eq(a, S("-k")))
 			ret.keyboard = 1;
 		else if (str_eq(a, S("--mag-none")))
 			ret.no_mag = 1;
