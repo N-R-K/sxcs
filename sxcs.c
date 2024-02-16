@@ -607,8 +607,12 @@ magnify(const int x, const int y)
 	);
 	if (img.im == NULL)
 		fatal("failed to get image");
-	if (img.im->bits_per_pixel != 32) /* ximg_pixel_get() depends on it */
-		fatal("unexpected bits_per_pixel");
+	if (img.im->bits_per_pixel != 32 ||
+	    img.im->bytes_per_line != (img.im->width * 4) ||
+	    !(img.im->depth == 24 || img.im->depth == 32))
+	{ /* ximg_pixel_get() depends on these */
+		fatal("unexpected XImage format");
+	}
 	mag_func(cursor_img, &img);
 	XDestroyImage(img.im);
 
