@@ -64,7 +64,8 @@ $ man sxcs
 
 - Build Dependencies:
   * C89 compiler
-  * necessary headers
+  * Necessary library headers (on some distros you need to install `*-dev`
+    packages to get header files)
 
 - Runtime Dependencies:
   * Xlib
@@ -76,26 +77,20 @@ $ man sxcs
 * Simple build:
 
 ```console
-$ cc -o sxcs sxcs.c -s -l X11 -l Xcursor
+$ cc -o sxcs sxcs.c -O3 -s -l X11 -l Xcursor
 ```
 
-* Recommended optimized build:
+The above command should also work with `gcc`, `clang` or any other C compiler
+that has a POSIX compatible cli interface.
 
-```console
-$ gcc -o sxcs sxcs.c -Ofast -march=native -fwhole-program -fno-plt \
-    -fno-semantic-interposition -fgraphite-identity -floop-nest-optimize \
-    -fipa-pta -fno-asynchronous-unwind-tables -fno-ident -fno-pie \
-    -s -no-pie -l X11 -l Xcursor
-```
-
-* Recommended debug build:
+* Debug build with `gcc` (also works with `clang`):
 
 ```console
 $ gcc -o sxcs sxcs.c -std=c89 -Wall -Wextra -Wpedantic \
     -g3 -D DEBUG -O0 -fsanitize=address,undefined -l X11 -l Xcursor
 ```
 
-* Optionally run some static analysis:
+* If you're editing the code, you may optionally run some static analysis:
 
 ```console
 $ make -f analyze.mk
@@ -106,15 +101,15 @@ $ make -f analyze.mk
 Just copy the executable and the man-page to the appropriate location:
 
 ```console
-$ sudo cp sxcs /usr/local/bin
-$ sudo cp sxcs.1 /usr/local/share/man/man1
+# cp sxcs /usr/local/bin
+# cp sxcs.1 /usr/local/share/man/man1
 ```
 
 Or using the `install` utility:
 
 ```console
-$ sudo install -Dm755 sxcs /usr/local/bin/sxcs
-$ sudo install -Dm644 sxcs.1 /usr/local/share/man/man1/sxcs.1
+# install -Dm755 sxcs /usr/local/bin/sxcs
+# install -Dm644 sxcs.1 /usr/local/share/man/man1/sxcs.1
 ```
 
 ## Limitation
