@@ -58,8 +58,6 @@
 
 #define FILTER_SEQ_FROM_ARRAY(X)  { X, ARRLEN(X) }
 
-#define S(X)       str_c89_workaround((char *)(X), sizeof(X) - 1)
-
 /* portable compiler attributes */
 #ifndef __has_attribute
 	#define __has_attribute(X) (0)
@@ -209,17 +207,6 @@ fatal(const char *fmt, ...)
 	va_end(ap);
 	fwrite("\n", 1, 1, stderr);
 	exit(1);
-}
-
-/* c89 no compound literal support */
-static Str
-str_c89_workaround(char *s, ptrdiff_t len)
-{
-	Str ret;
-	ASSERT(s != NULL && len >= 0);
-	ret.s = (uchar *)s;
-	ret.len = len;
-	return ret;
 }
 
 static Str
@@ -425,40 +412,48 @@ filter_parse(Str arg)
 	filter = &fs_buf;
 }
 
+/* inspired by https://github.com/skeeto/scratch/blob/master/parsers/imgo.c */
+typedef struct { char **argv, *cur, *flag; int len; } OptCtx;
+#define OPT(O, SO, LO) ( ((O)->len == 1 && (SO) != 0x0 && (O)->flag[0] == (SO)) || \
+	((LO) != 0 && (O)->len-1 == sizeof(LO)-1 && memcmp(LO, (O)->flag+1, (O)->len-1) == 0) )
+static int
+opt_next(OptCtx *o)
+{
+	if (o->cur == NULL || *o->cur == '\0') {
+		if ((o->cur = *o->argv++) == NULL || *o->cur++ != '-' || *o->cur == '\0')
+			return --o->argv, 0;
+		if (*o->cur == '-') {
+			o->flag = o->cur; o->cur = NULL;
+			return o->len = (int)strlen(o->flag);
+		}
+	}
+	o->flag = o->cur++;
+	return o->len = 1;
+}
+
 static Options
 opt_parse(int argc, char *argv[])
 {
-	int i;
 	Options ret = {0};
 	int no_color = 0;
+	OptCtx o[1] = {0};
 
-	for (i = 1; i < argc; ++i) {
-		Str a = str_from_cstr(argv[i]);
-		if (str_eq(a, S("--rgb")))
-			ret.fmt |= OUTPUT_RGB;
-		else if (str_eq(a, S("--hex")))
-			ret.fmt |= OUTPUT_HEX;
-		else if (str_eq(a, S("--hsl")))
-			ret.fmt |= OUTPUT_HSL;
-		else if (str_eq(a, S("--color-none")))
-			no_color = 1;
-		else if (str_eq(a, S("--one-shot")) || str_eq(a, S("-o")))
-			ret.oneshot = 1;
-		else if (str_eq(a, S("--quit-on-keypress")) || str_eq(a, S("-q")))
-			ret.quit_on_keypress = 1;
-		else if (str_eq(a, S("--keyboard")) || str_eq(a, S("-k")))
-			ret.keyboard = 1;
-		else if (str_eq(a, S("--mag-none")))
-			ret.no_mag = 1;
-		else if (str_eq(a, S("--mag-filters")))
-			filter_parse(str_from_cstr(argv[++i]));
-		else if (str_eq(a, S("--help")) || str_eq(a, S("-h")))
-			usage();
-		else if (str_eq(a, S("--version")))
-			version();
-		else
-			fatal("unknown argument `%s`.", argv[i]);
-	}
+	for (o->argv = argv + (argc > 0); opt_next(o);) { /* NOLINTBEGIN(*misleading-indentation) */
+		     if (OPT(o, 0x0, "rgb"))  ret.fmt |= OUTPUT_RGB;
+		else if (OPT(o, 0x0, "hex"))  ret.fmt |= OUTPUT_HEX;
+		else if (OPT(o, 0x0, "hsl"))  ret.fmt |= OUTPUT_HSL;
+		else if (OPT(o, 0x0, "color-none"))  no_color = 1;
+		else if (OPT(o, 'o', "one-shot"))    ret.oneshot = 1;
+		else if (OPT(o, 'q', "quit-on-keypress"))  ret.quit_on_keypress = 1;
+		else if (OPT(o, 'k', "keyboard"))  ret.keyboard = 1;
+		else if (OPT(o, 0x0, "mag-none"))  ret.no_mag = 1;
+		else if (OPT(o, 0x0, "mag-filters"))  filter_parse(str_from_cstr(*o->argv++));
+		else if (OPT(o, 'h', "help"))     usage();
+		else if (OPT(o, 0x0, "version"))  version();
+		else fatal("unknown argument `-%.*s`", (int)o->len, o->flag);
+	} /* NOLINTEND(*misleading-indentation) */
+	if (*o->argv)
+		fatal("excess argument: `%s`", *o->argv);
 
 	if (ret.fmt == OUTPUT_NONE && !no_color)
 		ret.fmt = OUTPUT_DEFAULT;
