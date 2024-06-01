@@ -1,5 +1,5 @@
 # convenient makefile to run some static analyzers:
-#	$ make -f analyze.mk
+#	$ make -f etc/analyze.mk
 
 nproc != nproc
 MAKEFLAGS := -j$(nproc)
@@ -12,7 +12,7 @@ analyze-cppcheck:
 	cppcheck sxcs.c --std=c89 --quiet --inline-suppr --force \
 		--enable=performance,portability,style --max-ctu-depth=16
 analyze-clang-tidy:
-	clang-tidy sxcs.c --quiet -- -std=c89
+	clang-tidy --quiet --config-file=./etc/.clang-tidy sxcs.c -- -std=c89
 analyze-clang-weverything:
 	clang sxcs.c -o /dev/null -c -std=c89 -Ofast -Weverything \
 		-Wno-unreachable-code-break -Wno-string-conversion \

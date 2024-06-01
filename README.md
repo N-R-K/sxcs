@@ -93,7 +93,7 @@ $ gcc -o sxcs sxcs.c -std=c89 -Wall -Wextra -Wpedantic \
 * If you're editing the code, you may optionally run some static analysis:
 
 ```console
-$ make -f analyze.mk
+$ make -f etc/analyze.mk
 ```
 
 ## Installing
