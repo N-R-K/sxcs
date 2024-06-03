@@ -1,0 +1,17 @@
+#compdef sxcs
+#
+# This is free and unencumbered software released into the public domain.
+# For more information, please refer to <https://unlicense.org/>
+
+_arguments \
+	'--color-none[disable color output]' \
+	'--hex[output hex colors]' \
+	'--rgb[output rgb colors]' \
+	'--hsl[output hsl colors]' \
+	'--mag-none[disable magnifier]' \
+	'--mag-filters[list of filters]:filters' \
+	'(-o --one-shot)'{-o,--one-shot}'[quit after single selection]' \
+	'(-q --quit-on-keypress)'{-q,--quit-on-keypress}'[quit on keypress]' \
+	'(-k --keyboard)'{-k,--keyboard}'[enable keyboard control]' \
+	'(- : *)'{-h,--help}'[Show usage and exit]' \
+	'(- : *)'{-v,--version}'[Show version and exit]' \

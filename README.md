@@ -112,6 +112,9 @@ Or using the `install` utility:
 # install -Dm644 sxcs.1 /usr/local/share/man/man1/sxcs.1
 ```
 
+A zsh completion script is also available for zsh users under
+[etc/zsh-completion](./etc/zsh-completion/).
+
 ## Limitation
 
 Cursor size bigger than 255x255 causes visual glitches, it seems to be a
