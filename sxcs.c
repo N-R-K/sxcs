@@ -435,14 +435,14 @@ static Options
 opt_parse(int argc, char *argv[])
 {
 	Options ret = {0};
-	int no_color = 0;
+	int fmt_default = 1;
 	OptCtx o[1] = {0};
 
 	for (o->argv = argv + (argc > 0); opt_next(o);) { /* NOLINTBEGIN(*misleading-indentation) */
 		     if (OPT(o, 0x0, "rgb"))  ret.fmt |= OUTPUT_RGB;
 		else if (OPT(o, 0x0, "hex"))  ret.fmt |= OUTPUT_HEX;
 		else if (OPT(o, 0x0, "hsl"))  ret.fmt |= OUTPUT_HSL;
-		else if (OPT(o, 0x0, "color-none"))  no_color = 1;
+		else if (OPT(o, 0x0, "color-none"))  ret.fmt = fmt_default = 0;
 		else if (OPT(o, 'o', "one-shot"))    ret.oneshot = 1;
 		else if (OPT(o, 'q', "quit-on-keypress"))  ret.quit_on_keypress = 1;
 		else if (OPT(o, 'k', "keyboard"))  ret.keyboard = 1;
@@ -455,7 +455,7 @@ opt_parse(int argc, char *argv[])
 	if (*o->argv)
 		fatal("excess argument: `%s`", *o->argv);
 
-	if (ret.fmt == OUTPUT_NONE && !no_color)
+	if (ret.fmt == OUTPUT_NONE && fmt_default)
 		ret.fmt = OUTPUT_DEFAULT;
 
 	if (ret.quit_on_keypress && ret.keyboard)
