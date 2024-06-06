@@ -40,9 +40,6 @@
 #ifndef PROGNAME
 	#define PROGNAME "sxcs"
 #endif
-#ifndef VERSION
-	#define VERSION "v1.0.0"
-#endif
 
 #define ARRLEN(X)        (sizeof(X) / sizeof((X)[0]))
 #define MAX(A, B)        ((A) > (B) ? (A) : (B))
@@ -370,7 +367,7 @@ static void
 version(void)
 {
 	char s[] =
-		PROGNAME" "VERSION"\n\n"
+		PROGNAME" v1.1.0\n\n"
 		"Copyright (C) 2022-2024 NRK and contributors.\n"
 		"License: GPLv3+ <https://gnu.org/licenses/gpl.html>.\n"
 		"Upstream: <https://codeberg.org/NRK/sxcs>\n"
