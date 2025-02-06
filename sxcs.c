@@ -55,19 +55,10 @@
 
 #define FILTER_SEQ_FROM_ARRAY(X)  { X, ARRLEN(X) }
 
-/* portable compiler attributes */
-#ifndef __has_attribute
-	#define __has_attribute(X) (0)
-#endif
-#if __has_attribute(format)
-	#define ATTR_FMT(A, S, ARG) __attribute__ ((format (A, S, ARG)))
+#ifdef __has_attribute
+	#define ATTR(X)  __attribute(X)
 #else
-	#define ATTR_FMT(A, S, ARG)
-#endif
-#if __has_attribute(noreturn)
-	#define ATTR_NORETURN __attribute__ ((noreturn))
-#else
-	#define ATTR_NORETURN
+	#define ATTR(X)
 #endif
 
 #ifdef __GNUC__
@@ -189,7 +180,7 @@ static const FilterSeq *filter = &filter_default;
  * function implementation
  */
 
-ATTR_NORETURN ATTR_FMT(printf, 1, 2)
+ATTR((noreturn, format(printf, 1, 2)))
 static void
 fatal(const char *fmt, ...)
 {
@@ -350,7 +341,7 @@ print_color(int x, int y, enum output fmt)
 		fatal("writing to stdout failed");
 }
 
-ATTR_NORETURN
+ATTR((noreturn))
 static void
 usage(void)
 {
@@ -362,7 +353,7 @@ usage(void)
 	exit(1);
 }
 
-ATTR_NORETURN
+ATTR((noreturn))
 static void
 version(void)
 {
