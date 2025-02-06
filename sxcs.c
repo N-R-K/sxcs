@@ -435,8 +435,8 @@ opt_parse(int argc, char *argv[])
 	int fmt_default = 1;
 	OptCtx o[1] = {0};
 
-	for (o->argv = argv + (argc > 0); opt_next(o);) { /* NOLINTBEGIN(*misleading-indentation) */
-		     if (OPT(o, 0x0, "rgb"))  ret.fmt |= OUTPUT_RGB;
+	for (o->argv = argv + (argc > 0); opt_next(o);) {
+		if      (OPT(o, 0x0, "rgb"))  ret.fmt |= OUTPUT_RGB;
 		else if (OPT(o, 0x0, "hex"))  ret.fmt |= OUTPUT_HEX;
 		else if (OPT(o, 0x0, "hsl"))  ret.fmt |= OUTPUT_HSL;
 		else if (OPT(o, 0x0, "color-none"))  ret.fmt = fmt_default = 0;
@@ -448,7 +448,7 @@ opt_parse(int argc, char *argv[])
 		else if (OPT(o, 'h', "help"))     usage();
 		else if (OPT(o, 0x0, "version"))  version();
 		else fatal("unknown argument `-%.*s`", (int)o->len, o->flag);
-	} /* NOLINTEND(*misleading-indentation) */
+	}
 	if (*o->argv)
 		fatal("excess argument: `%s`", *o->argv);
 
@@ -802,12 +802,12 @@ main(int argc, char *argv[])
 				if (opt.oneshot)
 					goto out;
 				break;
+			default: break;
 			}
 			if (x != ev.xkey.x_root || y != ev.xkey.y_root)
 				XWarpPointer(x11.dpy, None, x11.root.win, 0, 0, 0, 0, x, y);
 		} break;
-		default:
-			break;
+		default: break;
 		}
 	}
 
