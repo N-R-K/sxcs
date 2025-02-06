@@ -371,32 +371,28 @@ static void
 filter_parse(Str arg)
 {
 	static FilterFunc f_buf[16];
-	static FilterSeq fs_buf = FILTER_SEQ_FROM_ARRAY(f_buf);
+	static FilterSeq fs_buf = { f_buf, 0 };
 
 	Str tok;
-	uint i, f_len = 0;
 
 	if (arg.len == 0)
 		fatal("--mag-filters: no argument provided");
 
 	while (str_tok(&arg, &tok, ',')) {
-		int found_match = 0;
+		uint i;
 		for (i = 0; i < ARRLEN(FILTER_TABLE); ++i) {
 			if (str_eq(tok, FILTER_TABLE[i].str)) {
-				if (f_len >= ARRLEN(f_buf))
+				if (fs_buf.len >= ARRLEN(f_buf))
 					fatal("--mag-filters: too many filters");
-				f_buf[f_len++] = FILTER_TABLE[i].f;
-				found_match = 1;
+				f_buf[fs_buf.len++] = FILTER_TABLE[i].f;
 				break;
 			}
 		}
-
-		if (!found_match)
-			fatal("invalid filter `%.*s`", (int)tok.len, tok.s);
+		if (i == ARRLEN(FILTER_TABLE))
+			fatal("--mag-filters: unknown filter `%.*s`", (int)tok.len, tok.s);
 	}
 
 	ASSERT(arg.len == 0);
-	fs_buf.len = f_len;
 	filter = &fs_buf;
 }
 
