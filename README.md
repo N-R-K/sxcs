@@ -70,6 +70,7 @@ $ man sxcs
 - Runtime Dependencies:
   * Xlib
   * Xcursor
+  * XShm (commonly part of libXext package)
   * POSIX 2001 C standard library
 
 ## Building
@@ -77,7 +78,7 @@ $ man sxcs
 * Simple build:
 
 ```console
-$ cc -o sxcs sxcs.c -O3 -s -l X11 -l Xcursor
+$ cc -o sxcs sxcs.c -O3 -s -l X11 -l Xcursor -l Xext
 ```
 
 The above command should also work with `gcc`, `clang` or any other C compiler
@@ -87,7 +88,7 @@ that has a POSIX compatible cli interface.
 
 ```console
 $ gcc -o sxcs sxcs.c -std=c89 -Wall -Wextra -Wpedantic \
-    -g3 -D DEBUG -O0 -fsanitize=address,undefined -l X11 -l Xcursor
+    -g3 -D DEBUG -O0 -fsanitize=address,undefined -l X11 -l Xcursor -l Xext
 ```
 
 * If you're editing the code, you may optionally run some static analysis:

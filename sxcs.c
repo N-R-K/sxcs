@@ -27,11 +27,13 @@
 #include <string.h>
 
 #include <poll.h>
+#include <sys/shm.h>
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/cursorfont.h>
 #include <X11/Xcursor/Xcursor.h>
+#include <X11/extensions/XShm.h>
 
 /*
  * macros
@@ -563,9 +565,12 @@ circle(XcursorImage *img)
 	}
 }
 
+/* #include "./timings.h" */
+
 static void
 magnify(const int x, const int y)
 {
+	/* tstart(); */
 	const uint c = (uint)((float)MAG_SIZE / MAG_FACTOR) + 1;
 	const int off = (c - 1) / 2;
 	uint i;
@@ -579,11 +584,45 @@ magnify(const int x, const int y)
 	img.cx = x - (int)img.x;
 	img.cy = y - (int)img.y;
 	img.wanted.w = img.wanted.h = c;
-	/* TODO: look into Shm extension to reduce allocation overhead. */
-	img.im = XGetImage(
-		x11.dpy, x11.root.win, (int)img.x, (int)img.y, img.w, img.h,
-		AllPlanes, ZPixmap
+
+	XShmSegmentInfo si;
+	XImage *xim = XShmCreateImage(
+		x11.dpy,
+		DefaultVisual(x11.dpy, DefaultScreen(x11.dpy)),
+		DefaultDepth(x11.dpy, DefaultScreen(x11.dpy)),
+		ZPixmap, NULL, &si, img.w, img.h
 	);
+	if (!xim)
+		fatal("XShmCreateImage");
+	si.shmid = shmget(
+		IPC_PRIVATE, (size_t)xim->bytes_per_line * xim->height,
+		IPC_CREAT | 0666
+	);
+	if (si.shmid < 0)
+		fatal("shmget");
+	si.readOnly = False;
+	si.shmaddr = xim->data = shmat(si.shmid, 0, 0);
+	if (si.shmaddr == (void *)-1)
+		fatal("shmat");
+	/*
+	 * NOTE: this can fail if remote server or w/e
+	 * should set up a dummy xlib error handler to avoid crashing and then
+	 * retry with regular XGetImage
+	 */
+	XShmAttach(x11.dpy, &si);
+	Bool r = XShmGetImage(
+		x11.dpy, x11.root.win, xim,
+		(int)img.x, (int)img.y, 0xFFFFFFFF
+	);
+	if (!r)
+		fatal("XShmGetImage");
+	img.im = xim;
+	XSync(x11.dpy, False);
+
+	/* img.im = XGetImage( */
+	/* 	x11.dpy, x11.root.win, (int)img.x, (int)img.y, img.w, img.h, */
+	/* 	AllPlanes, ZPixmap */
+	/* ); */
 	if (img.im == NULL)
 		fatal("failed to get image");
 	if (img.im->bits_per_pixel != 32 ||
@@ -593,7 +632,11 @@ magnify(const int x, const int y)
 		fatal("unexpected XImage format");
 	}
 	mag_func(cursor_img, &img);
+
+	XShmDetach(x11.dpy, &si);
 	XDestroyImage(img.im);
+	shmdt(si.shmaddr);
+	shmctl(si.shmid, IPC_RMID, 0);
 
 	for (i = 0; i < filter->len; ++i)
 		filter->f[i](cursor_img);
@@ -603,6 +646,7 @@ magnify(const int x, const int y)
 	x11.cur = new_cur;
 	x11.valid.cur = 1;
 	XChangeActivePointerGrab(x11.dpy, x11.grab_mask, x11.cur, CurrentTime);
+	/* tend(0); */
 }
 
 static void
@@ -624,6 +668,9 @@ main(int argc, char *argv[])
 
 	if ((x11.dpy = XOpenDisplay(NULL)) == NULL)
 		fatal("failed to open x11 display");
+
+	if (!XShmQueryExtension(x11.dpy))
+		fatal("XShmQueryExtension");
 
 	{
 		XWindowAttributes tmp;
