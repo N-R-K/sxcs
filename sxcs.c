@@ -31,7 +31,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/cursorfont.h>
-#include <X11/Xcursor/Xcursor.h>
+#include <X11/extensions/Xrender.h>
 
 /*
  * macros
@@ -105,14 +105,18 @@ typedef struct {
 } Options;
 
 typedef struct {
-	XImage *im;
+	uint w, h;
+	uint *pixels;
+} Image;
+
+typedef struct {
 	uint x, y, w, h;
 	int cx, cy;
 	struct { uint w, h; } wanted; /* w, h if no clipping occurred */
-} Image;
+} ImageInfo;
 
-typedef void (*FilterFunc)(XcursorImage *img);
-typedef void (*MagFunc)(XcursorImage *out, const Image *in);
+typedef void (*FilterFunc)(Image *img);
+typedef void (*MagFunc)(Image *out, XImage *in, ImageInfo info);
 
 typedef struct {
 	const FilterFunc *f;
@@ -126,28 +130,28 @@ typedef struct {
 /*
  * zoom functions:
  *
- * The zoom functions are given a `XcursorImage` pointer where it must output
- * the zoomed image. As input, an `Image` pointer is given.
+ * The zoom functions are given an `Image` pointer where it must output ARGB32
+ * pixels. The input is an `XImage`.
  * NOTE: In case of clipping (cursor at the edge of the screen) the input may
- * not be of expected size. `in->{cx,cy}` are the coordinates of the cursor
- * position and `in->wanted.{w,h}` are w/h if no clipping had occurred.
+ * not be of expected size. `info.{cx,cy}` are the coordinates of the cursor
+ * position and `info.wanted.{w,h}` are w/h if no clipping had occurred.
  * so the zoom function must ensure that the middle of the output maps to the
  * cx,cy of the input and it must fill any of the clipped area with transparent
  * pixel (0xff000000).
  */
 /* TODO: add bicubic scaling */
-static void nearest_neighbour(XcursorImage *out, const Image *in);
+static void nearest_neighbour(Image *out, XImage *in, ImageInfo info);
 /*
  * filter functions:
  *
- * The filter functions are given a pointer to `XcursorImage` as input. There
+ * The filter functions are given a pointer to `XImage` as input. There
  * is no output, the functions can modify it's input as it wants.
  */
 /* TODO: add pixels_grid */
-static void square(XcursorImage *img);
-static void xhair(XcursorImage *img);
-static void grid(XcursorImage *img);
-static void circle(XcursorImage *img);
+static void square(Image *img);
+static void xhair(Image *img);
+static void grid(Image *img);
+static void circle(Image *img);
 
 /*
  * static globals
@@ -156,6 +160,11 @@ static void circle(XcursorImage *img);
 static struct {
 	Display *dpy;
 	Cursor cur;
+	Pixmap pix;
+	GC gc;
+	XImage cursor_img;
+	XRenderPictFormat *pixfmt;
+	Picture picture;
 	uint grab_mask;
 	struct {
 		Window win;
@@ -167,8 +176,6 @@ static struct {
 		uint ungrab_kb   : 1;
 	} valid;
 } x11;
-
-static XcursorImage *cursor_img;
 
 static volatile sig_atomic_t sig_recieved;
 
@@ -303,10 +310,9 @@ get_pixel(int x, int y)
 {
 	ulong ret;
 
-	if (cursor_img != NULL) {
-		uint m = cursor_img->height / 2;
-		ret = cursor_img->pixels[m * cursor_img->width + m];
-		ret &= 0x00ffffff; /* cut off the alpha */
+	if (x11.cursor_img.data != NULL) {
+		uint m = x11.cursor_img.height / 2;
+		ret = ximg_pixel_get(&x11.cursor_img, m, m);
 	} else {
 		XImage *im = XGetImage(x11.dpy, x11.root.win, x, y, 1, 1, AllPlanes, ZPixmap);
 		if (im == NULL)
@@ -314,7 +320,7 @@ get_pixel(int x, int y)
 		ret = ximg_pixel_get(im, 0, 0);
 		XDestroyImage(im);
 	}
-
+	ret &= 0x00ffffff; /* TODO: is cutting off alpha even needed anymore? */
 	return ret;
 }
 
@@ -449,98 +455,98 @@ opt_parse(int argc, char *argv[])
 }
 
 static void
-nearest_neighbour(XcursorImage *out, const Image *in)
+nearest_neighbour(Image *out, XImage *in, ImageInfo info)
 {
 	uint x, y;
-	float ocy = (float)out->height / 2.0f;
-	float ocx = (float)out->width / 2.0f;
-	float icy = (float)in->wanted.h / 2.0f;
-	float icx = (float)in->wanted.w / 2.0f;
+	float ocy = (float)out->h / 2.0f;
+	float ocx = (float)out->w / 2.0f;
+	float icy = (float)info.wanted.h / 2.0f;
+	float icx = (float)info.wanted.w / 2.0f;
 
-	for (y = 0; y < out->height; ++y) {
-		for (x = 0; x < out->width; ++x) {
+	for (y = 0; y < out->h; ++y) {
+		for (x = 0; x < out->w; ++x) {
 			float oy = ((float)y - ocy) / ocy;
 			float ox = ((float)x - ocx) / ocx;
-			int iy = ROUNDF((float)in->cy + (icy * oy));
-			int ix = ROUNDF((float)in->cx + (icx * ox));
+			int iy = ROUNDF((float)info.cy + (icy * oy));
+			int ix = ROUNDF((float)info.cx + (icx * ox));
 			ulong tmp;
 
-			if ((iy < 0 || iy >= (int)in->h) || (ix < 0 || ix >= (int)in->w))
+			if ((iy < 0 || iy >= (int)info.h) || (ix < 0 || ix >= (int)info.w))
 				tmp = 0xff000000;
 			else
-				tmp = ximg_pixel_get(in->im, ix, iy) | 0xff000000;
-			out->pixels[y * out->width + x] = (XcursorPixel)tmp;
+				tmp = ximg_pixel_get(in, ix, iy) | 0xff000000;
+			out->pixels[y * out->w + x] = tmp;
 		}
 	}
 }
 
 static void
-square(XcursorImage *img)
+square(Image *img)
 {
 	size_t i, k;
 	const uint b = SQUARE_WIDTH;
 
 	i = 0;
-	while (i < img->width * b + b) /* draw the top border + 1 left side */
+	while (i < img->w * b + b) /* draw the top border + 1 left side */
 		img->pixels[i++] = SQUARE_COLOR;
 	do {
-		i += img->width - b * 2; /* skip the mid */
+		i += img->w - b * 2; /* skip the mid */
 		for (k = 0; k < b*2; ++k)
 			img->pixels[i++] = SQUARE_COLOR;
-	} while (i < (img->height - b) * img->width);
-	while (i < img->width * img->height) /* draw the rest */
+	} while (i < (img->h - b) * img->w);
+	while (i < img->w * img->h) /* draw the rest */
 		img->pixels[i++] = SQUARE_COLOR;
 }
 
 static void
-xhair(XcursorImage *img)
+xhair(Image *img)
 {
-	uint x, y;
-	const uint c = img->height / 2;
+	uint x, y, *p = img->pixels;
+	const uint c = img->h / 2;
 	const uint b = XHAIR_SIZE;
-	const uint bw = XHAIR_BORDER_WIDTH ;
+	const uint bw = XHAIR_BORDER_WIDTH;
 
 	for (y = c - b; y <= c + b; ++y) {
 		for (x = c - b; x <= c + b; ++x) {
 			if (DIFF(x, c) > b - bw || DIFF(y, c) > b - bw)
-				img->pixels[y * img->width + x] = XHAIR_COLOR;
+				p[y * img->w + x] = XHAIR_COLOR;
 		}
 	}
 }
 
 static void
-grid(XcursorImage *img)
+grid(Image *img)
 {
-	uint x, y;
+	uint x, y, *p = img->pixels;
 	const uint z = GRID_SIZE;
-	const uint c = (img->height / 2) + (z / 2);
+	const uint c = (img->h / 2) + (z / 2);
 
-	for (y = 0; y < img->height; ++y) {
+	for (y = 0; y < img->h; ++y) {
 		if (DIFF(c, y) % z == 0) {
-			for (x = 0; x < img->width; ++x)
-				img->pixels[y * img->width + x] = GRID_COLOR;
-		} else for (x = c % z; x < img->width; x += z) {
-			img->pixels[y * img->width + x] = GRID_COLOR;
+			for (x = 0; x < img->w; ++x)
+				p[y * img->w + x] = GRID_COLOR;
+		} else for (x = c % z; x < img->w; x += z) {
+			p[y * img->w + x] = GRID_COLOR;
 		}
 	}
 }
 
 static void
-four_point_draw(XcursorImage *img, uint x, uint y, XcursorPixel col) /* naming is hard */
+four_point_draw(Image *img, uint x, uint y, uint col) /* naming is hard */
 {
-	uint w = img->width, h = img->height;
+	uint w = img->w, h = img->h, *p = img->pixels;
 	ASSERT(x <= w/2); ASSERT(y <= h/2);
-	img->pixels[y * w + x] = col;
-	img->pixels[y * w + (w - x - 1)] = col;
-	img->pixels[(h - y - 1) * w + x] = col;
-	img->pixels[(h - y - 1) * w + (w - x - 1)] = col;
+	p[y * w + x] = col;
+	p[y * w + (w - x - 1)] = col;
+	p[(h - y - 1) * w + x] = col;
+	p[(h - y - 1) * w + (w - x - 1)] = col;
 }
 
 /* TODO: reduce jaggedness */
 static void
-circle(XcursorImage *img)
+circle(Image *img)
 {
-	uint x, y, h = img->height, w = img->width;
+	uint x, y, h = img->h, w = img->w;
 	uint r = CIRCLE_RADIUS;
 	uint br = r - CIRCLE_WIDTH;
 	uint c = h / 2;
@@ -568,36 +574,45 @@ magnify(const int x, const int y)
 {
 	const uint c = (uint)((float)MAG_SIZE / MAG_FACTOR) + 1;
 	const int off = (c - 1) / 2;
+	XImage *raw, *cim = &x11.cursor_img;
+	int hot = cim->width / 2;
 	uint i;
-	Image img;
 	Cursor new_cur;
+	Image cimg = {0};
+	ImageInfo info = {0};
 
-	img.x = (uint)MAX(0, x - off);
-	img.y = (uint)MAX(0, y - off);
-	img.w = MIN(c, x11.root.w - img.x);
-	img.h = MIN(c, x11.root.h - img.y);
-	img.cx = x - (int)img.x;
-	img.cy = y - (int)img.y;
-	img.wanted.w = img.wanted.h = c;
+	cimg.w = cim->width;
+	cimg.h = cim->height;
+	cimg.pixels = (uint *)cim->data;
+
+	info.x = (uint)MAX(0, x - off);
+	info.y = (uint)MAX(0, y - off);
+	info.w = MIN(c, x11.root.w - info.x);
+	info.h = MIN(c, x11.root.h - info.y);
+	info.cx = x - (int)info.x;
+	info.cy = y - (int)info.y;
+	info.wanted.w = info.wanted.h = c;
 	/* TODO: look into Shm extension to reduce allocation overhead. */
-	img.im = XGetImage(
-		x11.dpy, x11.root.win, (int)img.x, (int)img.y, img.w, img.h,
+	raw = XGetImage(
+		x11.dpy, x11.root.win, (int)info.x, (int)info.y, info.w, info.h,
 		AllPlanes, ZPixmap
 	);
-	if (img.im == NULL)
+	if (raw == NULL)
 		fatal("failed to get image");
-	if (img.im->bits_per_pixel != 32 ||
-	    img.im->bytes_per_line != (img.im->width * 4) ||
-	    !(img.im->depth == 24 || img.im->depth == 32))
+	if (raw->bits_per_pixel != 32 ||
+	    raw->bytes_per_line != (raw->width * 4) ||
+	    !(raw->depth == 24 || raw->depth == 32))
 	{ /* ximg_pixel_get() depends on these */
 		fatal("unexpected XImage format");
 	}
-	mag_func(cursor_img, &img);
-	XDestroyImage(img.im);
+	mag_func(&cimg, raw, info);
+	XDestroyImage(raw);
 
 	for (i = 0; i < filter->len; ++i)
-		filter->f[i](cursor_img);
-	new_cur = XcursorImageLoadCursor(x11.dpy, cursor_img);
+		filter->f[i](&cimg);
+
+	XPutImage(x11.dpy, x11.pix, x11.gc, cim, 0, 0, 0, 0, cim->width, cim->height);
+	new_cur = XRenderCreateCursor(x11.dpy, x11.picture, hot, hot);
 	if (x11.valid.cur)
 		XFreeCursor(x11.dpy, x11.cur);
 	x11.cur = new_cur;
@@ -651,10 +666,34 @@ main(int argc, char *argv[])
 		x11.cur = XCreateFontCursor(x11.dpy, XC_tcross);
 		x11.valid.cur = 1;
 	} else {
-		cursor_img = XcursorImageCreate(MAG_SIZE, MAG_SIZE);
-		if (cursor_img == NULL)
-			fatal("failed to create cursor image");
-		cursor_img->xhot = cursor_img->yhot = MAG_SIZE / 2;
+		union { int i; char bytes[sizeof(int)]; } u = {1};
+		XImage *cim = &x11.cursor_img;
+		cim->width = cim->height = MAG_SIZE;
+		cim->format = ZPixmap;
+		cim->byte_order = u.bytes[0] == 1 ? LSBFirst : MSBFirst;
+		cim->bitmap_unit = 32;
+		cim->bitmap_bit_order = cim->byte_order;
+		cim->bitmap_pad = 32;
+		cim->depth = 32;
+		cim->bits_per_pixel = 32;
+		cim->red_mask   = 0xFF0000;
+		cim->green_mask = 0x00FF00;
+		cim->blue_mask  = 0x0000FF;
+		cim->data = malloc((size_t)cim->width * cim->height * 4);
+		if (cim->data == NULL)
+			fatal("malloc failed: %s", strerror(errno));
+		if (!XInitImage(cim))
+			fatal("failed to initialize XImage");
+
+		x11.pix = XCreatePixmap(
+			x11.dpy, x11.root.win,
+			cim->width, cim->height, 32
+		);
+		x11.gc = XCreateGC(x11.dpy, x11.pix, 0, NULL);
+		x11.pixfmt = XRenderFindStandardFormat(x11.dpy, PictStandardARGB32);
+		if (x11.pixfmt == NULL)
+			fatal("failed to find standard ARGB32 format");
+		x11.picture = XRenderCreatePicture(x11.dpy, x11.pix, x11.pixfmt, 0, NULL);
 	}
 
 	if (opt.quit_on_keypress || opt.keyboard) {
@@ -812,8 +851,13 @@ out:
 		XUngrabKeyboard(x11.dpy, CurrentTime);
 	if (x11.valid.ungrab_ptr)
 		XUngrabPointer(x11.dpy, CurrentTime);
-	if (cursor_img != NULL)
-		XcursorImageDestroy(cursor_img);
+	free(x11.cursor_img.data);
+	if (x11.pix != None)
+		XFreePixmap(x11.dpy, x11.pix);
+	if (x11.gc != None)
+		XFreeGC(x11.dpy, x11.gc);
+	if (x11.picture != None)
+		XRenderFreePicture(x11.dpy, x11.picture);
 	if (x11.valid.cur)
 		XFreeCursor(x11.dpy, x11.cur);
 #endif

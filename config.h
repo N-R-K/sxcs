@@ -14,21 +14,21 @@ static const MagFunc mag_func = nearest_neighbour;
 
 /* square() options */
 static const uint SQUARE_WIDTH = 2;
-static const XcursorPixel SQUARE_COLOR = 0xffff3838;
+static const uint SQUARE_COLOR = 0xffff3838;
 
 /* xhair() options */
 static const uint XHAIR_SIZE = 5;
 static const uint XHAIR_BORDER_WIDTH = 2;
-static const XcursorPixel XHAIR_COLOR = 0xffff3838;
+static const uint XHAIR_COLOR = 0xffff3838;
 
 /* grid() options */
 static const uint GRID_SIZE = 5 * 2; /* best kept 2x XHAIR_SIZE */
-static const XcursorPixel GRID_COLOR = 0xff3C3836;
+static const uint GRID_COLOR = 0xff3C3836;
 
 /* circle_border() options */
 static const uint CIRCLE_RADIUS = 192 / 2; /* best kept 0.5x MAG_SIZE */
 static const uint CIRCLE_WIDTH = 2;
-static const XcursorPixel CIRCLE_COLOR = 0xffff3838;
+static const uint CIRCLE_COLOR = 0xffff3838;
 static const Bool CIRCLE_TRANSPARENT_OUTSIDE = True;
 
 /* example filter sequences */

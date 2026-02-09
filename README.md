@@ -69,7 +69,7 @@ $ man sxcs
 
 - Runtime Dependencies:
   * Xlib
-  * Xcursor
+  * Xrender
   * POSIX 2001 C standard library
 
 ## Building
@@ -77,7 +77,7 @@ $ man sxcs
 * Simple build:
 
 ```console
-$ cc -o sxcs sxcs.c -O3 -s -l X11 -l Xcursor
+$ cc -o sxcs sxcs.c -O3 -s -l X11 -l Xrender
 ```
 
 The above command should also work with `gcc`, `clang` or any other C compiler
@@ -87,7 +87,7 @@ that has a POSIX compatible cli interface.
 
 ```console
 $ gcc -o sxcs sxcs.c -std=c89 -Wall -Wextra -Wpedantic \
-    -g3 -D DEBUG -O0 -fsanitize=address,undefined -l X11 -l Xcursor
+    -g3 -D DEBUG -O0 -fsanitize=address,undefined -l X11 -l Xrender
 ```
 
 * If you're editing the code, you may optionally run some static analysis:
@@ -117,8 +117,8 @@ A zsh completion script is also available for zsh users under
 
 ## Limitation
 
-Cursor size bigger than 255x255 causes visual glitches, it seems to be a
-X11/Xcursor limitation.
+Cursor size bigger than 255x255 causes visual glitches, it seems to be an
+inherent limitation.
 
 One alternative would be using XComposite and using an `override_redirect`
 window. Which is what was being done (incorrectly) before commit
