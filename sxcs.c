@@ -615,7 +615,7 @@ extern int
 main(int argc, char *argv[])
 {
 	Options opt;
-	struct { int x, y, valid; } old = {0};
+	struct { int x, y; } old = {0};
 	XEvent ev;
 	Bool queued;
 	int npending;
@@ -695,6 +695,15 @@ main(int argc, char *argv[])
 			signal(sigs[i], sighandler);
 	}
 
+	if (!opt.no_mag) {
+		Window tmpw; int tmpi; unsigned tmpu;
+		XQueryPointer(
+			x11.dpy, x11.root.win, &tmpw, &tmpw,
+			&old.x, &old.y, &tmpi, &tmpi, &tmpu
+		);
+		magnify(old.x, old.y);
+	}
+
 	for (queued = False, npending = 0; 1;) {
 		Bool pending;
 		struct pollfd pfd;
@@ -708,7 +717,7 @@ main(int argc, char *argv[])
 			exit(128 + sig_recieved);
 
 		if (!pending) {
-			if (!opt.no_mag && old.valid)
+			if (!opt.no_mag)
 				magnify(old.x, old.y);
 			continue;
 		}
@@ -744,7 +753,6 @@ main(int argc, char *argv[])
 
 			old.x = ev.xmotion.x_root;
 			old.y = ev.xmotion.y_root;
-			old.valid = 1;
 			while (npending > 0 || (npending = XPending(x11.dpy)) > 0) {
 				XNextEvent(x11.dpy, &ev);
 				--npending;
