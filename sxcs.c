@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024 NRK and contributors.
+ * Copyright (C) 2022-2026 NRK and contributors.
  *
  * This file is part of sxcs.
  *
@@ -359,7 +359,7 @@ version(void)
 {
 	char s[] =
 		PROGNAME" v1.1.0\n\n"
-		"Copyright (C) 2022-2024 NRK and contributors.\n"
+		"Copyright (C) 2022-2026 NRK and contributors.\n"
 		"License: GPLv3+ <https://gnu.org/licenses/gpl.html>.\n"
 		"Upstream: <https://codeberg.org/NRK/sxcs>\n"
 	;
