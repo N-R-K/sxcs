@@ -551,7 +551,7 @@ circle_core(Image *img, int xcolor)
 	uint r = CIRCLE_RADIUS;
 	uint br = r - CIRCLE_WIDTH;
 	uint c = h / 2;
-	ulong col = xcolor ? (get_pixel(-1,-1) | 0xff000000) : CIRCLE_COLOR;
+	uint col = xcolor ? (get_pixel(-1,-1) | 0xff000000) : CIRCLE_COLOR;
 
 	for (y = 0; y < h / 2 + (h & 1); ++y) {
 		for (x = 0; x < w / 2 + (w & 1); ++x) {
