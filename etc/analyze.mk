@@ -15,17 +15,19 @@ analyze-gcc:
 		-Ofast -fwhole-program
 analyze-cppcheck:
 	cppcheck sxcs.c ${cppcheck_flags} \
-		--suppress=normalCheckLevelMaxBranches
+		--suppress=normalCheckLevelMaxBranches \
+		--suppress=constParameterCallback
 analyze-cppcheck-exhaustive:
 	cppcheck sxcs.c ${cppcheck_flags} -j ${nproc} \
 		--force --check-level=exhaustive
 analyze-clang-tidy:
 	clang-tidy --quiet --config-file=./etc/.clang-tidy sxcs.c -- -std=c89
 analyze-clang-weverything:
-	clang sxcs.c -o /dev/null -c -std=c89 -Ofast -Weverything \
+	clang sxcs.c -o /dev/null -c -std=c89 -O3 -ffast-math -Weverything \
 		-Wno-unreachable-code-break -Wno-string-conversion \
 		-Wno-unused-macros -Wno-comma -Wno-padded \
 		-Wno-disabled-macro-expansion -Wno-unsafe-buffer-usage \
-		-Wno-sign-conversion
+		-Wno-sign-conversion -Wno-implicit-void-ptr-cast \
+		-Wno-implicit-int-enum-cast
 
 .PHONY: analyze

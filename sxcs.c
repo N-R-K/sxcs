@@ -49,9 +49,9 @@
 /* not correct. but works fine for our usecase in this program */
 #define ROUNDF(X)        ((int)((X) + 0.50f))
 
-#define R(X)             ( ((ulong)(X) & 0xFF0000) >> 16 )
-#define G(X)             ( ((ulong)(X) & 0x00FF00) >>  8 )
-#define B(X)             ( ((ulong)(X) & 0x0000FF) >>  0 )
+#define R(X)             ( ((uint)(X) & 0xFF0000) >> 16 )
+#define G(X)             ( ((uint)(X) & 0x00FF00) >>  8 )
+#define B(X)             ( ((uint)(X) & 0x0000FF) >>  0 )
 
 #define FILTER_SEQ_FROM_ARRAY(X)  { X, ARRLEN(X) }
 
@@ -236,7 +236,7 @@ str_tok(Str *s, Str *t, uchar ch)
 }
 
 static HSL
-rgb_to_hsl(ulong col)
+rgb_to_hsl(uint col)
 {
 	HSL ret = {0};
 	const int r = R(col);
@@ -285,7 +285,7 @@ rgb_to_hsl(ulong col)
  * possible that this causes some problems, especially if the X server is
  * running on some funny config.
  */
-static ulong
+static uint
 ximg_pixel_get(const XImage *img, int x, int y)
 {
 	const size_t off = ((size_t)y * (size_t)img->bytes_per_line) + ((size_t)x * 4);
@@ -293,22 +293,22 @@ ximg_pixel_get(const XImage *img, int x, int y)
 	ASSERT(x >= 0); ASSERT(y >= 0);
 
 	if (img->byte_order == MSBFirst) {
-		return (ulong)p[0] << 24 |
-		       (ulong)p[1] << 16 |
-		       (ulong)p[2] <<  8 |
-		       (ulong)p[3] <<  0;
+		return (uint)p[0] << 24 |
+		       (uint)p[1] << 16 |
+		       (uint)p[2] <<  8 |
+		       (uint)p[3] <<  0;
 	} else {
-		return (ulong)p[3] << 24 |
-		       (ulong)p[2] << 16 |
-		       (ulong)p[1] <<  8 |
-		       (ulong)p[0] <<  0;
+		return (uint)p[3] << 24 |
+		       (uint)p[2] << 16 |
+		       (uint)p[1] <<  8 |
+		       (uint)p[0] <<  0;
 	}
 }
 
-static ulong
+static uint
 get_pixel(int x, int y)
 {
-	ulong ret;
+	uint ret;
 
 	if (x11.cursor_img.data != NULL) {
 		uint m = x11.cursor_img.height / 2;
@@ -327,16 +327,16 @@ get_pixel(int x, int y)
 static void
 print_color(int x, int y, enum output fmt)
 {
-	ulong pix;
+	uint pix;
 
 	if (fmt == OUTPUT_NONE)
 		return;
 
 	pix = get_pixel(x, y);
 	if (fmt & OUTPUT_HEX)
-		fprintf(stdout, "hex:\t#%.6lX\t", pix);
+		fprintf(stdout, "hex:\t#%.6X\t", pix);
 	if (fmt & OUTPUT_RGB)
-		fprintf(stdout, "rgb:\t%lu %lu %lu\t", R(pix), G(pix), B(pix));
+		fprintf(stdout, "rgb:\t%u %u %u\t", R(pix), G(pix), B(pix));
 	if (fmt & OUTPUT_HSL) {
 		HSL tmp = rgb_to_hsl(pix);
 		fprintf(stdout, "hsl:\t%u %u %u\t", tmp.h, tmp.s, tmp.l);
@@ -469,7 +469,7 @@ nearest_neighbour(Image *out, XImage *in, ImageInfo info)
 			float ox = ((float)x - ocx) / ocx;
 			int iy = ROUNDF((float)info.cy + (icy * oy));
 			int ix = ROUNDF((float)info.cx + (icx * ox));
-			ulong tmp;
+			uint tmp;
 
 			if ((iy < 0 || iy >= (int)info.h) || (ix < 0 || ix >= (int)info.w))
 				tmp = 0xff000000;
@@ -666,7 +666,7 @@ main(int argc, char *argv[])
 		x11.cur = XCreateFontCursor(x11.dpy, XC_tcross);
 		x11.valid.cur = 1;
 	} else {
-		union { int i; char bytes[sizeof(int)]; } u = {1};
+		union { int i; char bytes[sizeof(int)]; } u = {1}; /* cppcheck-suppress unusedStructMember */
 		XImage *cim = &x11.cursor_img;
 		cim->width = cim->height = MAG_SIZE;
 		cim->format = ZPixmap;
