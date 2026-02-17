@@ -356,8 +356,9 @@ usage(void)
 		"usage: "PROGNAME" [options]\n"
 		"See the manpage for more details.\n"
 	;
-	fwrite(s, 1, sizeof s - 1, stderr);
-	exit(1);
+	fwrite(s, 1, sizeof s - 1, stdout);
+	fflush(stdout);
+	exit(ferror(stdout) != 0);
 }
 
 ATTR((noreturn))
@@ -370,8 +371,9 @@ version(void)
 		"License: GPLv3+ <https://gnu.org/licenses/gpl.html>.\n"
 		"Upstream: <https://codeberg.org/NRK/sxcs>\n"
 	;
-	fwrite(s, 1, sizeof s - 1, stderr);
-	exit(1);
+	fwrite(s, 1, sizeof s - 1, stdout);
+	fflush(stdout);
+	exit(ferror(stdout) != 0);
 }
 
 static void
