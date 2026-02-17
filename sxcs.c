@@ -592,7 +592,7 @@ magnify(const int x, const int y)
 	info.cx = x - (int)info.x;
 	info.cy = y - (int)info.y;
 	info.wanted.w = info.wanted.h = c;
-	/* TODO: look into Shm extension to reduce allocation overhead. */
+	/* TODO: look into Shm extension to reduce transfer overhead. */
 	raw = XGetImage(
 		x11.dpy, x11.root.win, (int)info.x, (int)info.y, info.w, info.h,
 		AllPlanes, ZPixmap
