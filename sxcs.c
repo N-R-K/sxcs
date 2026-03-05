@@ -751,13 +751,15 @@ main(int argc, char *argv[])
 	}
 
 	for (queued = False, npending = 0; 1;) {
-		Bool pending;
-		struct pollfd pfd;
-
-		pfd.fd = ConnectionNumber(x11.dpy);
-		pfd.events = POLLIN;
-		pending = queued || npending > 0 || (npending = XPending(x11.dpy)) > 0 ||
-		          poll(&pfd, 1, MAX_FRAME_TIME) > 0;
+		Bool pending = queued || npending > 0 ||
+		               (npending = XPending(x11.dpy)) > 0;
+		if (!pending) {
+			struct pollfd pfd = {0};
+			pfd.fd = ConnectionNumber(x11.dpy);
+			pfd.events = POLLIN;
+			poll(&pfd, 1, MAX_FRAME_TIME);
+			pending = (npending = XPending(x11.dpy)) > 0;
+		}
 
 		if (sig_recieved)
 			exit(128 + sig_recieved);
