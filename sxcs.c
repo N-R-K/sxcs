@@ -550,10 +550,13 @@ static void
 circle_core(Image *img, int xcolor)
 {
 	uint x, y, h = img->h, w = img->w;
+	int outline = xcolor && CIRCLE_WIDTH > 0;
 	uint r = CIRCLE_RADIUS;
 	uint br = r - CIRCLE_WIDTH;
+	uint olr = r + outline;
 	uint c = h / 2;
 	uint col = xcolor ? (get_pixel(-1,-1) | 0xff000000) : CIRCLE_COLOR;
+	uint ocol = rgb_to_hsl(col).l > 50 ? 0x80000000 : 0x80FFFFFF;
 
 	for (y = 0; y < h / 2 + (h & 1); ++y) {
 		for (x = 0; x < w / 2 + (w & 1); ++x) {
@@ -561,9 +564,11 @@ circle_core(Image *img, int xcolor)
 			uint ty = c - y;
 			uint x2y2 = (tx * tx) + (ty * ty);
 
-			if (x2y2 > (r * r)) { /* outside the circle border */
+			if (x2y2 > (olr * olr)) { /* outside the circle border */
 				if (CIRCLE_TRANSPARENT_OUTSIDE)
 					four_point_draw(img, x, y, 0x0);
+			} else if (outline && x2y2 > (r * r)) { /* outside outline border */
+				four_point_draw(img, x, y, ocol);
 			} else if (x2y2 > (br * br)) { /* inside the circle border */
 				four_point_draw(img, x, y, col);
 			} else { /* inside the circle, nothing to do. move on to the next y */

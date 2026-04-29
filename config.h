@@ -27,7 +27,7 @@ static const uint GRID_COLOR = 0xff3C3836;
 
 /* circle_border() options */
 static const uint CIRCLE_RADIUS = 192 / 2; /* best kept 0.5x MAG_SIZE */
-static const uint CIRCLE_WIDTH = 2;
+static const uint CIRCLE_WIDTH = 3;
 static const uint CIRCLE_COLOR = 0xffff3838;
 static const Bool CIRCLE_TRANSPARENT_OUTSIDE = True;
 
