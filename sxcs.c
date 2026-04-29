@@ -714,7 +714,8 @@ main(int argc, char *argv[])
 				x11.dpy, x11.root.win, 0,
 				GrabModeAsync, GrabModeAsync, CurrentTime
 			);
-			XNextEvent(x11.dpy, &ev);
+			if (res == AlreadyGrabbed)
+				XNextEvent(x11.dpy, &ev);
 		} while (res == AlreadyGrabbed);
 		XSelectInput(x11.dpy, x11.root.win, 0x0);
 		x11.valid.ungrab_kb = res == GrabSuccess;
