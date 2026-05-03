@@ -38,7 +38,7 @@ static const FilterFunc circle_grid_cross[] = { grid, circle, xhair };
 static const FilterFunc icircle_grid_cross[] = { grid, icircle, xhair };
 
 /* default filter sequence, overridden via cli arg `--mag-filters` */
-static const FilterSeq filter_default = FILTER_SEQ_FROM_ARRAY(circle_grid_cross);
+static const FilterSeq filter_default = FILTER_SEQ_FROM_ARRAY(icircle_grid_cross);
 
 /* max time (in ms) allowed to go on without a redraw */
 static const int MAX_FRAME_TIME = 16;
