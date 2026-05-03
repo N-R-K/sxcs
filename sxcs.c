@@ -380,7 +380,10 @@ static void
 filter_parse(Str arg)
 {
 	static FilterFunc f_buf[16];
-	static FilterSeq fs_buf = { f_buf, 0 };
+	static FilterSeq fs_buf;
+
+	fs_buf.f = f_buf;
+	fs_buf.len = 0;
 
 	Str tok;
 
