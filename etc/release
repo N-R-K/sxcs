@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+
+set -eu
+
+usage() {
+	printf 'usage: %s <tag>\n' "${0##*/}" >&2
+	exit 1
+}
+
+escape_sed_repl() {
+	local s=$1
+	s=${s//\\/\\\\}
+	s=${s//&/\\&}
+	s=${s//|/\\|}
+	printf '%s' "$s"
+}
+
+rewrite_file() {
+	local file=$1
+	sed -i -E \
+		-e "s|PROGNAME\" v[^\"\\]*|PROGNAME\" $tag_esc|g" \
+		-e "s|Copyright \(C\) 2022-[0-9]{4} NRK\.|Copyright (C) 2022-$year NRK.|g" \
+		-- "$file"
+}
+
+[ $# -eq 1 ] || usage
+tag=$1
+[ -n "$tag" ] || usage
+
+root=$(git rev-parse --show-toplevel)
+cd "$root"
+
+if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+	printf '%s: worktree must be clean\n' "${0##*/}" >&2
+	exit 1
+fi
+
+if git show-ref --verify --quiet "refs/tags/$tag"; then
+	printf '%s: tag already exists\n' "${0##*/}" >&2
+	exit 1
+fi
+
+month=$(LC_ALL=C date '+%b %Y')
+year=$(date '+%Y')
+tag_esc=$(escape_sed_repl "$tag")
+month_esc=$(escape_sed_repl "$month")
+
+while IFS= read -r -d '' file; do
+	rewrite_file "$file"
+done < <(git ls-files -z -- '*.c')
+
+sed -i -E \
+	-e "1s|^\.TH SXCS 1 \"[^\"]+\" \"sxcs [^\"]*\"|.TH SXCS 1 \"$month_esc\" \"sxcs $tag_esc\"|" \
+	-- sxcs.1
+
+if git diff --quiet -- . ':!etc/release'; then
+	printf '%s: no release changes made\n' "${0##*/}" >&2
+	exit 1
+fi
+
+git add -u
+git commit -m "release $tag"
+git tag -a -m "release $tag" -- "$tag"
