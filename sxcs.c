@@ -366,7 +366,7 @@ static void
 version(void)
 {
 	char s[] =
-		PROGNAME" v1.2.0\n\n"
+		PROGNAME" v1.2.1\n\n"
 		"Copyright (C) 2022-2026 NRK and contributors.\n"
 		"License: GPLv3+ <https://gnu.org/licenses/gpl.html>.\n"
 		"Upstream: <https://codeberg.org/NRK/sxcs>\n"
