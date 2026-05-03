@@ -37,7 +37,7 @@ filter-list will be applied in order, as given by the user.
 The default filter list is the following:
 
 ```console
-$ sxcs --mag-filters "grid,circle,xhair"
+$ sxcs --mag-filters "grid,icircle,xhair"
 ```
 
 Following are a couple more examples:
