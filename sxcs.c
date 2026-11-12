@@ -381,11 +381,10 @@ filter_parse(Str arg)
 {
 	static FilterFunc f_buf[16];
 	static FilterSeq fs_buf;
+	Str tok;
 
 	fs_buf.f = f_buf;
 	fs_buf.len = 0;
-
-	Str tok;
 
 	if (arg.len == 0)
 		fatal("--mag-filters: no argument provided");
