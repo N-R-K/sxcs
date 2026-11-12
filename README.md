@@ -4,7 +4,7 @@
 
 Color picker and magnifier for X11.
 
-![preview](https://github.com/user-attachments/assets/e4d90b6d-6a9a-4458-b2ff-0dc1c868b915)
+![preview](https://github.com/user-attachments/assets/aa65ef70-1e25-4d23-ba61-c8c518410df6)
 
 ## Usage
 
